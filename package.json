@@ -1,0 +1,17 @@
+{
+  "name": "matchnade",
+  "version": "0.1.0",
+  "description": "Projeto Avanade",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "echo \"sem testes configurados ainda\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {},
+  "devDependencies": {}
+}
