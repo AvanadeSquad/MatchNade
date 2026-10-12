@@ -47,3 +47,20 @@ O Google bloqueia login automatizado. A API só registra `POST /api/v1/test/logi
 - Poucos testes de ponta a ponta, só para os fluxos principais. Regras de negócio (cota, expiração, permissão do chat) ficam no `backend/test`, que é mais rápido e estável.
 - Dados sempre fictícios.
 - Os dois projetos compartilham o mesmo banco; por isso cada teste cria as próprias pessoas e roda um de cada vez.
+
+## Regressão visual
+
+`tests/visual.spec.js` captura login, descoberta, perfil de outra pessoa, match, conexões, chat e perfil próprio, em desktop e celular. As capturas de referência ficam em `tests/visual.spec.js-snapshots/` e são comparadas com `toHaveScreenshot`. Para as telas não variarem entre execuções:
+
+- cada teste cria pessoas com nomes e interesses fixos por teste e por projeto, e o banco em memória nasce vazio a cada execução;
+- a fonte é trocada por Liberation Sans durante a captura, porque a Inter existe em algumas máquinas e não em outras;
+- as animações ficam desligadas;
+- até 100 pixels diferentes são tolerados, para a suavização de bordas que muda entre versões do Chromium. Trocar a cor do nome no cartão da descoberta muda cerca de 850 pixels e é detectado.
+
+As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Depois de uma mudança visual intencional, gere as referências de novo no Linux, com o Chromium da versão do Playwright do projeto, e versione as imagens:
+
+```bash
+npx playwright test tests/visual.spec.js --update-snapshots
+```
+
+O relatório do Playwright (`npm run report`) mostra lado a lado a referência, a captura nova e a diferença.
