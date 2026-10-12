@@ -30,6 +30,8 @@ Os testes rodam em dois tamanhos de tela: `desktop` (1280x800, o layout principa
 - `tests/conexoes.spec.js`: match mútuo entre duas pessoas em navegadores separados com chat em tempo real, aceitar uma solicitação recebida, chat bloqueado sem match, bloquear e pausar a exposição.
 - `tests/regras.spec.js`: cargo oculto antes do match, denúncia, foco e teclado de diálogos e menus, desbloquear, recusar, excluir dados, sessão inválida ou expirada, cota usada, menu lateral no desktop e barra inferior no celular, chat em duas colunas ou uma tela por vez e ausência de rolagem horizontal.
 
+- `tests/acessibilidade.spec.js`: varre com o axe (`@axe-core/playwright`) as telas de login, cadastro (boas-vindas, bio, interesses e objetivos), descoberta, perfil de outra pessoa com o menu e os diálogos de bloquear e denunciar abertos, conexões, match, chat e perfil próprio com seus diálogos. Usa as regras WCAG 2.1 A e AA e falha em violações sérias ou críticas.
+
 Não cobertos ainda: a revisão de tags com a IA respondendo (os testes rodam com a IA desligada) e o login real do Google.
 
 ## Como funciona o login nos testes
