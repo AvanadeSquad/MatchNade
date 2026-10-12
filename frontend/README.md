@@ -49,3 +49,14 @@ Públicas: `/` e `/login`. As demais exigem sessão. Quem ainda não concluiu o 
 - O cartão da descoberta nunca mostra cargo ou senioridade.
 - Match só existe quando os dois demonstram interesse.
 - A IA nunca bloqueia o cadastro: se a análise da bio falhar, a pessoa escolhe os interesses manualmente.
+
+## Cabeçalhos de segurança
+
+O `vercel.json` envia, em todas as rotas, uma política de conteúdo (CSP) e os cabeçalhos `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `Strict-Transport-Security`. A CSP:
+
+- só executa scripts do próprio site e o do login do Google (`https://accounts.google.com/gsi/client`), sem `unsafe-eval` nem script inline;
+- aceita estilo inline (`'unsafe-inline'` em `style-src`) porque o script do Google injeta estilos no botão de login;
+- só permite chamadas ao próprio site, ao Google e a `https://*.onrender.com`, onde a API é publicada. Se a API for publicada em outro domínio, troque esse endereço em `connect-src`, ou o app não consegue falar com ela;
+- impede que o app seja aberto dentro de um iframe de outro site.
+
+O `public/_redirects` (Netlify) não carrega esses cabeçalhos.
