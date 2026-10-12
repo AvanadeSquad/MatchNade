@@ -27,7 +27,7 @@ describe('logs estruturados', () => {
   const ultimas = (n) => linhas.slice(-n).map((l) => JSON.parse(l));
 
   it('cada requisição recebe X-Request-Id e gera uma linha JSON com o mesmo id', async () => {
-    const r = await http.get('/api/v1/health?origem=teste');
+    const r = await http.get('/api/v1/rota-que-nao-existe?origem=teste');
     expect(r.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
     const [linha] = ultimas(1);
     expect(linha).toMatchObject({
@@ -35,11 +35,23 @@ describe('logs estruturados', () => {
       msg: 'requisicao',
       request_id: r.headers['x-request-id'],
       method: 'GET',
-      path: '/api/v1/health',
-      status: 200,
+      path: '/api/v1/rota-que-nao-existe',
+      status: 404,
     });
     expect(typeof linha.duracao_ms).toBe('number');
     expect(linha.time).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('as verificações de saúde são registradas em debug, não em info', async () => {
+    const antes = linhas.length;
+    for (const caminho of ['/health', '/api/v1/health', '/api/v1/health/ready']) await http.get(caminho);
+    expect(linhas.length).toBe(antes);
+
+    const emDebug = [];
+    const logDebug = criarLog({ nivel: 'debug', escrever: (linha) => emDebug.push(JSON.parse(linha)) });
+    const app = criarApp({ banco: a.banco, config: a.config, log: logDebug, limitarRequisicoes: false, ia: {} });
+    await request(app).get('/health');
+    expect(emDebug.filter((l) => l.msg === 'requisicao')).toEqual([expect.objectContaining({ level: 'debug', path: '/health' })]);
   });
 
   it('aproveita um X-Request-Id válido de quem chamou e troca um inválido', async () => {

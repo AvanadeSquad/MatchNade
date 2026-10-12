@@ -12,6 +12,7 @@ import { rotasDev } from './routes/dev.js';
 import { rotasPerfil } from './routes/perfil.js';
 import { rotasPessoas } from './routes/pessoas.js';
 import { criarAutenticacao } from './services/autenticacao.js';
+import { criarProntidao } from './services/prontidao.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
 // Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorGoogle` e `log`
@@ -52,23 +53,17 @@ export function criarApp({
   const saude = (_req, res) => res.json({ status: 'ok' });
   app.get('/health', saude);
 
-  // Prontidão: além de o processo responder, o banco precisa atender em até 2 segundos.
-  const prontidao = async (req, res) => {
-    let espera;
-    const tempoEsgotado = new Promise((_, rejeitar) => {
-      espera = setTimeout(() => rejeitar(new Error('banco não respondeu a tempo')), 2000);
-    });
-    try {
-      await Promise.race([banco.query('SELECT 1'), tempoEsgotado]);
-      res.json({ status: 'ok', banco: 'ok' });
-    } catch (erro) {
-      log.warn('banco indisponivel', { request_id: req.id, ...resumirErro(erro) });
-      res.status(503).json({ status: 'indisponivel', banco: 'erro' });
-    } finally {
-      clearTimeout(espera);
-    }
+  // Prontidão: além de o processo responder, o banco precisa atender. O resultado é guardado por
+  // alguns segundos e a rota tem um limite próprio, porque não exige login.
+  const verificarProntidao = criarProntidao({ banco, log });
+  const limiteProntidao = limitarRequisicoes
+    ? rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false })
+    : (_req, _res, next) => next();
+  const prontidao = async (_req, res) => {
+    if (await verificarProntidao()) res.json({ status: 'ok', banco: 'ok' });
+    else res.status(503).json({ status: 'indisponivel', banco: 'erro' });
   };
-  app.get('/api/v1/health/ready', prontidao);
+  app.get('/api/v1/health/ready', limiteProntidao, prontidao);
 
   const limite = (max) => rateLimit({ windowMs: 15 * 60 * 1000, limit: max, standardHeaders: true, legacyHeaders: false });
   const semLimite = (_req, _res, next) => next();
