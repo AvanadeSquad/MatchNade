@@ -4,7 +4,7 @@ Referência visual do app, exportada do Figma.
 
 ## Conteúdo
 
-- `telas/`: PNG (390x844) das telas de celular, numerados na ordem do fluxo do usuário. São a referência de conteúdo e de estilo; a versão para desktop foi adaptada a partir delas (veja os ajustes abaixo).
+- `telas/`: PNG (390x844) das telas de celular, numerados na ordem em que a pessoa percorre o app. São a referência de conteúdo e de estilo; a versão para desktop foi adaptada a partir delas (veja os ajustes abaixo).
 - `telas/_auxiliares/`: PDFs de apoio (conteúdo rolável do login e da entrada, indicador da barra inferior).
 - `telas/_fora-mvp-preferencias.png`: tela de preferências (prioridade entre interesses, alcance geográfico), fora do escopo do MVP.
 - `tokens.css`: cores e formas usadas nas telas, como variáveis CSS. É a extração original do Figma. O frontend mantém a própria cópia em `frontend/src/styles/tokens.css`; ao mudar uma, atualize a outra.
