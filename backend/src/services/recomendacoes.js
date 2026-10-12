@@ -67,7 +67,9 @@ export async function recomendar({ banco, config }, meuId, limiteSolicitado) {
   }
 
   const excluidos = new Set([meuId]);
-  const bloqueios = await banco.query('SELECT blocker_id, blocked_id FROM employee_block WHERE blocker_id = $1 OR blocked_id = $1', [meuId]);
+  const bloqueios = await banco.query('SELECT blocker_id, blocked_id FROM employee_block WHERE blocker_id = $1 OR blocked_id = $1', [
+    meuId,
+  ]);
   for (const b of bloqueios) excluidos.add(b.blocker_id === meuId ? b.blocked_id : b.blocker_id);
   const conexoes = await banco.query(
     `SELECT requester_id, receiver_id FROM connection_match

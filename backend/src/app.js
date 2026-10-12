@@ -20,7 +20,13 @@ export function criarApp({ banco, config, ia, verificadorGoogle, limitarRequisic
   // Limites por pessoa nas rotas que gastam a cota gratuita de IA.
   ctx.limitarPorPessoa = (max, janelaMs) =>
     limitarRequisicoes
-      ? rateLimit({ windowMs: janelaMs, limit: max, keyGenerator: (req) => (req.usuario ? `u${req.usuario.id}` : ipKeyGenerator(req.ip)), standardHeaders: true, legacyHeaders: false })
+      ? rateLimit({
+          windowMs: janelaMs,
+          limit: max,
+          keyGenerator: (req) => (req.usuario ? `u${req.usuario.id}` : ipKeyGenerator(req.ip)),
+          standardHeaders: true,
+          legacyHeaders: false,
+        })
       : (_req, _res, next) => next();
   const exigirLogin = autenticar(ctx);
 

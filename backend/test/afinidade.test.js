@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { arredondar, calcularAfinidade, calcularIdf, jaccardPonderado } from '../src/services/afinidade.js';
 
 // Base de 30 perfis. Ids: 1 React, 2 Node.js, 3 Azure, 4 Xadrez, 5 Café especial, 6 Ficção, 7 Corrida.
-const df = new Map([[1, 14], [2, 18], [3, 6], [4, 2], [5, 4], [6, 9], [7, 5]]);
+const df = new Map([
+  [1, 14],
+  [2, 18],
+  [3, 6],
+  [4, 2],
+  [5, 4],
+  [6, 9],
+  [7, 5],
+]);
 const idf = calcularIdf(30, df);
 
 const ana = { tecnicas: [1, 2], hobbies: [4, 5, 6], unidade: 'A' };

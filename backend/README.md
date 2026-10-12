@@ -2,6 +2,16 @@
 
 API REST em Node.js 20+ com Express 5. Os dados ficam em PostgreSQL; sem `DATABASE_URL` a API usa PGlite (PostgreSQL em processo), então roda sem instalar nada.
 
+## Lint e formatação
+
+```powershell
+npm run lint           # ESLint com as regras recomendadas
+npm run format:check   # confere a formatação do Prettier
+npm run format         # aplica a formatação
+```
+
+O Prettier usa aspas simples, vírgula no fim e linhas de até 140 caracteres, o estilo que o código já tinha. Listas de dados, como as palavras de `src/utils/tags.js` e as pessoas de `src/db/seed.js`, ficam compactas com `// prettier-ignore`.
+
 ## Rodar
 
 No PowerShell, a partir da raiz do repositório:

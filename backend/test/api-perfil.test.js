@@ -7,10 +7,12 @@ describe('autenticação e perfil', () => {
     a = await criarAmbiente({
       ambiente: { ALLOWED_EMAIL_DOMAINS: 'exemplo.test' },
       verificadorGoogle: async (credencial) => {
-        if (credencial === 'credencial-ok-123') return { sub: 'g-1', email: 'Nova.Pessoa@exemplo.test', name: 'Nova Pessoa', email_verified: true };
+        if (credencial === 'credencial-ok-123')
+          return { sub: 'g-1', email: 'Nova.Pessoa@exemplo.test', name: 'Nova Pessoa', email_verified: true };
         if (credencial === 'credencial-externa') return { sub: 'g-2', email: 'alguem@outro.com', name: 'Alguém', email_verified: true };
         if (credencial === 'credencial-sem-verificacao') return { sub: 'g-3', email: 'sem.campo@exemplo.test', name: 'Sem Campo' };
-        if (credencial === 'credencial-nao-verificada') return { sub: 'g-4', email: 'nao.verificada@exemplo.test', name: 'Nao Verificada', email_verified: false };
+        if (credencial === 'credencial-nao-verificada')
+          return { sub: 'g-4', email: 'nao.verificada@exemplo.test', name: 'Nao Verificada', email_verified: false };
         throw new Error('inválida');
       },
     });
@@ -69,7 +71,13 @@ describe('autenticação e perfil', () => {
   it('PUT /profile atualiza campos e valida os limites', async () => {
     const { email } = await a.criarPessoa({ nome: 'Ana Teste' });
     const eu = a.como(email);
-    const ok = await eu.put('/profile', { department: 'Cloud', location: 'Recife', connection_goals: ['NETWORKING', 'MENTORIA'], max_weekly_matches: 4, bio: 'Gosto de xadrez' });
+    const ok = await eu.put('/profile', {
+      department: 'Cloud',
+      location: 'Recife',
+      connection_goals: ['NETWORKING', 'MENTORIA'],
+      max_weekly_matches: 4,
+      bio: 'Gosto de xadrez',
+    });
     expect(ok.status).toBe(200);
     expect(ok.body).toMatchObject({ department: 'Cloud', max_weekly_matches: 4, connection_goals: ['NETWORKING', 'MENTORIA'] });
 
@@ -79,7 +87,12 @@ describe('autenticação e perfil', () => {
 
   it('salvar menos de 3 interesses devolve 400 MENOS_DE_3_TAGS', async () => {
     const { email } = await a.criarPessoa({ nome: 'Ana Teste' });
-    const r = await a.como(email).put('/profile/interests', { interests: [{ name: 'React', category: 'TECHNICAL' }, { name: 'Xadrez', category: 'HOBBY' }] });
+    const r = await a.como(email).put('/profile/interests', {
+      interests: [
+        { name: 'React', category: 'TECHNICAL' },
+        { name: 'Xadrez', category: 'HOBBY' },
+      ],
+    });
     expect(r.status).toBe(400);
     expect(r.body.code).toBe('MENOS_DE_3_TAGS');
   });
@@ -103,7 +116,11 @@ describe('autenticação e perfil', () => {
   it('trocar os interesses substitui os anteriores', async () => {
     const { email } = await a.criarPessoa({ nome: 'Ana Teste', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });
     const r = await a.como(email).put('/profile/interests', {
-      interests: [{ name: 'Python', category: 'TECHNICAL' }, { name: 'Corrida', category: 'HOBBY' }, { name: 'Café especial', category: 'HOBBY' }],
+      interests: [
+        { name: 'Python', category: 'TECHNICAL' },
+        { name: 'Corrida', category: 'HOBBY' },
+        { name: 'Café especial', category: 'HOBBY' },
+      ],
     });
     expect(r.body.tags.technical.map((t) => t.name)).toEqual(['Python']);
   });
@@ -143,7 +160,9 @@ describe('autenticação e perfil', () => {
     expect((await a.como(eu.email).delete('/profile')).status).toBe(204);
     const [{ total }] = await a.banco.query('SELECT COUNT(*)::int AS total FROM connection_match');
     expect(total).toBe(0);
-    const [{ interesses }] = await a.banco.query('SELECT COUNT(*)::int AS interesses FROM employee_interest WHERE employee_id = $1', [eu.id]);
+    const [{ interesses }] = await a.banco.query('SELECT COUNT(*)::int AS interesses FROM employee_interest WHERE employee_id = $1', [
+      eu.id,
+    ]);
     expect(interesses).toBe(0);
     expect((await a.http.get('/api/v1/profile').set('Authorization', await a.entrar(eu.email))).status).toBe(401);
   });

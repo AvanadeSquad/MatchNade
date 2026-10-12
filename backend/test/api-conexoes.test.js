@@ -17,8 +17,20 @@ describe('recomendações, conexões, chat e bloqueio', () => {
   beforeEach(async () => {
     await a.limpar();
     ia.gerarQuebraGelo.mockReset();
-    ana = await a.criarPessoa({ nome: 'Ana Silva', unidade: 'Design', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez', 'Café especial'], cargo: 'Gerente de UX' });
-    bruno = await a.criarPessoa({ nome: 'Bruno Lima', unidade: 'Dados', tecnicas: ['Node.js', 'Azure'], hobbies: ['Xadrez', 'Corrida'], cargo: 'Engenheiro Sênior' });
+    ana = await a.criarPessoa({
+      nome: 'Ana Silva',
+      unidade: 'Design',
+      tecnicas: ['React', 'Node.js'],
+      hobbies: ['Xadrez', 'Café especial'],
+      cargo: 'Gerente de UX',
+    });
+    bruno = await a.criarPessoa({
+      nome: 'Bruno Lima',
+      unidade: 'Dados',
+      tecnicas: ['Node.js', 'Azure'],
+      hobbies: ['Xadrez', 'Corrida'],
+      cargo: 'Engenheiro Sênior',
+    });
     camila = await a.criarPessoa({ nome: 'Camila Rocha', unidade: 'Cloud', tecnicas: ['Azure', 'Terraform'], hobbies: ['Corrida'] });
   });
 
