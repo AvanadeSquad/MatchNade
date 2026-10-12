@@ -24,9 +24,11 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
   const ultimoId = useRef(0);
   const fim = useRef(null);
 
-  const adicionar = useCallback((novas) => {
+  // `avancar` é falso para a mensagem recém-enviada: o polling continua de onde parou e não pula
+  // mensagens da outra pessoa com id menor que o da enviada.
+  const adicionar = useCallback((novas, avancar = true) => {
     if (!novas.length) return;
-    ultimoId.current = Math.max(ultimoId.current, novas[novas.length - 1].id);
+    if (avancar) ultimoId.current = Math.max(ultimoId.current, novas[novas.length - 1].id);
     setMensagens((atuais) => [...atuais, ...novas.filter((n) => !atuais.some((a) => a.id === n.id))]);
   }, []);
 
@@ -35,9 +37,9 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
     ultimoId.current = 0;
     setMensagens([]);
     try {
-      const [{ messages }, gelo] = await Promise.all([API.mensagens(id), API.quebraGelo(id)]);
+      const [{ messages }, gelo] = await Promise.all([API.mensagens(id), API.quebraGelo(id).catch(() => null)]);
       adicionar(messages);
-      setQuebraGelo(gelo.match_summary);
+      setQuebraGelo(gelo?.match_summary ?? null);
       setEstado({ carregando: false, erro: null, indisponivel: false });
     } catch (e) {
       const indisponivel = e.status === 403 || e.status === 404;
@@ -79,7 +81,7 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
     if (!corpo || enviando) return;
     setEnviando(true);
     try {
-      adicionar([await API.enviarMensagem(id, corpo)]);
+      adicionar([await API.enviarMensagem(id, corpo)], false);
       setTexto('');
     } catch (e) {
       if (e.status === 403 || e.status === 404) setEstado({ carregando: false, erro: null, indisponivel: true });

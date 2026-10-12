@@ -20,7 +20,7 @@ function selecaoInicial(rascunho, perfil) {
 }
 
 export default function Interesses() {
-  const { perfil, rascunho, setRascunho, atualizarPerfilEmSilencio } = useAuth();
+  const { perfil, rascunho, setRascunho, definirPerfil } = useAuth();
   const avisar = useAviso();
   const navegar = useNavigate();
   const [params] = useSearchParams();
@@ -66,16 +66,17 @@ export default function Interesses() {
   async function salvar() {
     setErro('');
     setSalvando(true);
+    let atualizado;
     try {
       const interests = [...selecionadas.values()].map((t) => ({ name: t.nome, category: t.categoria, source: t.fonte === 'AI' ? 'AI' : 'MANUAL' }));
-      await API.salvarInteresses(interests);
+      atualizado = await API.salvarInteresses(interests);
+      definirPerfil(atualizado);
     } catch (e) {
       setErro(e.message);
       setSalvando(false);
       return;
     }
     setRascunho(null);
-    const atualizado = await atualizarPerfilEmSilencio();
     avisar('Interesses salvos.');
     navegar(editando || atualizado?.connection_goals.length ? '/eu' : '/perfil/objetivos');
   }

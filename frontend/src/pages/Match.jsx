@@ -20,7 +20,8 @@ export default function Match() {
       pessoaId = confirmadas.find((c) => String(c.match_id) === id)?.employee_id;
     }
     if (!pessoaId) throw new Error('Esta conexão não está disponível.');
-    const [pessoa, quebraGelo] = await Promise.all([API.pessoa(pessoaId), API.quebraGelo(id)]);
+    // A sugestão da IA é opcional: se falhar, a tela segue com os interesses em comum.
+    const [pessoa, quebraGelo] = await Promise.all([API.pessoa(pessoaId), API.quebraGelo(id).catch(() => null)]);
     return { pessoa, quebraGelo };
   }, [id]);
 
@@ -50,7 +51,7 @@ export default function Match() {
 
       <section className="match__porque" aria-label="Por que houve match?">
         <p className="rotulo">Por que houve match?</p>
-        <p style={{ marginTop: 6 }}>{quebraGelo.match_summary}</p>
+        <p style={{ marginTop: 6 }}>{quebraGelo?.match_summary ?? (comuns.length ? `Vocês têm em comum ${listaEmTexto(comuns)}.` : 'Vocês demonstraram interesse um no outro.')}</p>
       </section>
 
       <button type="button" className="botao botao--primario" onClick={() => navegar(`/chat/${id}`)}>Enviar mensagem</button>

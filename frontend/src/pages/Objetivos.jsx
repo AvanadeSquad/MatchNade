@@ -8,7 +8,7 @@ import { OBJETIVOS } from '../utils/objetivos.js';
 
 // Seleção múltipla dos objetivos de conexão. Último passo do cadastro.
 export default function Objetivos() {
-  const { perfil, atualizarPerfilEmSilencio } = useAuth();
+  const { perfil, definirPerfil } = useAuth();
   const avisar = useAviso();
   const navegar = useNavigate();
   const [params] = useSearchParams();
@@ -23,13 +23,13 @@ export default function Objetivos() {
     setErro('');
     setSalvando(true);
     try {
-      await API.atualizarPerfil({ connection_goals: escolhidos });
+      // A resposta do PUT já traz o perfil completo, sem depender de uma segunda chamada.
+      definirPerfil(await API.atualizarPerfil({ connection_goals: escolhidos }));
     } catch (e) {
       setErro(e.message);
       setSalvando(false);
       return;
     }
-    await atualizarPerfilEmSilencio();
     avisar(editando ? 'Objetivos salvos.' : 'Tudo pronto! Veja quem tem a ver com você.');
     navegar(editando ? '/eu' : '/descobrir', { replace: true });
   }
