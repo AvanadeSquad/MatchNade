@@ -23,6 +23,21 @@ npm test
 
 Os testes usam PGlite em memória e cobrem afinidade, IA (timeout, nova tentativa, disjuntor, saída inválida), autenticação, perfil, conexões, chat, bloqueio e as regras de cota e expiração.
 
+### Com PostgreSQL real
+
+Com a variável `TEST_DATABASE_URL` os mesmos testes rodam em um PostgreSQL de verdade. Cada arquivo de teste cria um schema próprio, vazio, e o apaga no fim, então o banco pode ser compartilhado e os arquivos rodam em paralelo. O usuário precisa poder criar schemas no banco.
+
+Com um PostgreSQL instalado na máquina (sem Docker), no PowerShell:
+
+```powershell
+psql -U postgres -c "CREATE USER teste WITH PASSWORD 'teste';"
+psql -U postgres -c "CREATE DATABASE matchnade_teste OWNER teste;"
+$env:TEST_DATABASE_URL = "postgresql://teste:teste@localhost:5432/matchnade_teste"
+npm test
+```
+
+O arquivo `test/compatibilidade-banco.test.js` confere, nos dois bancos, os pontos em que pg e PGlite poderiam divergir: contagens e `bigint` como número (o pg devolveria texto sem o ajuste em `src/db/index.js`), `REAL`, `TIMESTAMPTZ` e `JSONB`, o índice único parcial do par, `ON CONFLICT` sobre `LOWER(name)` e a trava consultiva de transação.
+
 ## Estrutura
 
 ```
