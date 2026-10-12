@@ -293,6 +293,14 @@ describe('recomendações, conexões, chat e bloqueio', () => {
       expect(r.body.connection.status).toBe('ACCEPTED');
     });
 
+    it('uma solicitação pendente há mais de 14 dias não aparece mais no perfil', async () => {
+      const pedido = await a.como(ana.email).post('/matches', { receiver_id: bruno.id });
+      await a.banco.query(`UPDATE connection_match SET created_at = NOW() - INTERVAL '15 days' WHERE id = $1`, [pedido.body.match_id]);
+      const r = await a.como(bruno.email).get(`/employees/${ana.id}`);
+      expect(r.status).toBe(200);
+      expect(r.body.connection).toBeNull();
+    });
+
     it('pessoa bloqueada, a própria pessoa e id inexistente devolvem 404', async () => {
       await a.como(ana.email).post(`/employees/${bruno.id}/block`);
       expect((await a.como(ana.email).get(`/employees/${bruno.id}`)).status).toBe(404);

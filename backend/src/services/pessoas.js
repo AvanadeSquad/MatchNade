@@ -1,6 +1,7 @@
 import { naoEncontrado } from '../utils/erros.js';
 import { arredondar } from './afinidade.js';
 import { bloqueadoEntre } from './bloqueios.js';
+import { expirarPendentes } from './expiracao.js';
 import { buscarFuncionario, buscarTagsDoFuncionario, exigirPerfilCompleto } from './perfil.js';
 import { afinidadeEntre, carregarBase } from './recomendacoes.js';
 
@@ -13,6 +14,8 @@ export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
   const base = await carregarBase(banco.query);
   exigirPerfilCompleto(base.perfis.get(meuId), config.regras.minTags);
 
+  // Expira antes de ler a conexão, para uma pendente vencida não aparecer como PENDING.
+  await expirarPendentes(banco.query, config.regras.diasExpiracao);
   const [conexao] = await banco.query(
     `SELECT id, requester_id, status FROM connection_match
       WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))

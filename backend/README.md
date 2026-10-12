@@ -44,7 +44,8 @@ test/              testes com vitest e supertest
 - Mínimo de 3 interesses por perfil.
 - Match só existe com interesse dos dois lados. O chat e o quebra-gelo só abrem para conexões aceitas e sem bloqueio.
 - Cota semanal de solicitações (padrão 3, de 1 a 5), contada de segunda a domingo no horário de Brasília.
-- Solicitações pendentes há mais de 14 dias expiram.
+- Solicitações pendentes há mais de 14 dias expiram. Quem pediu pode pedir de novo.
+- Uma recusa é permanente: se alguém tentar demonstrar interesse de novo em quem recusou, ou em quem foi recusado, a API devolve `409 JA_EXISTE`.
 - A IA nunca bloqueia o fluxo: timeout de 2,5 s, uma nova tentativa após 500 ms, disjuntor (3 falhas em 60 s), prazo total de 8 s (dá tempo de o provedor reserva responder) e fallback para tags manuais e texto padrão.
 
 ## Variáveis de ambiente
