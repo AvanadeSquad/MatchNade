@@ -81,3 +81,23 @@ jobs:
           name: relatorio-playwright
           path: e2e/playwright-report
           retention-days: 7
+
+  auditoria:
+    name: Auditoria de dependências
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        pasta: [backend, frontend, e2e]
+    defaults:
+      run:
+        working-directory: ${{ matrix.pasta }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Falha só com vulnerabilidade alta ou crítica nas dependências de produção.
+      # As de desenvolvimento (executores de teste, build) não vão para o que é publicado.
+      - run: npm audit --audit-level=high --omit=dev
