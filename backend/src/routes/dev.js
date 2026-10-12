@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ErroApi } from '../utils/erros.js';
 import { montarPerfil, obterOuCriarPorGoogle } from '../services/perfil.js';
 
-const corpoEmail = z.object({ email: z.string().trim().toLowerCase().email() });
+export const corpoEmail = z.object({ email: z.string().trim().toLowerCase().email() });
 
 // Rotas de apoio ao desenvolvimento e aos testes de ponta a ponta. Só são registradas
 // quando AUTH_DEV_LOGIN ou E2E_TEST_MODE está ativo, e a configuração recusa ambos em produção.

@@ -5,11 +5,11 @@ import { demonstrarInteresse, listarConexoes, obterQuebraGelo, responderSolicita
 import { recomendar } from '../services/recomendacoes.js';
 import { lerId } from '../utils/validacao.js';
 
-const corpoInteresse = z.object({ receiver_id: z.number().int().positive() });
-const corpoResposta = z.object({ action: z.enum(['accept', 'decline']) });
-const corpoMensagem = z.object({ body: z.string() });
-const consultaLista = z.object({ peek: z.enum(['true', 'false']).optional() });
-const consultaMensagens = z.object({
+export const corpoInteresse = z.object({ receiver_id: z.number().int().positive() });
+export const corpoResposta = z.object({ action: z.enum(['accept', 'decline']) });
+export const corpoMensagem = z.object({ body: z.string() });
+export const consultaLista = z.object({ peek: z.enum(['true', 'false']).optional() });
+export const consultaMensagens = z.object({
   after: z.coerce.number().int().min(0).default(0),
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });

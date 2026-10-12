@@ -15,7 +15,7 @@ import {
 
 const texto = (max) => z.string().trim().max(max);
 
-const corpoPerfil = z.object({
+export const corpoPerfil = z.object({
   name: texto(120).min(2).optional(),
   bio: texto(1000).optional(),
   position: texto(80).optional(),
@@ -25,9 +25,9 @@ const corpoPerfil = z.object({
   max_weekly_matches: z.number().int().min(1).max(5).optional(),
 });
 
-const corpoBio = z.object({ raw_bio: z.string().max(2000) });
+export const corpoBio = z.object({ raw_bio: z.string().max(2000) });
 
-const corpoInteresses = z.object({
+export const corpoInteresses = z.object({
   interests: z
     .array(
       z.object({
@@ -40,8 +40,8 @@ const corpoInteresses = z.object({
     .max(40),
 });
 
-const corpoTag = z.object({ name: texto(60), category: z.enum(['TECHNICAL', 'HOBBY']) });
-const corpoPausa = z.object({ is_paused: z.boolean() });
+export const corpoTag = z.object({ name: texto(60), category: z.enum(['TECHNICAL', 'HOBBY']) });
+export const corpoPausa = z.object({ is_paused: z.boolean() });
 
 export function rotasPerfil(ctx, autenticar) {
   const router = Router();

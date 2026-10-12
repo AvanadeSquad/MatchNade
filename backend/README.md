@@ -53,3 +53,13 @@ test/              testes com vitest e supertest
 Veja `.env.example`. Em produção a API recusa iniciar sem `JWT_SECRET` forte, `DATABASE_URL`, `GOOGLE_CLIENT_ID` e lista de e-mails liberados, e recusa `AUTH_DEV_LOGIN` e `E2E_TEST_MODE`.
 
 A API completa está em `docs/api.md`.
+
+## Contrato da API (OpenAPI)
+
+`openapi.json`, nesta pasta, é a especificação OpenAPI 3.1 da API. Ela é gerada por `src/openapi/especificacao.js`: os corpos e parâmetros de consulta vêm dos mesmos schemas zod que as rotas usam para validar, e os resumos, respostas e códigos de erro são descritos ali. Depois de mudar uma rota ou um schema:
+
+```powershell
+npm run openapi
+```
+
+O teste `test/contrato-openapi.test.js` falha se o `openapi.json` estiver desatualizado, se uma rota do Express não estiver na especificação (ou o contrário), ou se o fuzz guiado pela especificação receber erro 500 ou um status não documentado ao enviar corpos e ids malformados.
