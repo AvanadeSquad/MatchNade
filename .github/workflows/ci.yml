@@ -5,10 +5,19 @@ on:
   push:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
+# Um push novo no mesmo PR ou branch cancela a execução anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     name: Backend (testes)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -25,6 +34,7 @@ jobs:
   frontend:
     name: Frontend (build)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -42,11 +52,17 @@ jobs:
     name: Ponta a ponta (Playwright)
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+            e2e/package-lock.json
       - run: npm ci
         working-directory: backend
       - run: npm ci
@@ -60,7 +76,7 @@ jobs:
         env:
           CI: 'true'
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
           name: relatorio-playwright
           path: e2e/playwright-report

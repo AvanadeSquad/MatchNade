@@ -5,11 +5,13 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm ci
-    startCommand: node src/index.js
+    startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22"
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: DATABASE_URL
