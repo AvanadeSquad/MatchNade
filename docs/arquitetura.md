@@ -31,7 +31,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
 - **Consentimento mútuo.** Match só existe com interesse dos dois lados. Chat e quebra-gelo exigem conexão aceita e sem bloqueio, e quem não participa da conexão recebe 404.
 - **Cota semanal.** De 1 a 5 solicitações por semana, de segunda a domingo. A checagem roda em transação com trava, então pedidos simultâneos não passam do limite.
 - **Expiração.** Solicitações pendentes há mais de 14 dias expiram.
-- **Privacidade.** Só nome, e-mail corporativo, unidade, cidade e interesses. A pessoa pode pausar a exposição, bloquear, denunciar e excluir os dados (exclusão definitiva em cascata).
+- **Privacidade.** A API guarda nome, e-mail corporativo, unidade, cidade, interesses, objetivos, bio e cargo (opcional). Cargo e bio só aparecem para outra pessoa depois do match. A pessoa pode pausar a exposição, bloquear, denunciar e excluir os dados (exclusão definitiva em cascata, incluindo os registros de IA).
 
 ## IA
 

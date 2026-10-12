@@ -31,8 +31,9 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 | `ALLOWED_EMAIL_DOMAINS` | domínio da empresa |
 | `FRONTEND_URL` | URL do frontend (aceita várias separadas por vírgula) |
 | `GEMINI_API_KEY`, `GROQ_API_KEY` | opcionais |
+| `ALLOWED_EMAILS`, `JWT_EXPIRES_IN`, `TRUST_PROXY` | opcionais: e-mails liberados fora do domínio, validade do JWT (padrão 8h) e número de proxies confiáveis (padrão 1 em produção) |
 
-`NODE_ENV=production` já vem no `render.yaml`. Em produção a API recusa iniciar com `AUTH_DEV_LOGIN` ou `E2E_TEST_MODE` ativos, sem segredo forte ou sem banco. O serviço gratuito do Render hiberna sem uso, então o primeiro acesso depois de um tempo parado demora.
+`NODE_ENV=production` já vem no `render.yaml`. Em produção a API recusa iniciar com `AUTH_DEV_LOGIN`, `E2E_TEST_MODE` ou `RATE_LIMIT_DISABLED` ativos, sem segredo forte, sem `GOOGLE_CLIENT_ID` ou sem banco. O serviço gratuito do Render hiberna sem uso, então o primeiro acesso depois de um tempo parado demora.
 
 ## 5. Frontend (Vercel ou Netlify)
 

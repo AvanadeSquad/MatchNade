@@ -2,13 +2,12 @@
 
 Lista de pontos conhecidos, por área. Não é uma promessa de escopo: serve para priorizar o que vem depois do que já funciona.
 
-## Ainda não exercitado de verdade
+## Validação em ambiente real
 
-- **Login com Google.** O fluxo está implementado e testado com um verificador simulado; falta rodar com um ID de cliente real e uma conta liberada.
-- **PostgreSQL real.** Os testes rodam em PGlite. Falta validar o mesmo esquema e as consultas no Neon, inclusive o comportamento das travas em pedidos simultâneos.
-- **IA com chaves reais.** Gemini e Groq foram testados com respostas simuladas. Falta medir precisão e cobertura da extração de tags com um conjunto de bios fictícias e ajustar os prompts, o modelo e os limites.
-- **CI no GitHub.** O workflow existe, mas ainda não rodou. Pode precisar de ajustes na primeira execução.
-- **Publicação.** `render.yaml` e a documentação de `deploy.md` não foram testados em um deploy.
+- **Login com Google.** Os testes usam um verificador simulado. Validar com um ID de cliente real e uma conta liberada.
+- **PostgreSQL.** Os testes rodam em PGlite. Validar o esquema, as consultas e as travas de pedidos simultâneos no Neon.
+- **IA.** Os testes usam respostas simuladas de Gemini e Groq. Medir precisão e cobertura da extração de tags com bios fictícias e ajustar prompts, modelo e limites.
+- **Publicação.** Conferir `render.yaml`, o workflow de CI e os passos de `deploy.md` num deploy completo.
 
 ## Produto
 

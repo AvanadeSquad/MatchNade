@@ -36,9 +36,9 @@ Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de lo
 ## Testes
 
 ```powershell
-cd backend;  npm test                 # regras de negócio e API (PGlite em memória)
-cd frontend; npm run build            # confere que o app compila
-cd e2e; npm install; npx playwright install chromium; npm test   # navegador, desktop e celular
+cd backend;     npm test               # regras de negócio e API (PGlite em memória)
+cd ..\frontend; npm run build          # confere que o app compila
+cd ..\e2e;      npm install; npx playwright install chromium; npm test   # navegador, desktop e celular
 ```
 
 Os testes de ponta a ponta sobem a API e o app sozinhos em portas próprias (3100 e 5174).
