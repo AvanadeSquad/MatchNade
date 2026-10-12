@@ -9,6 +9,8 @@ describe('autenticação e perfil', () => {
       verificadorGoogle: async (credencial) => {
         if (credencial === 'credencial-ok-123') return { sub: 'g-1', email: 'Nova.Pessoa@exemplo.test', name: 'Nova Pessoa', email_verified: true };
         if (credencial === 'credencial-externa') return { sub: 'g-2', email: 'alguem@outro.com', name: 'Alguém', email_verified: true };
+        if (credencial === 'credencial-sem-verificacao') return { sub: 'g-3', email: 'sem.campo@exemplo.test', name: 'Sem Campo' };
+        if (credencial === 'credencial-nao-verificada') return { sub: 'g-4', email: 'nao.verificada@exemplo.test', name: 'Nao Verificada', email_verified: false };
         throw new Error('inválida');
       },
     });
@@ -27,6 +29,15 @@ describe('autenticação e perfil', () => {
     const r = await a.http.get('/api/v1/profile').set('Authorization', 'Bearer lixo');
     expect(r.status).toBe(401);
     expect(r.body.code).toBe('NAO_AUTENTICADO');
+  });
+
+  it('login com Google exige email_verified exatamente true', async () => {
+    for (const credential of ['credencial-sem-verificacao', 'credencial-nao-verificada']) {
+      const r = await a.http.post('/api/v1/auth/google').send({ credential });
+      expect(r.status, credential).toBe(401);
+      expect(r.body.code).toBe('NAO_AUTENTICADO');
+    }
+    expect((await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-ok-123' })).status).toBe(200);
   });
 
   it('login com Google cria a pessoa no primeiro acesso e reaproveita nos próximos', async () => {

@@ -143,6 +143,17 @@ describe('regras de borda da API', () => {
       }
     });
 
+    it('recusa token assinado com outro algoritmo', async () => {
+      const base64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+      const semAssinatura = `${base64url({ alg: 'none', typ: 'JWT' })}.${base64url({ sub: String(ana.id) })}.`;
+      const hs512 = jwt.sign({ sub: String(ana.id) }, SEGREDO, { algorithm: 'HS512', expiresIn: '1h' });
+      for (const token of [semAssinatura, hs512]) {
+        const r = await a.http.get('/api/v1/profile').set('Authorization', cabecalho(token));
+        expect(r.status).toBe(401);
+        expect(r.body.code).toBe('NAO_AUTENTICADO');
+      }
+    });
+
     it('aceita token válido', async () => {
       const valido = jwt.sign({ sub: String(ana.id) }, SEGREDO, { expiresIn: '1h' });
       expect((await a.http.get('/api/v1/profile').set('Authorization', cabecalho(valido))).status).toBe(200);
