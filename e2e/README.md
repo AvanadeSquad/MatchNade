@@ -57,7 +57,18 @@ O Google bloqueia login automatizado. A API só registra `POST /api/v1/test/logi
 - as animações ficam desligadas;
 - até 100 pixels diferentes são tolerados, para a suavização de bordas que muda entre versões do Chromium. Trocar a cor do nome no cartão da descoberta muda cerca de 850 pixels e é detectado.
 
-As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Depois de uma mudança visual intencional, gere as referências de novo no Linux, com o Chromium da versão do Playwright do projeto, e versione as imagens:
+As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Esses testes não são repetidos em caso de falha: a repetição encontraria no banco as pessoas da primeira tentativa e a tela mudaria.
+
+### Atualizar as referências com as imagens do CI
+
+O Chromium que o CI instala pode desenhar um pouco diferente do Chromium de outra máquina. Por isso as referências devem vir do próprio CI. Quando uma captura não bate com a referência, ou a referência ainda não existe, o teste falha e anexa a imagem real com o nome exato do arquivo de referência, como `nova-referencia/descoberta-desktop-linux.png`. O relatório traz também as imagens esperada, real e de diferença.
+
+1. Na execução do CI que falhou, baixe o artefato `relatorio-playwright` e descompacte.
+2. Abra o relatório: `npx playwright show-report caminho/da/pasta/descompactada`.
+3. Em cada teste visual que falhou, confira a diferença. Se a mudança é intencional, salve cada anexo `nova-referencia/<arquivo>.png` em `tests/visual.spec.js-snapshots/<arquivo>.png`, substituindo o antigo.
+4. Faça o commit das imagens. A próxima execução do CI compara com elas.
+
+Numa máquina Linux com o Chromium da versão do Playwright do projeto, também é possível gerar as referências localmente:
 
 ```bash
 npx playwright test tests/visual.spec.js --update-snapshots
