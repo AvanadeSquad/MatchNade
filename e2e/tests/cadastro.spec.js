@@ -12,7 +12,7 @@ test.describe('acesso e cadastro', () => {
   test('sem sessão, uma tela interna leva ao login', async ({ page }) => {
     await page.goto('/descobrir');
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole('heading', { name: 'Bem-vindo ao Avanade Connect' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Boas-vindas ao Avanade Connect' })).toBeVisible();
   });
 
   test('pessoa nova completa o cadastro pelo caminho manual', async ({ page, request }) => {
