@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { autenticarPagina, chamar, criarPessoaPronta, interessesExclusivos } from './helpers/api.js';
 
+// Abre um navegador separado com o tamanho de tela do projeto atual (desktop ou celular),
+// porque browser.newContext não herda viewport, isMobile e hasTouch da configuração.
 async function abrirComo(browser, contextOptions, baseURL, pessoa) {
-  const contexto = await browser.newContext({ ...contextOptions, baseURL });
+  const { viewport, isMobile, hasTouch } = test.info().project.use;
+  const contexto = await browser.newContext({ ...contextOptions, viewport, isMobile, hasTouch, baseURL });
   const pagina = await contexto.newPage();
   await autenticarPagina(pagina, pessoa.token);
   return { contexto, pagina };
