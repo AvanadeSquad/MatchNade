@@ -68,13 +68,18 @@ export default function Conexoes() {
     }
   }
 
-  // Setas esquerda e direita trocam de aba, como em qualquer grupo de abas.
+  // Setas esquerda e direita trocam de aba; Home e End vão para a primeira e a última.
   function aoTeclar(evento) {
     const indice = ABAS.findIndex((a) => a.id === aba);
-    const deslocamento = { ArrowRight: 1, ArrowLeft: -1 }[evento.key];
-    if (!deslocamento) return;
+    const destinos = {
+      ArrowRight: (indice + 1) % ABAS.length,
+      ArrowLeft: (indice - 1 + ABAS.length) % ABAS.length,
+      Home: 0,
+      End: ABAS.length - 1,
+    };
+    if (!(evento.key in destinos)) return;
     evento.preventDefault();
-    const proxima = ABAS[(indice + deslocamento + ABAS.length) % ABAS.length];
+    const proxima = ABAS[destinos[evento.key]];
     setAba(proxima.id);
     document.getElementById(`${idBase}-${proxima.id}`)?.focus();
   }

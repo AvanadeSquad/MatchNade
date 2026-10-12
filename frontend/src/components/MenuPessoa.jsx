@@ -14,6 +14,27 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
   const [erro, setErro] = useState('');
   const raiz = useRef(null);
   const botao = useRef(null);
+  const lista = useRef(null);
+
+  // Ao abrir, o foco vai para o primeiro item, como esperado de um menu.
+  useEffect(() => {
+    if (aberto) lista.current?.querySelector('[role="menuitem"]')?.focus();
+  }, [aberto]);
+
+  // Setas para cima e para baixo percorrem os itens em ciclo; Home e End vão ao primeiro e ao último.
+  function aoTeclarNaLista(evento) {
+    const itens = [...lista.current.querySelectorAll('[role="menuitem"]')];
+    const indice = itens.indexOf(document.activeElement);
+    const destinos = {
+      ArrowDown: (indice + 1) % itens.length,
+      ArrowUp: (indice - 1 + itens.length) % itens.length,
+      Home: 0,
+      End: itens.length - 1,
+    };
+    if (!(evento.key in destinos)) return;
+    evento.preventDefault();
+    itens[destinos[evento.key]].focus();
+  }
 
   // Com o menu aberto, Esc fecha e devolve o foco ao botão; clicar fora também fecha.
   useEffect(() => {
@@ -85,7 +106,7 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
           <IconeMais />
         </button>
         {aberto && (
-          <div className="menu__lista" role="menu">
+          <div className="menu__lista" role="menu" ref={lista} onKeyDown={aoTeclarNaLista}>
             <button type="button" role="menuitem" onClick={() => abrirDialogo('bloquear')}>
               <IconeBloquear /> Bloquear
             </button>
