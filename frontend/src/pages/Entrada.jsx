@@ -18,7 +18,9 @@ export default function Entrada() {
 
   return (
     <main className="tela tela--centro">
-      <div className="entrada__logo"><IconePessoas /></div>
+      <div className="entrada__logo">
+        <IconePessoas />
+      </div>
       <h1>
         Avanade <span className="destaque">Connect</span>
       </h1>

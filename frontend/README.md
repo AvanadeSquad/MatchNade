@@ -15,6 +15,16 @@ npm run dev
 
 Abre em http://localhost:5173. Sem `VITE_GOOGLE_CLIENT_ID`, a tela de login mostra o seletor de pessoas do ambiente de desenvolvimento da API (`AUTH_DEV_LOGIN=true`). Com o ID configurado, mostra o botão do Google.
 
+## Lint e formatação
+
+```powershell
+npm run lint           # ESLint recomendado e regras de hooks do React
+npm run format:check   # confere a formatação do Prettier
+npm run format         # aplica a formatação
+```
+
+O ESLint usa as regras recomendadas e as regras `rules-of-hooks` e `exhaustive-deps` do React. O Prettier usa aspas simples, vírgula no fim e linhas de até 140 caracteres. Os estilos em `src/styles/` e os arquivos Markdown ficam fora do Prettier: os estilos usam regras compactas, uma por linha, e no Markdown o Prettier só realinharia as tabelas.
+
 ## Estrutura
 
 ```

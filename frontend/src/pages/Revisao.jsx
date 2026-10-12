@@ -32,8 +32,16 @@ function EditorDeTags({ titulo, itens, aoMudar }) {
         </ul>
       )}
       <form className="nova-tag" onSubmit={adicionar}>
-        <input value={novo} onChange={(e) => setNovo(e.target.value)} placeholder="Adicionar" aria-label={`Adicionar em ${titulo}`} maxLength={40} />
-        <button type="submit" className="botao botao--suave">Adicionar</button>
+        <input
+          value={novo}
+          onChange={(e) => setNovo(e.target.value)}
+          placeholder="Adicionar"
+          aria-label={`Adicionar em ${titulo}`}
+          maxLength={40}
+        />
+        <button type="submit" className="botao botao--suave">
+          Adicionar
+        </button>
       </form>
     </section>
   );
@@ -58,11 +66,17 @@ export default function Revisao() {
         </div>
       </section>
 
-      <EditorDeTags titulo="Interesses profissionais" itens={rascunho.tecnicas} aoMudar={(tecnicas) => setRascunho({ ...rascunho, tecnicas })} />
+      <EditorDeTags
+        titulo="Interesses profissionais"
+        itens={rascunho.tecnicas}
+        aoMudar={(tecnicas) => setRascunho({ ...rascunho, tecnicas })}
+      />
       <EditorDeTags titulo="Interesses pessoais" itens={rascunho.hobbies} aoMudar={(hobbies) => setRascunho({ ...rascunho, hobbies })} />
 
       <p className="pequeno">{total} interesses. Na próxima etapa você pode completar e criar tags novas.</p>
-      <button type="button" className="botao botao--primario" onClick={() => navegar('/perfil/interesses')}>Salvar e continuar</button>
+      <button type="button" className="botao botao--primario" onClick={() => navegar('/perfil/interesses')}>
+        Salvar e continuar
+      </button>
     </main>
   );
 }

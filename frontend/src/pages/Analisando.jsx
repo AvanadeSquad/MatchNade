@@ -77,8 +77,12 @@ export default function Analisando() {
       <main className="tela tela--centro" role="alert">
         <h1>Não conseguimos analisar agora</h1>
         <p className="subtitulo">Sem problema: você escolhe seus interesses manualmente em poucos cliques.</p>
-        <button type="button" className="botao botao--primario" onClick={() => navegar('/perfil/interesses', { replace: true })}>Preencher manualmente</button>
-        <button type="button" className="botao botao--texto" onClick={tentarDeNovo}>Tentar de novo</button>
+        <button type="button" className="botao botao--primario" onClick={() => navegar('/perfil/interesses', { replace: true })}>
+          Preencher manualmente
+        </button>
+        <button type="button" className="botao botao--texto" onClick={tentarDeNovo}>
+          Tentar de novo
+        </button>
       </main>
     );
   }
