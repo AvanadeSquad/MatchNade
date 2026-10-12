@@ -51,7 +51,7 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
     try {
       await API.bloquear(pessoaId);
       fechar();
-      avisar(`${nome} foi bloqueada.`);
+      avisar(`Pessoa bloqueada: ${nome}.`);
       aoBloquear?.();
     } catch (e) {
       setErro(e.message);
@@ -70,7 +70,7 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
     try {
       await API.denunciar(pessoaId, motivo.trim());
       fechar();
-      avisar('Denúncia enviada. Obrigado por avisar.');
+      avisar('Denúncia enviada. Agradecemos o aviso.');
     } catch (e) {
       setErro(e.message);
     } finally {

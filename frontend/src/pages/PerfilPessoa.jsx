@@ -38,7 +38,7 @@ export default function PerfilPessoa() {
     if (!r) return;
     if (r.status === 'ACCEPTED') navegar(`/match/${r.match_id}`, { state: { pessoaId: pessoa.id } });
     else {
-      avisar('Interesse enviado. Se ela também quiser, vira match.');
+      avisar('Interesse enviado. Se a outra pessoa também quiser, vira match.');
       recarregar();
     }
   }
@@ -65,7 +65,7 @@ export default function PerfilPessoa() {
   return (
     <>
     <main className="tela tela--app">
-      <Cabecalho titulo="Detalhes do colaborador" acao={<MenuPessoa pessoaId={pessoa.id} nome={pessoa.name} aoBloquear={() => navegar('/descobrir', { replace: true })} />} />
+      <Cabecalho titulo="Detalhes da pessoa" acao={<MenuPessoa pessoaId={pessoa.id} nome={pessoa.name} aoBloquear={() => navegar('/descobrir', { replace: true })} />} />
 
       <div className="duas-colunas">
         <div className="coluna">

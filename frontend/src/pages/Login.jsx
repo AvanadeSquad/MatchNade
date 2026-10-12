@@ -107,7 +107,7 @@ export default function Login() {
       </section>
 
       <section className="auth__form">
-        <h1>Bem-vindo ao Avanade Connect</h1>
+        <h1>Boas-vindas ao Avanade Connect</h1>
         <p className="subtitulo">Acesse sua rede interna e conecte-se com colaboradores da Avanade.</p>
 
         {CLIENT_ID && <div ref={botaoGoogle} className="google-botao" />}

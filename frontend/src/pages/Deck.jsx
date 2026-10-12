@@ -45,7 +45,7 @@ export default function Deck() {
       return;
     }
     marcarComoVista(atual.employee_id);
-    avisar(`Interesse enviado para ${atual.name}. Se ela também quiser, vira match.`);
+    avisar(`Interesse enviado para ${atual.name}. Se a outra pessoa também quiser, vira match.`);
   }
 
   let conteudo;

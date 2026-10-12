@@ -57,7 +57,7 @@ function Bloqueados({ aoFechar }) {
   async function desbloquear(pessoa) {
     try {
       await API.desbloquear(pessoa.id);
-      avisar(`${pessoa.name} foi desbloqueada.`);
+      avisar(`Pessoa desbloqueada: ${pessoa.name}.`);
       recarregar();
     } catch (e) {
       avisar(e.message, 'erro');
