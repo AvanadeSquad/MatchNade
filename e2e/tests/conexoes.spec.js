@@ -115,9 +115,13 @@ test.describe('conexões', () => {
 });
 
 test.describe('perfil e privacidade', () => {
-  test('pausar a exposição e ajustar a cota semanal ficam salvos', async ({ page, request }) => {
+  test('pausar a exposição e ajustar a cota semanal ficam salvos', async ({ page, request, browser, baseURL, contextOptions }) => {
     const tags = interessesExclusivos();
     const iris = await criarPessoaPronta(request, { nome: 'Íris Exemplo', ...tags });
+    const joao = await criarPessoaPronta(request, { nome: 'João Exemplo', ...tags });
+    const antes = await (await chamar(request, joao.token, 'get', '/matches/recommendations')).json();
+    expect(antes.recommendations.map((r) => r.employee_id)).toContain(iris.id);
+
     await autenticarPagina(page, iris.token);
     await page.goto('/eu');
 
@@ -130,5 +134,16 @@ test.describe('perfil e privacidade', () => {
     await page.reload();
     await expect(page.getByLabel(/Pausar minha exposição/)).toBeChecked();
     await expect(page.getByRole('group', { name: /Solicitações por semana/ }).locator('output')).toHaveText('4');
+
+    // Quem tem afinidade máxima com a pessoa pausada deixa de vê-la no deck.
+    const { contexto, pagina } = await abrirComo(browser, contextOptions, baseURL, joao);
+    try {
+      await pagina.goto('/descobrir');
+      // O deck mostra primeiro a maior afinidade: sem a pausa, este seria o cartão de Íris Exemplo.
+      await expect(pagina.getByRole('article', { name: /^Sugestão: / }).first()).toBeVisible();
+      await expect(cartaoDe(pagina, 'Íris Exemplo')).toHaveCount(0);
+    } finally {
+      await contexto.close();
+    }
   });
 });

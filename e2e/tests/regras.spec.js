@@ -85,6 +85,35 @@ test.describe('segurança entre pessoas', () => {
     await expect(page.getByRole('menu')).toHaveCount(0);
   });
 
+  test('o menu "Mais opções" foca o primeiro item e navega com as setas', async ({ page, request }) => {
+    const { a, b } = await parDePessoas(request, 'Vera Exemplo', 'Wagner Exemplo');
+    await autenticarPagina(page, a.token);
+    await page.goto(`/pessoa/${b.id}`);
+
+    await page.getByRole('button', { name: 'Mais opções' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Bloquear' })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('menuitem', { name: 'Denunciar' })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('menuitem', { name: 'Bloquear' })).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(page.getByRole('menuitem', { name: 'Denunciar' })).toBeFocused();
+  });
+
+  test('as abas de Conexões aceitam Home e End', async ({ page, request }) => {
+    const { a } = await parDePessoas(request, 'Xênia Exemplo', 'Yuri Exemplo');
+    await autenticarPagina(page, a.token);
+    await page.goto('/conexoes');
+
+    await page.getByRole('tab', { name: /Recebidas/ }).focus();
+    await page.keyboard.press('End');
+    await expect(page.getByRole('tab', { name: /Aguardando/ })).toBeFocused();
+    await expect(page.getByRole('tab', { name: /Aguardando/ })).toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('Home');
+    await expect(page.getByRole('tab', { name: /Recebidas/ })).toBeFocused();
+    await expect(page.getByRole('tab', { name: /Recebidas/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
   test('desbloquear devolve a pessoa à lista e ao perfil', async ({ page, request }) => {
     const { a, b } = await parDePessoas(request, 'Tânia Exemplo', 'Ubirajara Exemplo');
     await chamar(request, a.token, 'post', `/employees/${b.id}/block`);
