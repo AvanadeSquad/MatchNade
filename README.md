@@ -16,6 +16,7 @@ backend/        API em Node.js
     utils/        funcoes utilitarias
   test/         testes automatizados
 frontend-web/   app React (a criar)
+e2e/            testes de ponta a ponta (Playwright)
 docs/           documentacao do projeto
 ```
 
@@ -28,3 +29,7 @@ npm run dev
 ```
 
 Copie `backend/.env.example` para `backend/.env` e ajuste os valores.
+
+## Testes de ponta a ponta
+
+Veja `e2e/README.md`.
