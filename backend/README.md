@@ -30,13 +30,21 @@ src/
   app.js           monta o Express (segurança, CORS, limite de requisições, rotas)
   index.js         inicia banco, dados de exemplo e servidor
   config/env.js    leitura e validação das variáveis de ambiente
-  db/              schema.sql, conexão (pg ou PGlite) e dados de exemplo
+  db/              migrações SQL, conexão (pg ou PGlite) e dados de exemplo
   routes/          rotas HTTP e validação das entradas (zod)
   services/        regras de negócio (afinidade, conexões, chat, bloqueios, perfil)
   ai/              provedores (Gemini, Groq), prompts, disjuntor e serviço de IA
   middlewares/     autenticação e tratamento de erros
 test/              testes com vitest e supertest
 ```
+
+## Migrações do banco
+
+O esquema é definido por migrações SQL numeradas em `src/db/migracoes/` (`001_esquema_inicial.sql`, `002_...`). Na inicialização, `src/db/migrar.js` cria a tabela `schema_migrations` se ela não existir e aplica, em ordem, as migrações ainda não registradas. Cada migração roda numa transação junto com o seu registro: se falhar, nada dela fica aplicado e a API não sobe. Uma trava consultiva impede que duas instâncias migrem ao mesmo tempo. Funciona igual em PostgreSQL e PGlite.
+
+Para mudar o esquema, crie o próximo arquivo numerado. Não altere uma migração já publicada, porque bancos que já a aplicaram não a executam de novo.
+
+Um banco criado antes das migrações (sem `schema_migrations`) é adotado: a `001` usa `IF NOT EXISTS` e não muda nada que já exista, e as seguintes aplicam o que falta. A `002` troca a chave de `ai_interaction_log` para `ON DELETE CASCADE`.
 
 ## Regras que o código garante
 
