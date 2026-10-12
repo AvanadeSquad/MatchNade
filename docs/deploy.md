@@ -40,9 +40,20 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 - Diretório raiz: `frontend`. Comando de build: `npm run build`. Saída: `dist`.
 - Variáveis: `VITE_API_URL` (URL da API com `/api/v1`) e `VITE_GOOGLE_CLIENT_ID`.
 - As rotas do app são do navegador; `frontend/vercel.json` e `frontend/public/_redirects` já redirecionam qualquer caminho para o `index.html`.
+- Os cabeçalhos de segurança, com a política de conteúdo (CSP), ficam em `frontend/vercel.json` (Vercel) e `frontend/public/_headers` (Netlify), com a mesma política nos dois. A CSP só deixa o app chamar o próprio site, o login do Google e `https://*.onrender.com`. Se a API for publicada em outro domínio, acrescente-o a `connect-src` **nos dois arquivos**; sem isso, o navegador bloqueia as chamadas à API. `npm run test:cabecalhos` confere que os dois continuam iguais.
 
 ## Conferência
 
 1. `GET <API>/health` responde `{"status":"ok"}`.
 2. Abra o frontend, entre com uma conta liberada e conclua o cadastro.
 3. Entre com uma conta fora da lista e confira a mensagem "Seu e-mail ainda não está liberado".
+
+## Depois de mesclar
+
+Itens que dependem das configurações do GitHub ou dos serviços e não são feitos por código:
+
+1. **Reporte privado de vulnerabilidade:** em Settings, Code security, ative "Private vulnerability reporting". O `SECURITY.md` orienta a reportar por ali.
+2. **CodeQL e Dependabot:** em Settings, Code security, confira se a análise do CodeQL e os alertas e atualizações do Dependabot estão ativos. Os arquivos `.github/workflows/codeql.yml` e `.github/dependabot.yml` só funcionam com eles ligados (em repositório privado, o CodeQL depende do GitHub Advanced Security).
+3. **Proteção das branches:** em Settings, Branches, proteja `main` e `develop` exigindo pull request e os jobs do CI aprovados antes de mesclar.
+4. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
+5. **Referências visuais:** se a primeira execução do CI falhar nos testes visuais por diferença de desenho do Chromium, atualize as referências pelo artefato do CI, seguindo `e2e/README.md`.
