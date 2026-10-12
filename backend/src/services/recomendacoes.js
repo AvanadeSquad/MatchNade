@@ -77,7 +77,7 @@ export async function recomendar({ banco, config }, meuId, limiteSolicitado) {
   for (const c of conexoes) excluidos.add(c.requester_id === meuId ? c.receiver_id : c.requester_id);
 
   const candidatos = [...base.perfis.values()]
-    .filter((p) => !excluidos.has(p.id) && !p.pausado && p.tecnicas.length + p.hobbies.length > 0)
+    .filter((p) => !excluidos.has(p.id) && !p.pausado && p.tecnicas.length + p.hobbies.length >= config.regras.minTags)
     .map((p) => ({ perfil: p, ...afinidadeEntre(base, eu, p, config.regras.bonusUnidade) }))
     .sort((x, y) => y.score - x.score || x.perfil.nome.localeCompare(y.perfil.nome))
     .slice(0, limite);

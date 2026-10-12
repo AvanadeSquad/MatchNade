@@ -240,7 +240,7 @@ describe('recomendações, conexões, chat e bloqueio', () => {
       expect((await a.como(ana.email).post(`/matches/${conexao}/messages`, { body: 'x'.repeat(1001) })).body.code).toBe('MENSAGEM_LONGA');
     });
 
-    it('bloquear fecha o chat para as duas pessoas e desbloquear não o reabre sozinho para quem bloqueou', async () => {
+    it('bloquear fecha o chat para as duas pessoas e desbloquear reabre a conversa existente', async () => {
       await abrir();
       await a.como(ana.email).post(`/employees/${bruno.id}/block`);
       for (const quem of [ana, bruno]) {

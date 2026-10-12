@@ -103,11 +103,14 @@ export async function garantirTag(consulta, nome, categoria) {
   if (!normalizado) throw invalido('TAG_INVALIDA', 'Essa tag não é válida. Use de 2 a 40 caracteres e evite cargos ou termos genéricos.');
   const [existente] = await consulta('SELECT id, name, category FROM interest_tag WHERE LOWER(name) = LOWER($1)', [normalizado]);
   if (existente) return existente;
-  const [criada] = await consulta('INSERT INTO interest_tag (name, category) VALUES ($1, $2) RETURNING id, name, category', [
-    normalizado,
-    categoria,
-  ]);
-  return criada;
+  // ON CONFLICT cobre duas pessoas criando a mesma tag ao mesmo tempo: quem perde a corrida relê a tag criada.
+  const [criada] = await consulta(
+    'INSERT INTO interest_tag (name, category) VALUES ($1, $2) ON CONFLICT (LOWER(name)) DO NOTHING RETURNING id, name, category',
+    [normalizado, categoria],
+  );
+  if (criada) return criada;
+  const [vencedora] = await consulta('SELECT id, name, category FROM interest_tag WHERE LOWER(name) = LOWER($1)', [normalizado]);
+  return vencedora;
 }
 
 // Substitui os interesses da pessoa. itens: [{ name, category, source?, confidence? }].
@@ -140,9 +143,13 @@ export async function definirPausa(banco, id, pausado) {
   await banco.query('UPDATE employee SET is_paused = $1 WHERE id = $2', [pausado, id]);
 }
 
-// Exclusão definitiva dos dados da pessoa (as demais tabelas caem em cascata).
+// Exclusão definitiva dos dados da pessoa. Os registros de IA guardam tags derivadas da bio,
+// por isso são apagados junto; as demais tabelas caem em cascata.
 export async function excluirPerfil(banco, id) {
-  await banco.query('DELETE FROM employee WHERE id = $1', [id]);
+  await banco.tx(async ({ query }) => {
+    await query('DELETE FROM ai_interaction_log WHERE employee_id = $1', [id]);
+    await query('DELETE FROM employee WHERE id = $1', [id]);
+  });
 }
 
 export async function listarTags(banco, categoria) {

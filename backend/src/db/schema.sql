@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS employee_report (
 
 CREATE TABLE IF NOT EXISTS ai_interaction_log (
   id SERIAL PRIMARY KEY,
-  employee_id INTEGER REFERENCES employee(id) ON DELETE SET NULL,
+  employee_id INTEGER REFERENCES employee(id) ON DELETE CASCADE,
   prompt_type TEXT NOT NULL,
   prompt_version TEXT NOT NULL,
   model TEXT,

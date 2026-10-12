@@ -23,6 +23,13 @@ describe('normalizarTag', () => {
     }
   });
 
+  it('recusa cargo e senioridade em inglês', () => {
+    for (const termo of ['Tech Lead', 'Manager', 'Director', 'Intern', 'Staff Engineer', 'Principal Architect']) {
+      expect(normalizarTag(termo), termo).toBeNull();
+    }
+    expect(mencionaHierarquia('Ela é tech lead e você é intern.')).toBe(true);
+  });
+
   it('recusa termos genéricos e ofensivos', () => {
     expect(normalizarTag('Tecnologia')).toBeNull();
     expect(normalizarTag('Projetos')).toBeNull();

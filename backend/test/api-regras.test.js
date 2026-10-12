@@ -81,6 +81,33 @@ describe('regras de borda da API', () => {
       expect(interesse.body.code).toBe('PERFIL_INCOMPLETO');
       expect((await a.como(nova.email).get(`/employees/${bruno.id}`)).status).toBe(409);
     });
+
+    it('quem tem menos de 3 interesses não aparece na descoberta nem recebe interesse', async () => {
+      const nova = await a.criarPessoa({ nome: 'Nova Pessoa', tecnicas: ['React', 'Node.js'] });
+      const { body } = await a.como(ana.email).get('/matches/recommendations');
+      expect(body.recommendations.map((r) => r.employee_id)).not.toContain(nova.id);
+      const interesse = await a.como(ana.email).post('/matches', { receiver_id: nova.id });
+      expect(interesse.status).toBe(400);
+      expect(interesse.body.code).toBe('RECEIVER_INVALIDO');
+    });
+  });
+
+  describe('tags e exclusão', () => {
+    it('duas pessoas criando a mesma tag nova ao mesmo tempo recebem a mesma tag', async () => {
+      const respostas = await Promise.all([
+        a.como(ana.email).post('/tags', { name: 'Origami', category: 'HOBBY' }),
+        a.como(bruno.email).post('/tags', { name: 'origami', category: 'HOBBY' }),
+      ]);
+      expect(respostas.map((r) => r.status)).toEqual([201, 201]);
+      expect(respostas[0].body.id).toBe(respostas[1].body.id);
+    });
+
+    it('excluir os dados apaga também os registros de IA da pessoa', async () => {
+      await a.banco.query(`INSERT INTO ai_interaction_log (employee_id, prompt_type, prompt_version, status) VALUES ($1, 'ENRICH_BIO', 'v1', 'OK')`, [ana.id]);
+      expect((await a.como(ana.email).delete('/profile')).status).toBe(204);
+      const restantes = await a.banco.query('SELECT 1 FROM ai_interaction_log WHERE employee_id = $1 OR employee_id IS NULL', [ana.id]);
+      expect(restantes).toHaveLength(0);
+    });
   });
 
   describe('cota semanal', () => {

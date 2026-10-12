@@ -29,7 +29,11 @@ export async function demonstrarInteresse({ banco, config }, meuId, receiverId) 
   const base = await carregarBase(banco.query);
   const eu = base.perfis.get(meuId);
   exigirPerfilCompleto(eu, config.regras.minTags);
-  const score = arredondar(afinidadeEntre(base, eu, base.perfis.get(receiverId), config.regras.bonusUnidade).score, 4);
+  const alvo = base.perfis.get(receiverId);
+  if (!alvo || alvo.tecnicas.length + alvo.hobbies.length < config.regras.minTags) {
+    throw invalido('RECEIVER_INVALIDO', 'Esta pessoa não está disponível.');
+  }
+  const score = arredondar(afinidadeEntre(base, eu, alvo, config.regras.bonusUnidade).score, 4);
 
   return banco.tx(async ({ query }) => {
     // Serializa pedidos simultâneos entre o mesmo par de pessoas (A->B e B->A) e os pedidos

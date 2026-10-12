@@ -13,7 +13,8 @@ const HIERARQUIA = new Set([
   'gerente', 'diretor', 'diretora', 'coordenador', 'coordenadora', 'supervisor', 'supervisora',
   'lider', 'líder', 'head', 'presidente', 'estagiario', 'estagiário', 'trainee', 'junior', 'júnior',
   'pleno', 'senior', 'sênior', 'especialista', 'analista', 'consultor', 'consultora', 'arquiteto',
-  'arquiteta', 'chefe', 'socio', 'sócio',
+  'arquiteta', 'chefe', 'socio', 'sócio', 'lead', 'manager', 'director', 'intern', 'staff', 'principal',
+  'associate', 'partner', 'executive', 'chief', 'president',
 ]);
 
 const OFENSIVAS = new Set(['porra', 'merda', 'caralho', 'puta', 'foda', 'idiota', 'burro']);
