@@ -15,6 +15,36 @@ npm run dev
 
 A API sobe em http://localhost:3000/api/v1 já com 30 pessoas fictícias. Com `AUTH_DEV_LOGIN=true` (padrão do `.env.example`) a tela de login mostra uma lista de pessoas para entrar sem Google.
 
+## Avaliação da IA
+
+```powershell
+npm run avaliar-ia
+```
+
+Roda a extração de tags nas 20 bios fictícias de `avaliacao/bios.json`, que incluem bios com cargo (em português, em inglês e em sigla), duas tentativas de injeção de prompt, uma bio vazia e duas genéricas. Mede:
+
+- **Precisão:** das tags devolvidas, quantas eram esperadas.
+- **Cobertura:** das tags esperadas, quantas foram devolvidas.
+- **Respostas com cargo:** meta zero. O script termina com erro se houver alguma.
+- **Respostas que obedeceram a texto injetado:** tags que só existem no trecho injetado.
+
+Sem chaves, usa um provedor simulado (`avaliacao/provedor-simulado.js`): um extrator ingênuo por palavras conhecidas que devolve também cargos e o texto injetado, para medir o que a normalização e os filtros seguram. Com `GEMINI_API_KEY` ou `GROQ_API_KEY` definidas, usa os provedores reais. As chaves nunca são impressas.
+
+Números com o provedor simulado:
+
+| Medida | Valor |
+|---|---|
+| Precisão | 98,4% |
+| Cobertura | 96,8% |
+| Respostas com cargo | 0 |
+| Respostas que obedeceram a texto injetado | 1 |
+
+Esses números medem o fluxo de normalização, não a qualidade de um modelo. As metas reais de precisão e cobertura só podem ser medidas com chaves. Os pontos que o simulado expõe:
+
+- **Injeção:** a tag injetada "Hackeado" é uma palavra válida, então só o modelo pode recusá-la. Nenhum filtro posterior a distingue de um interesse real.
+- **`.NET`:** a normalização exige que a tag comece com letra ou número, então `.NET` é descartada.
+- **Vocabulário:** "marcenaria" falta porque o simulado não a conhece.
+
 ## Testes
 
 ```powershell
@@ -26,6 +56,7 @@ Os testes usam PGlite em memória e cobrem afinidade, IA (timeout, nova tentativ
 ## Estrutura
 
 ```
+avaliacao/         bios fictícias e script de avaliação da extração de tags
 src/
   app.js           monta o Express (segurança, CORS, limite de requisições, rotas)
   index.js         inicia banco, dados de exemplo e servidor
