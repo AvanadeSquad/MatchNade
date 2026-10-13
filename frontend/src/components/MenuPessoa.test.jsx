@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AvisosProvider } from '../context/Avisos.jsx';
@@ -46,7 +46,7 @@ describe('MenuPessoa', () => {
     await usuario.click(screen.getByRole('button', { name: 'Mais opções' }));
     await usuario.click(screen.getByRole('menuitem', { name: 'Bloquear' }));
     const dialogo = screen.getByRole('dialog', { name: 'Bloquear Pessoa Exemplo?' });
-    await usuario.click(dialogo.querySelector('.botao--perigo'));
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Bloquear' }));
     expect(API.bloquear).toHaveBeenCalledWith(7);
     expect(aoBloquear).toHaveBeenCalled();
     expect(await screen.findByText('Pessoa bloqueada: Pessoa Exemplo.')).toBeInTheDocument();

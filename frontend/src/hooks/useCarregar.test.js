@@ -1,6 +1,23 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useCarregar } from './useCarregar.js';
+
+// Conta os pedidos de atualização de estado feitos pelos componentes. Depois de desmontar, o React 18
+// ignora essas atualizações sem aviso, então só a contagem mostra se o hook ainda tentou aplicar
+// uma resposta que chegou tarde.
+const atualizacoes = vi.hoisted(() => ({ total: 0 }));
+vi.mock('react', async (importarOriginal) => {
+  const React = await importarOriginal();
+  const useState = (inicial) => {
+    const [valor, definir] = React.useState(inicial);
+    const contar = (...args) => {
+      atualizacoes.total += 1;
+      return definir(...args);
+    };
+    return [valor, contar];
+  };
+  return { ...React, default: { ...React.default, useState }, useState };
+});
 
 // Promessa que o teste resolve ou rejeita quando quiser.
 function adiada() {
@@ -38,12 +55,23 @@ describe('useCarregar', () => {
     expect(result.current).toMatchObject({ dados: 'novo', erro: null });
   });
 
-  it('não atualiza depois de desmontar', async () => {
+  it('não tenta aplicar a resposta que chega depois de desmontar', async () => {
     const pedido = adiada();
     const { result, unmount } = renderHook(() => useCarregar(() => pedido.promessa, []));
     unmount();
+    const antes = atualizacoes.total;
     await act(async () => pedido.resolver('tarde'));
+    expect(atualizacoes.total).toBe(antes);
     expect(result.current.dados).toBeNull();
+  });
+
+  it('não tenta aplicar o erro que chega depois de desmontar', async () => {
+    const pedido = adiada();
+    const { unmount } = renderHook(() => useCarregar(() => pedido.promessa, []));
+    unmount();
+    const antes = atualizacoes.total;
+    await act(async () => pedido.rejeitar(new Error('tarde')));
+    expect(atualizacoes.total).toBe(antes);
   });
 
   it('recarregar busca de novo e guarda o erro', async () => {

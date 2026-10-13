@@ -25,12 +25,20 @@ Testes de unidade com Vitest e Testing Library, em jsdom, ao lado do código (`*
 
 - `components/Modal.test.jsx`: foco inicial no diálogo, Tab preso nos dois sentidos, Esc fecha e devolve o foco, e nada fecha enquanto `ocupado`.
 - `components/MenuPessoa.test.jsx`: foco no primeiro item, setas e Home, Esc, confirmação de bloqueio e motivo obrigatório na denúncia.
-- `hooks/useCarregar.test.js`: descarte de respostas e erros de execuções antigas e nada atualizado depois de desmontar.
+- `hooks/useCarregar.test.js`: descarte de respostas e erros de execuções antigas, e nenhuma atualização de estado pedida depois de desmontar (o teste conta os pedidos, porque o React 18 ignora em silêncio as atualizações de um componente desmontado).
 - `context/AuthContext.test.jsx`: resposta 401 encerra a sessão; falha de rede mantém a sessão e permite tentar de novo.
 - `utils/formatar.test.js` e `utils/ignorados.test.js`: formatação e lista de ignorados por pessoa.
 - `pages/Interesses.test.jsx`: mínimo de 3 interesses, dados enviados ao salvar, tag vinda da análise e erro ao salvar.
 
 A API é simulada com `vi.spyOn` no objeto `API`, sem rede.
+
+### Dependências de desenvolvimento e `npm audit`
+
+O `package.json` tem um `overrides` que fixa o `tinypool` (usado pelo Vitest para rodar os testes em paralelo) na versão 2.1.2. A versão 1.x que o Vitest 3 declara (`^1.1.1`) tem um alerta crítico no `npm audit` (poluição de protótipo nas opções do worker, com execução remota de código). A 2.1.2 fica fora do intervalo declarado pelo Vitest 3, por isso o `overrides`; a suíte roda igual com ela no Node 22 e no Node 24. Ao atualizar o Vitest para uma versão que já traga o `tinypool` corrigido, o `overrides` pode sair.
+
+O `npm audit` completo ainda mostra alertas moderados e um alto em dependências de desenvolvimento: Vitest e `@vitest/mocker` (leitura de arquivo pelo redirecionamento de mock), Vite e esbuild (acesso ao servidor de desenvolvimento por outros sites e caminho fora da pasta). Todos afetam só o servidor de desenvolvimento e a execução de testes, que rodam na máquina de quem desenvolve; o `npm run build` gera arquivos estáticos sem nenhum deles. A correção exige versões principais novas (Vite 8, Vitest 5), com mudanças de configuração, e fica para uma atualização própria proposta pelo Dependabot. Enquanto isso, não exponha o `npm run dev` fora da máquina (não use `--host`).
+
+O React Router, dependência de produção, também tem dois alertas moderados: redirecionamento aberto com barra invertida em `<Link>` e `useNavigate`, e injeção pela hidratação de erros do SSR. O app não usa SSR e só navega para caminhos montados pelo próprio código, então nenhum dos dois se aplica hoje; a correção é o React Router 7, também uma atualização própria. O CI falha só com alerta alto ou crítico em dependência de produção (`npm audit --audit-level=high --omit=dev`), e hoje passa.
 
 ## Estrutura
 
