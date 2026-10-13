@@ -89,7 +89,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pasta: [backend, frontend, e2e]
+        # O e2e fica de fora: só tem dependências de desenvolvimento (Playwright), então
+        # --omit=dev não teria nada a conferir, e nada dele vai para o que é publicado.
+        pasta: [backend, frontend]
     defaults:
       run:
         working-directory: ${{ matrix.pasta }}
