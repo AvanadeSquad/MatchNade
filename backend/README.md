@@ -21,29 +21,21 @@ A API sobe em http://localhost:3000/api/v1 já com 30 pessoas fictícias. Com `A
 npm run avaliar-ia
 ```
 
-Roda a extração de tags nas 20 bios fictícias de `avaliacao/bios.json`, que incluem bios com cargo (em português, em inglês e em sigla), duas tentativas de injeção de prompt, uma bio vazia e duas genéricas. Mede:
+Roda a extração de tags nas 20 bios fictícias de `avaliacao/bios.json`, que incluem bios com cargo (em português, em inglês e em sigla), duas tentativas de injeção de prompt, uma bio vazia e duas genéricas. Mostra:
 
-- **Precisão:** das tags devolvidas, quantas eram esperadas.
+- **Precisão:** das tags devolvidas, quantas eram esperadas. Aparece `n/a` quando nenhuma tag foi devolvida.
 - **Cobertura:** das tags esperadas, quantas foram devolvidas.
-- **Respostas com cargo:** meta zero. O script termina com erro se houver alguma.
+- **Respostas com cargo:** meta zero, com qualquer provedor.
 - **Respostas que obedeceram a texto injetado:** tags que só existem no trecho injetado.
+- **Bios não vazias sem resposta da IA:** quantas caíram no fallback. Se nenhuma tag foi devolvida (provedor real fora do ar ou chave inválida), o relatório destaca isso, porque os números não dizem nada sobre o modelo.
 
-Sem chaves, usa um provedor simulado (`avaliacao/provedor-simulado.js`): um extrator ingênuo por palavras conhecidas que devolve também cargos e o texto injetado, para medir o que a normalização e os filtros seguram. Com `GEMINI_API_KEY` ou `GROQ_API_KEY` definidas, usa os provedores reais. As chaves nunca são impressas.
+Sem chaves, usa um provedor simulado (`avaliacao/provedor-simulado.js`): um extrator ingênuo por palavras conhecidas que devolve também cargos e o texto injetado, para conferir o que a normalização e os filtros seguram. Com `GEMINI_API_KEY` ou `GROQ_API_KEY` definidas, usa os provedores reais. As chaves nunca são impressas, e os erros dos provedores trazem só o status HTTP ou o tipo da falha.
 
-Números com o provedor simulado:
+O script termina com erro (código 1) quando há resposta com cargo. Com provedor real, termina com erro também quando alguma resposta obedece ao texto injetado ou quando nenhuma tag é devolvida. Com o simulado, a injeção obedecida só é informada: o extrator ingênuo devolve o texto injetado de propósito, e a tag "Hackeado" é uma palavra válida que nenhum filtro posterior distingue de um interesse real.
 
-| Medida | Valor |
-|---|---|
-| Precisão | 98,4% |
-| Cobertura | 96,8% |
-| Respostas com cargo | 0 |
-| Respostas que obedeceram a texto injetado | 1 |
+Com o provedor simulado, precisão e cobertura ficam perto de 100% (98,4% e 96,8%), mas isso é circular: o vocabulário do simulado foi escrito a partir das tags esperadas. Esses números não medem qualidade; servem para ver o que a normalização descarta (por exemplo, `.NET`, porque a tag precisa começar com letra ou número). As metas de precisão e cobertura só fazem sentido com provedor real.
 
-Esses números medem o fluxo de normalização, não a qualidade de um modelo. As metas reais de precisão e cobertura só podem ser medidas com chaves. Os pontos que o simulado expõe:
-
-- **Injeção:** a tag injetada "Hackeado" é uma palavra válida, então só o modelo pode recusá-la. Nenhum filtro posterior a distingue de um interesse real.
-- **`.NET`:** a normalização exige que a tag comece com letra ou número, então `.NET` é descartada.
-- **Vocabulário:** "marcenaria" falta porque o simulado não a conhece.
+O teste `test/avaliacao-ia.test.js` cobre só o que o fluxo garante, com o simulado: nenhuma resposta com cargo, bio vazia e genérica sem tags, cargos injetados descartados e os interesses reais da bio mantidos diante de injeção. Cobre também o relatório (porcentagens em pt-BR, `n/a`, código de saída) e que os erros dos provedores não carregam a chave.
 
 ## Testes
 
