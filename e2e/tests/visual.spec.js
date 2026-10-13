@@ -74,9 +74,13 @@ test.describe('regressão visual', () => {
     await expect(page.getByRole('heading', { name: 'É um match!' })).toBeVisible();
     await capturar(page, 'match');
 
+    // Marca as conexões como vistas antes de abrir a tela. Em desenvolvimento o React busca a lista
+    // duas vezes e a primeira busca já marca como visto; sem isso, o selo "Novo" dependeria de qual
+    // das duas respostas chega por último.
+    await chamar(request, a.token, 'get', '/matches');
     await page.goto('/conexoes');
     await page.getByRole('tab', { name: /Confirmadas/ }).click();
-    await expect(page.getByText('Wagner Visual')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Wagner Visual/ })).toBeVisible();
     await capturar(page, 'conexoes');
 
     await page.goto(`/chat/${matchId}`);
