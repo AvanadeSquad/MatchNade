@@ -52,8 +52,9 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 
 Itens que dependem das configurações do GitHub ou dos serviços e não são feitos por código:
 
-1. **Reporte privado de vulnerabilidade:** em Settings, Code security, ative "Private vulnerability reporting". O `SECURITY.md` orienta a reportar por ali.
-2. **CodeQL e Dependabot:** em Settings, Code security, confira se a análise do CodeQL e os alertas e atualizações do Dependabot estão ativos. Os arquivos `.github/workflows/codeql.yml` e `.github/dependabot.yml` só funcionam com eles ligados (em repositório privado, o CodeQL depende do GitHub Advanced Security).
-3. **Proteção das branches:** em Settings, Branches, proteja `main` e `develop` exigindo pull request e os jobs do CI aprovados antes de mesclar.
-4. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
-5. **Referências visuais:** se a primeira execução do CI falhar nos testes visuais por diferença de desenho do Chromium, atualize as referências pelo artefato do CI, seguindo `e2e/README.md`.
+1. **Canal de vulnerabilidades:** com o repositório privado, o canal é o descrito no `SECURITY.md` (avisar a equipe pelo canal combinado do squad ou quem administra o repositório). Só se o repositório for público, ative em Settings, Code security, "Private vulnerability reporting", que passa a ser o canal.
+2. **Dependabot:** em Settings, Code security, confira se os alertas e as atualizações do Dependabot estão ativos. O arquivo `.github/dependabot.yml` só funciona com eles ligados.
+3. **CodeQL (opcional):** o job de `.github/workflows/codeql.yml` fica pulado até ser ativado. Para ativar, ligue o Code scanning em Settings, Code security (em repositório privado, isso exige o recurso de segurança do GitHub no plano; em repositório público, é gratuito) e depois crie, em Settings, Secrets and variables, Actions, aba Variables, a variável de repositório `CODEQL_ATIVO` com o valor `true`.
+4. **Proteção das branches:** em Settings, Branches, proteja `main` e `develop` exigindo pull request e os jobs do CI aprovados antes de mesclar. Não marque o CodeQL como verificação obrigatória enquanto ele estiver desligado: o GitHub conta o job pulado como aprovado, então a exigência não protege nada, e se a variável for criada antes de ligar o Code scanning, o job falha e trava todos os merges.
+5. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
+6. **Referências visuais:** se a primeira execução do CI falhar nos testes visuais por diferença de desenho do Chromium, gere as referências no mesmo ambiente do CI, seguindo `e2e/README.md`.

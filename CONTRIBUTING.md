@@ -22,19 +22,40 @@ Os PRs 3 a 7 apontam para `develop`. Os PRs a partir do 8 apontam para a branch 
 | `feature/observabilidade` (PR 22) | 26 |
 | `feature/cabecalhos-seguranca` (PR 16) | 27 |
 
+Mescle sempre com merge commit ("Create a merge commit"), nunca com squash: como os PRs são empilhados, o squash cria commits novos e os PRs filhos passam a mostrar de novo as mudanças do pai.
+
 Ordem de mesclagem:
 
-1. Os PRs base, nesta ordem: 4, 5, 3, 6 e 7. O PR 24 (fim de linha) pode entrar a qualquer momento; quanto antes, menos problema no Windows.
-2. Depois de mesclar um PR base, reaponte os PRs filhos dele para `develop` (no PR, "Edit" ao lado do título) e mescle-os na ordem dos números. O PR 21 (lint no CI) só depois dos PRs 19 e 20, que criam os scripts que ele roda.
-3. Um PR que aponta para outro PR filho (25, 26 e 27) entra depois do PR da sua base, do mesmo jeito.
+1. **PR 24 primeiro de todos** (fim de linha), antes de qualquer outro, para que tudo o que entrar depois já chegue em LF.
+2. **Os PRs base**, nesta ordem: 4, 5, 3, 6 e 7.
+3. **Os filhos**, na ordem dos números, depois de reapontar cada um para `develop` (no PR, "Edit" ao lado do título) assim que o PR da sua base for mesclado. Algumas dependências fixam a ordem:
+   - PR 8 antes do PR 9. O 8 cria o modo de testes em PostgreSQL real; sem ele, o job de PostgreSQL do 9 passa sem testar PostgreSQL.
+   - PRs 18 e 25 entram juntos: mescle primeiro o PR 25 na branch do PR 18 (`feature/regressao-visual`) e depois o PR 18 em `develop`. O 18 sozinho repete o teste visual no CI, que falha na segunda tentativa.
+   - PRs 19 e 20 antes do PR 21. O 21 roda no CI os scripts de lint que eles criam.
+   - PR 22 antes do PR 26, e PR 16 antes do PR 27, porque são as bases deles.
+   - PRs 16 e 27 antes do PR 31. O `docs/deploy.md` do 31 cita `frontend/public/_headers` e `npm run test:cabecalhos`, que vêm deles.
 
-Não apague a branch de um PR base antes de mesclar ou reapontar todos os PRs que apontam para ela. Sem a branch base, esses PRs ficam sem destino.
+   Na prática: 24; 4, 5, 3, 6, 7; 8, 9, 10, 11, 12, 13, 14, 15, 16, 17; 25 dentro do 18 e então 18; 19, 20, 21, 22, 23, 26, 27, 28, 29, 30 e 31.
 
-Conflitos esperados ao mesclar os filhos, porque várias branches acrescentam coisas no mesmo lugar:
+**Branch base apagada.** Quando o próprio GitHub apaga a branch de um PR depois do merge (o botão "Delete branch" ou a opção de apagar automaticamente), os PRs filhos são reapontados sozinhos para a base do pai. O risco é apagar a branch por fora, no terminal (`git push origin --delete`): aí os PRs filhos são fechados e precisam ser reabertos ou recriados. Não apague branches pelo terminal enquanto houver PR apontando para elas.
 
-- `package.json`: mantenha os scripts e dependências dos dois lados.
-- `package-lock.json`: aceite qualquer um dos lados e rode `npm install` na pasta para regenerar o arquivo. Depois, `npm ci` e os testes.
+**Conflitos esperados.** Seis merges conflitam na ordem acima, porque várias branches acrescentam coisas no mesmo lugar:
+
+| PR | Arquivos em conflito |
+|---|---|
+| 13 | `backend/README.md` e `backend/package.json` |
+| 17 | `backend/package.json` |
+| 19 | `backend/package.json` |
+| 20 | `frontend/README.md`, `frontend/package.json` e `frontend/package-lock.json` |
+| 23 | `backend/package.json` e `backend/package-lock.json` |
+| 27 | `frontend/package.json` |
+
+Como resolver:
+
+- `package.json`: manter os dois lados não basta. Confira em que bloco (`scripts`, `dependencies`, `devDependencies`, `overrides`) cada linha ficou depois de juntar. Na união dos PRs 14 e 20, por exemplo, as dependências de lint podem cair dentro de `overrides`: o Git não avisa nada, e o lint quebra. Confira também as vírgulas: o arquivo precisa continuar sendo JSON válido.
+- `package-lock.json`: aceite qualquer um dos lados e rode `npm install` na pasta para regenerar o arquivo a partir do `package.json` já resolvido.
 - `README.md` do backend e do frontend: mantenha as duas seções.
+- Antes de concluir o merge, valide na pasta: `npm ci`, `npm test` e `npm run lint` (e, no backend, `npm run format:check`).
 
 ## Fim de linha
 
