@@ -59,6 +59,10 @@ O Google bloqueia login automatizado. A API só registra `POST /api/v1/test/logi
 
 As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Esses testes não são repetidos em caso de falha, mesmo no CI: a repetição encontraria no banco as pessoas da primeira tentativa e a tela mudaria.
 
+### Primeira execução no CI
+
+As referências versionadas vêm de uma máquina Linux de desenvolvimento, não do CI. Se o Chromium do CI desenhar alguma tela um pouco diferente, a primeira execução do CI falha nos testes visuais, mesmo sem nenhuma mudança visual, até as referências serem geradas no mesmo ambiente do CI. Para isso, siga o passo a passo abaixo com o relatório dessa execução; depois do commit das imagens, as execuções seguintes comparam com referências do próprio CI.
+
 ### Atualizar as referências com as imagens do CI
 
 O Chromium que o CI instala pode desenhar um pouco diferente do Chromium de outra máquina. Por isso as referências devem vir do próprio CI. Quando uma captura não bate com a referência, ou a referência ainda não existe, o teste falha e anexa a imagem real com o nome exato do arquivo de referência, como `nova-referencia/descoberta-desktop-linux.png`. O relatório traz também as imagens esperada, real e de diferença.
@@ -68,10 +72,12 @@ O Chromium que o CI instala pode desenhar um pouco diferente do Chromium de outr
 3. Em cada teste visual que falhou, confira a diferença. Se a mudança é intencional, salve cada anexo `nova-referencia/<arquivo>.png` em `tests/visual.spec.js-snapshots/<arquivo>.png`, substituindo o antigo.
 4. Faça o commit das imagens. A próxima execução do CI compara com elas.
 
-Numa máquina Linux com o Chromium da versão do Playwright do projeto, também é possível gerar as referências localmente:
+Numa máquina Linux com o Chromium da versão do Playwright do projeto (instalado com `npx playwright install --with-deps chromium`, como no CI), também é possível gerar as referências localmente. O script roda só o spec visual e grava as imagens novas:
 
 ```bash
-npx playwright test tests/visual.spec.js --update-snapshots
+npm run test:visual:atualizar
 ```
+
+Em Windows ou macOS o script não gera nada, porque os testes visuais são pulados fora do Linux.
 
 O relatório do Playwright (`npm run report`) mostra lado a lado a referência, a captura nova e a diferença.

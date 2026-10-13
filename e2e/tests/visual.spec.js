@@ -4,7 +4,7 @@ import { autenticarPagina, chamar, criarPessoaPronta } from './helpers/api.js';
 
 // Regressão visual das telas principais. As linhas de base ficam em tests/visual.spec.js-snapshots
 // e valem para Linux com o Chromium do Playwright, que é o ambiente do CI. Para atualizar:
-//   npx playwright test tests/visual.spec.js --update-snapshots
+//   npm run test:visual:atualizar
 test.skip(process.platform !== 'linux', 'As linhas de base são geradas e comparadas no Linux, como no CI.');
 
 // Sem repetição: a segunda tentativa encontraria no banco as pessoas da primeira, com os mesmos
@@ -18,7 +18,7 @@ test.afterEach(async ({}, info) => {
   if (info.status === info.expectedStatus) return;
   for (const anexo of info.attachments) {
     if (!anexo.path || !anexo.name.endsWith('-actual.png')) continue;
-    const referencia = basename(info.snapshotPath(anexo.name.replace(/-actual\.png$/, '.png')));
+    const referencia = basename(info.snapshotPath(anexo.name.replace(/-actual\.png$/, '.png'), { kind: 'screenshot' }));
     await info.attach(`nova-referencia/${referencia}`, { path: anexo.path, contentType: 'image/png' });
   }
 });
