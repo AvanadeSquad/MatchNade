@@ -53,17 +53,16 @@ export function criarApp({
   const saude = (_req, res) => res.json({ status: 'ok' });
   app.get('/health', saude);
 
-  // Prontidão: além de o processo responder, o banco precisa atender. O resultado é guardado por
-  // alguns segundos e a rota tem um limite próprio, porque não exige login.
+  // Prontidão: além de o processo responder, o banco precisa atender. A rota não tem limite de
+  // requisições: a sonda do serviço de hospedagem a chama com frequência, e um 429 tiraria a
+  // instância de rotação sem nada quebrado. O resultado guardado por alguns segundos já limita as
+  // consultas ao banco, por mais chamadas que cheguem.
   const verificarProntidao = criarProntidao({ banco, log });
-  const limiteProntidao = limitarRequisicoes
-    ? rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false })
-    : (_req, _res, next) => next();
-  const prontidao = async (_req, res) => {
-    if (await verificarProntidao()) res.json({ status: 'ok', banco: 'ok' });
+  const prontidao = async (req, res) => {
+    if (await verificarProntidao({ request_id: req.id })) res.json({ status: 'ok', banco: 'ok' });
     else res.status(503).json({ status: 'indisponivel', banco: 'erro' });
   };
-  app.get('/api/v1/health/ready', limiteProntidao, prontidao);
+  app.get('/api/v1/health/ready', prontidao);
 
   const limite = (max) => rateLimit({ windowMs: 15 * 60 * 1000, limit: max, standardHeaders: true, legacyHeaders: false });
   const semLimite = (_req, _res, next) => next();

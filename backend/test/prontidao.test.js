@@ -90,14 +90,26 @@ describe('GET /api/v1/health/ready', () => {
     expect(estado.consultas).toBe(1);
   });
 
-  it('tem limite próprio de 120 requisições por minuto, e /health continua livre', async () => {
-    const { banco } = bancoFalso();
+  it('não tem limite de requisições: com o limite ligado, 200 chamadas seguidas recebem 200 e viram uma consulta', async () => {
+    const { banco, estado } = bancoFalso();
     const app = criarApp({ banco, config: a.config, ia: {}, limitarRequisicoes: true, log: logMudo });
     const agente = request.agent(app);
     const status = [];
-    for (let i = 0; i < 121; i += 1) status.push((await agente.get('/api/v1/health/ready')).status);
-    expect(status.slice(0, 120).every((s) => s === 200)).toBe(true);
-    expect(status[120]).toBe(429);
-    expect((await agente.get('/health')).status).toBe(200);
+    for (let i = 0; i < 200; i += 1) status.push((await agente.get('/api/v1/health/ready')).status);
+    expect(status.every((s) => s === 200)).toBe(true);
+    expect(estado.consultas).toBe(1);
+  });
+
+  it('o aviso de banco indisponível leva o request_id da requisição', async () => {
+    const avisos = [];
+    const log = criarLog({ nivel: 'warn', escrever: (linha) => avisos.push(JSON.parse(linha)) });
+    const { banco, estado } = bancoFalso();
+    estado.ok = false;
+    const app = criarApp({ banco, config: a.config, ia: {}, limitarRequisicoes: false, log });
+    const r = await request(app).get('/api/v1/health/ready').set('X-Request-Id', 'sonda-1234abcd');
+    expect(r.status).toBe(503);
+    expect(avisos).toEqual([
+      expect.objectContaining({ level: 'warn', msg: 'banco indisponivel', request_id: 'sonda-1234abcd', erro: 'Error' }),
+    ]);
   });
 });

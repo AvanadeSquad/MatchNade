@@ -50,8 +50,12 @@ describe('logs estruturados', () => {
     const emDebug = [];
     const logDebug = criarLog({ nivel: 'debug', escrever: (linha) => emDebug.push(JSON.parse(linha)) });
     const app = criarApp({ banco: a.banco, config: a.config, log: logDebug, limitarRequisicoes: false, ia: {} });
-    await request(app).get('/health');
-    expect(emDebug.filter((l) => l.msg === 'requisicao')).toEqual([expect.objectContaining({ level: 'debug', path: '/health' })]);
+    for (const caminho of ['/health', '/api/v1/health', '/api/v1/health/ready']) await request(app).get(caminho);
+    expect(emDebug.filter((l) => l.msg === 'requisicao')).toEqual([
+      expect.objectContaining({ level: 'debug', path: '/health', status: 200 }),
+      expect.objectContaining({ level: 'debug', path: '/api/v1/health', status: 200 }),
+      expect.objectContaining({ level: 'debug', path: '/api/v1/health/ready', status: 200 }),
+    ]);
   });
 
   it('aproveita um X-Request-Id válido de quem chamou e troca um inválido', async () => {

@@ -61,7 +61,7 @@ O nível vem de `LOG_LEVEL` (`debug`, `info`, `warn`, `error` ou `silent`). O pa
 | `GET /health` e `GET /api/v1/health` | `200 {"status":"ok"}` quando o processo responde |
 | `GET /api/v1/health/ready` | `200 {"status":"ok","banco":"ok"}` quando o banco responde em até 2 segundos; senão `503 {"status":"indisponivel","banco":"erro"}` |
 
-A prontidão não exige login, então o resultado fica guardado por 5 segundos (2 segundos quando o banco falha, para a recuperação aparecer logo), chamadas simultâneas aproveitam a mesma consulta, e a rota aceita até 120 requisições por minuto por IP. As requisições às rotas de saúde são registradas em `debug`, não em `info`.
+A prontidão não exige login, então o resultado fica guardado por 5 segundos (2 segundos quando o banco falha, para a recuperação aparecer logo), e chamadas simultâneas aproveitam a mesma consulta. Por isso a rota não tem limite de requisições: muitas chamadas seguidas viram no máximo uma consulta ao banco a cada 5 segundos, e a sonda do serviço de hospedagem nunca recebe 429. Quando o banco falha, o aviso `banco indisponivel` sai com o `request_id` da requisição que fez a consulta. As requisições às rotas de saúde são registradas em `debug`, não em `info`.
 
 ## Variáveis de ambiente
 
