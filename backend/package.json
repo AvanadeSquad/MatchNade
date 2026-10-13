@@ -12,7 +12,8 @@
     "dev": "node --watch src/index.js",
     "seed": "node src/db/seed-cli.js",
     "test": "vitest run",
-    "mutacao": "stryker run"
+    "mutacao": "stryker run",
+    "mutacao:resumo": "node scripts/resumo-mutacao.js"
   },
   "license": "UNLICENSED",
   "dependencies": {

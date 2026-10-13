@@ -3,7 +3,10 @@
 // É lento (roda a suíte para cada mutante), por isso não roda no CI. Rode com: npm run mutacao
 //
 // Usa o executor de comando em vez de @stryker-mutator/vitest-runner: com a vitest 5 deste projeto
-// o executor próprio não ativava os mutantes, e todos sobreviviam mesmo quando um teste quebrava.
+// o executor próprio não ativa os mutantes, e todos sobrevivem mesmo quando um teste quebra.
+//
+// O relatório JSON guarda o status de cada mutante. `npm run mutacao:resumo` separa por arquivo os
+// mortos por um teste dos que só estouraram o tempo (Timeout), que o Stryker conta como detectados.
 export default {
   testRunner: 'command',
   // Limite de tempo folgado e poucos workers: com várias suítes rodando ao mesmo tempo, um teste lento
