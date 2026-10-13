@@ -60,3 +60,5 @@ O `vercel.json` (Vercel) e o `public/_headers` (Netlify) enviam, em todas as rot
 - impede que o app seja aberto dentro de um iframe de outro site.
 
 No Netlify, os mesmos cabeçalhos ficam em `public/_headers`, que o build copia para `dist/`. Os dois arquivos precisam ter a mesma política; `npm run test:cabecalhos` confere. Se a API for publicada fora de `*.onrender.com`, acrescente o domínio a `connect-src` nos dois.
+
+O `npm run test:cabecalhos` ainda não roda no CI; rode-o depois de mexer em `vercel.json` ou `public/_headers`. Ele aceita os arquivos com fim de linha LF ou CRLF. Para entrar no CI, basta um passo `- run: npm run test:cabecalhos` no job do frontend, depois do `npm ci`: o teste usa só o `node:test`, sem dependências.

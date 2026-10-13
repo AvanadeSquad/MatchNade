@@ -13,13 +13,14 @@ function doVercel() {
   return Object.fromEntries(bloco.headers.map((h) => [h.key, h.value]));
 }
 
-// Formato do Netlify: uma linha com o caminho e, abaixo, "  Nome: valor" indentado.
+// Formato do Netlify: uma linha com o caminho e, abaixo, "  Nome: valor" indentado. Aceita fim
+// de linha CRLF, que o Git pode gerar num checkout no Windows.
 function doNetlify() {
-  const linhas = readFileSync(new URL('public/_headers', raiz), 'utf8').split('\n');
+  const linhas = readFileSync(new URL('public/_headers', raiz), 'utf8').split(/\r?\n/);
   assert.equal(linhas[0], '/*', 'os cabeçalhos devem valer para todas as rotas');
   const cabecalhos = {};
   for (const linha of linhas.slice(1).filter((l) => l.trim())) {
-    assert.match(linha, /^ {2}[A-Za-z-]+: .+$/, `linha fora do formato: ${linha}`);
+    assert.match(linha, /^ {2}[A-Za-z-]+: [^\r\n]+$/, `linha fora do formato: ${linha}`);
     const separador = linha.indexOf(': ');
     cabecalhos[linha.slice(0, separador).trim()] = linha.slice(separador + 2);
   }
