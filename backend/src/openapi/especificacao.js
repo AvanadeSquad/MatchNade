@@ -1,17 +1,29 @@
 import { z } from 'zod';
 import { corpoGoogle } from '../routes/auth.js';
-import { consultaLista, consultaMensagens, corpoInteresse, corpoMensagem, corpoResposta } from '../routes/conexoes.js';
+import {
+  consultaLista,
+  consultaMensagens,
+  consultaRecomendacoes,
+  corpoInteresse,
+  corpoMensagem,
+  corpoResposta,
+} from '../routes/conexoes.js';
 import { corpoEmail } from '../routes/dev.js';
-import { corpoBio, corpoInteresses, corpoPausa, corpoPerfil, corpoTag } from '../routes/perfil.js';
+import { consultaTags, corpoBio, corpoInteresses, corpoPausa, corpoPerfil, corpoTag } from '../routes/perfil.js';
 import { corpoDenuncia } from '../routes/pessoas.js';
+import { idSchema } from '../utils/validacao.js';
+import { respostaPerfilPublico, respostaRecomendacoes } from './respostas.js';
 
-// Monta a especificação OpenAPI da API. Os corpos e parâmetros de consulta vêm dos mesmos
-// schemas zod que as rotas usam para validar, então não podem divergir deles. Resumos,
-// respostas e códigos de erro são descritos aqui.
+// Monta a especificação OpenAPI da API. Os corpos, os parâmetros de consulta e o id do caminho
+// vêm dos mesmos schemas zod que as rotas usam para validar, então não podem divergir deles. As
+// respostas de recomendações e do perfil de outra pessoa vêm de src/openapi/respostas.js, e o teste
+// de contrato valida respostas reais contra elas. Resumos, demais respostas e códigos de erro são
+// descritos aqui.
 
-// O campo $schema do JSON Schema não faz parte de um schema OpenAPI.
-const paraJsonSchema = (schema) => {
-  const json = z.toJSONSchema(schema, { io: 'input' });
+// O campo $schema do JSON Schema não faz parte de um schema OpenAPI. `io` escolhe entre o formato
+// aceito na entrada (corpos e parâmetros) e o formato devolvido (respostas).
+const paraJsonSchema = (schema, io = 'input') => {
+  const json = z.toJSONSchema(schema, { io });
   delete json.$schema;
   return json;
 };
@@ -29,8 +41,12 @@ const consulta = (schema) => {
   }));
 };
 
-const id = { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } };
+const id = { name: 'id', in: 'path', required: true, schema: paraJsonSchema(idSchema) };
 const json = (descricao) => ({ description: descricao, content: { 'application/json': { schema: { type: 'object' } } } });
+const tipado = (descricao, schema) => ({
+  description: descricao,
+  content: { 'application/json': { schema: paraJsonSchema(schema, 'output') } },
+});
 const erro = (descricao) => ({
   description: descricao,
   content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
@@ -39,6 +55,7 @@ const semCorpo = (descricao) => ({ description: descricao });
 const comLogin = [{ jwt: [] }];
 const naoAutenticado = erro('NAO_AUTENTICADO: sem token, token inválido ou expirado.');
 const invalidos = erro('DADOS_INVALIDOS (com details) ou CORPO_INVALIDO.');
+const limiteExcedido = erro('LIMITE_EXCEDIDO: limite de chamadas atingido.');
 
 function operacao(tag, resumo, { login = true, parametros = [], requisicao, respostas }) {
   return {
@@ -58,7 +75,7 @@ export function gerarEspecificacao() {
       title: 'Avanade Connect API',
       version: '1.0.0',
       description:
-        'API da plataforma interna de conexões entre colaboradores. Erros seguem { code, message }. Cargo e bio só aparecem depois do match.',
+        'API da plataforma interna de conexões entre colaboradores. Erros seguem { code, message }. Cargo e bio só aparecem depois do match. Qualquer rota pode responder 429 LIMITE_EXCEDIDO quando o limite geral por IP é atingido; as rotas com limite próprio o declaram.',
     },
     servers: [{ url: '/api/v1' }],
     components: {
@@ -89,6 +106,7 @@ export function gerarEspecificacao() {
             401: erro('NAO_AUTENTICADO: credencial inválida ou e-mail não verificado.'),
             403: erro('EMAIL_NAO_LIBERADO'),
             409: erro('CONTA_INATIVA'),
+            429: limiteExcedido,
             503: erro('GOOGLE_NAO_CONFIGURADO'),
           },
         }),
@@ -96,14 +114,14 @@ export function gerarEspecificacao() {
       '/auth/dev-users': {
         get: operacao('Desenvolvimento', 'Lista pessoas para entrar sem Google. Só existe com AUTH_DEV_LOGIN=true.', {
           login: false,
-          respostas: { 200: json('{ users: [{ name, email }] }') },
+          respostas: { 200: json('{ users: [{ name, email }] }'), 429: limiteExcedido },
         }),
       },
       '/auth/dev-login': {
         post: operacao('Desenvolvimento', 'Entra sem Google. Só existe com AUTH_DEV_LOGIN=true.', {
           login: false,
           requisicao: corpo(corpoEmail),
-          respostas: { 200: json('{ token, employee }'), 400: invalidos, 403: erro('EMAIL_NAO_LIBERADO') },
+          respostas: { 200: json('{ token, employee }'), 400: invalidos, 403: erro('EMAIL_NAO_LIBERADO'), 429: limiteExcedido },
         }),
       },
       '/test/login': {
@@ -129,7 +147,7 @@ export function gerarEspecificacao() {
           respostas: {
             200: json('{ technical_tags, hobby_tags, fallback? }'),
             400: erro('BIO_VAZIA, DADOS_INVALIDOS ou CORPO_INVALIDO.'),
-            429: semCorpo('Limite de chamadas atingido.'),
+            429: limiteExcedido,
           },
         }),
       },
@@ -147,7 +165,7 @@ export function gerarEspecificacao() {
       },
       '/tags': {
         get: operacao('Perfil', 'Catálogo de tags, da mais usada para a menos usada.', {
-          parametros: [{ name: 'category', in: 'query', required: false, schema: { type: 'string', enum: ['TECHNICAL', 'HOBBY'] } }],
+          parametros: consulta(consultaTags),
           respostas: { 200: json('{ tags: [{ id, name, category, uso }] }'), 400: invalidos },
         }),
         post: operacao('Perfil', 'Cria uma tag ou devolve a existente. Cargos e termos genéricos são recusados.', {
@@ -157,9 +175,9 @@ export function gerarEspecificacao() {
       },
       '/matches/recommendations': {
         get: operacao('Conexões', 'Pessoas por afinidade. Nunca inclui cargo.', {
-          parametros: [{ name: 'limit', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: 20 } }],
+          parametros: consulta(consultaRecomendacoes),
           respostas: {
-            200: json('{ recommendations, message? }'),
+            200: tipado('Sugestões por afinidade. message aparece quando a lista vem vazia.', respostaRecomendacoes),
             400: invalidos,
             404: erro('NAO_ENCONTRADO'),
             409: erro('PERFIL_INCOMPLETO'),
@@ -202,7 +220,7 @@ export function gerarEspecificacao() {
             400: invalidos,
             403: erro('SEM_MATCH'),
             404: erro('NAO_ENCONTRADO'),
-            429: semCorpo('Limite de chamadas atingido.'),
+            429: limiteExcedido,
           },
         }),
       },
@@ -225,7 +243,12 @@ export function gerarEspecificacao() {
       '/employees/{id}': {
         get: operacao('Pessoas', 'Perfil de outra pessoa. position e bio só depois do match.', {
           parametros: [id],
-          respostas: { 200: json('Perfil público'), 400: invalidos, 404: erro('NAO_ENCONTRADO'), 409: erro('PERFIL_INCOMPLETO') },
+          respostas: {
+            200: tipado('Perfil público: sem position e bio antes do match, com os dois depois.', respostaPerfilPublico),
+            400: invalidos,
+            404: erro('NAO_ENCONTRADO'),
+            409: erro('PERFIL_INCOMPLETO'),
+          },
         }),
       },
       '/employees/{id}/block': {

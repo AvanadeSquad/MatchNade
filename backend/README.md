@@ -56,10 +56,19 @@ A API completa está em `docs/api.md`.
 
 ## Contrato da API (OpenAPI)
 
-`openapi.json`, nesta pasta, é a especificação OpenAPI 3.1 da API. Ela é gerada por `src/openapi/especificacao.js`: os corpos e parâmetros de consulta vêm dos mesmos schemas zod que as rotas usam para validar, e os resumos, respostas e códigos de erro são descritos ali. Depois de mudar uma rota ou um schema:
+`openapi.json`, nesta pasta, é a especificação OpenAPI 3.1 da API. Ela é gerada por `src/openapi/especificacao.js`: os corpos, os parâmetros de consulta (inclusive `category` em `/tags` e `limit` em `/matches/recommendations`) e o `id` do caminho vêm dos mesmos schemas zod que as rotas usam para validar. As respostas de `GET /matches/recommendations` e `GET /employees/{id}` são tipadas em `src/openapi/respostas.js`, com `additionalProperties: false`; o perfil de outra pessoa tem duas formas, antes do match (sem `position` e `bio`) e depois. Os resumos, as demais respostas e os códigos de erro são descritos à mão. Depois de mudar uma rota ou um schema:
 
 ```powershell
 npm run openapi
 ```
 
-O teste `test/contrato-openapi.test.js` falha se o `openapi.json` estiver desatualizado, se uma rota do Express não estiver na especificação (ou o contrário), ou se o fuzz guiado pela especificação receber erro 500 ou um status não documentado ao enviar corpos e ids malformados.
+O teste `test/contrato-openapi.test.js` falha se:
+
+- o `openapi.json` estiver desatualizado;
+- uma rota do Express não estiver na especificação, ou o contrário;
+- os parâmetros de caminho declarados forem diferentes dos do caminho, ou uma rota ler de `req.query` um parâmetro não declarado (ou deixar de ler um declarado);
+- uma rota declarada com login responder sem ele, ou o contrário;
+- as respostas reais de recomendações e do perfil de outra pessoa não seguirem os schemas da especificação, inclusive se `position` ou `bio` aparecerem antes do match;
+- o fuzz guiado pela especificação receber erro 500 ou um status não documentado ao enviar corpos e ids malformados.
+
+O limite de requisições responde 429 em JSON, no mesmo formato dos outros erros: `{ "code": "LIMITE_EXCEDIDO", "message": "..." }`.

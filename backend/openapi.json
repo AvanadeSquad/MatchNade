@@ -3,7 +3,7 @@
   "info": {
     "title": "Avanade Connect API",
     "version": "1.0.0",
-    "description": "API da plataforma interna de conexões entre colaboradores. Erros seguem { code, message }. Cargo e bio só aparecem depois do match."
+    "description": "API da plataforma interna de conexões entre colaboradores. Erros seguem { code, message }. Cargo e bio só aparecem depois do match. Qualquer rota pode responder 429 LIMITE_EXCEDIDO quando o limite geral por IP é atingido; as rotas com limite próprio o declaram."
   },
   "servers": [
     {
@@ -149,6 +149,16 @@
               }
             }
           },
+          "429": {
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
           "503": {
             "description": "GOOGLE_NAO_CONFIGURADO",
             "content": {
@@ -176,6 +186,16 @@
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
@@ -233,6 +253,16 @@
           },
           "403": {
             "description": "EMAIL_NAO_LIBERADO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -523,7 +553,14 @@
             }
           },
           "429": {
-            "description": "Limite de chamadas atingido."
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
@@ -833,19 +870,75 @@
             "in": "query",
             "required": false,
             "schema": {
+              "description": "Quantidade de sugestões. Padrão 5; acima de 20 vira 20.",
               "type": "integer",
-              "minimum": 1,
-              "maximum": 20
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "{ recommendations, message? }",
+            "description": "Sugestões por afinidade. message aparece quando a lista vem vazia.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "recommendations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "employee_id": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "department": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "affinity_score": {
+                            "type": "number"
+                          },
+                          "shared_interests": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "employee_id",
+                          "name",
+                          "department",
+                          "city",
+                          "affinity_score",
+                          "shared_interests"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "recommendations"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -1053,7 +1146,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -1161,7 +1255,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -1217,7 +1312,14 @@
             }
           },
           "429": {
-            "description": "Limite de chamadas atingido."
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
@@ -1240,7 +1342,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -1336,7 +1439,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -1430,17 +1534,384 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Perfil público",
+            "description": "Perfil público: sem position e bio antes do match, com os dois depois.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "department": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "city": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "connection_goals": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "NETWORKING",
+                              "TROCA_DE_CONHECIMENTO",
+                              "HOBBY",
+                              "MENTORIA",
+                              "CONHECER_GENTE"
+                            ]
+                          }
+                        },
+                        "tags": {
+                          "type": "object",
+                          "properties": {
+                            "technical": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "AI",
+                                      "MANUAL"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "source"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "hobby": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "AI",
+                                      "MANUAL"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "source"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "technical",
+                            "hobby"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "affinity": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number"
+                            },
+                            "technical": {
+                              "type": "number"
+                            },
+                            "personal": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "score",
+                            "technical",
+                            "personal"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "shared_interests": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "connection": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "match_id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "const": "PENDING"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "enum": [
+                                    "SENT",
+                                    "RECEIVED"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "match_id",
+                                "status",
+                                "direction"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "department",
+                        "city",
+                        "connection_goals",
+                        "tags",
+                        "affinity",
+                        "shared_interests",
+                        "connection"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Antes do match"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "department": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "city": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "connection_goals": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "NETWORKING",
+                              "TROCA_DE_CONHECIMENTO",
+                              "HOBBY",
+                              "MENTORIA",
+                              "CONHECER_GENTE"
+                            ]
+                          }
+                        },
+                        "tags": {
+                          "type": "object",
+                          "properties": {
+                            "technical": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "AI",
+                                      "MANUAL"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "source"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "hobby": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "AI",
+                                      "MANUAL"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "source"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "technical",
+                            "hobby"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "affinity": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number"
+                            },
+                            "technical": {
+                              "type": "number"
+                            },
+                            "personal": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "score",
+                            "technical",
+                            "personal"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "shared_interests": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "connection": {
+                          "type": "object",
+                          "properties": {
+                            "match_id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "status": {
+                              "type": "string",
+                              "const": "ACCEPTED"
+                            },
+                            "direction": {
+                              "type": "string",
+                              "enum": [
+                                "SENT",
+                                "RECEIVED"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "match_id",
+                            "status",
+                            "direction"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "position": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "bio": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "department",
+                        "city",
+                        "connection_goals",
+                        "tags",
+                        "affinity",
+                        "shared_interests",
+                        "connection",
+                        "position",
+                        "bio"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Depois do match"
+                    }
+                  ]
                 }
               }
             }
@@ -1506,7 +1977,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -1563,7 +2035,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -1612,7 +2085,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],

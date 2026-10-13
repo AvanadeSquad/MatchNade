@@ -42,6 +42,7 @@ export const corpoInteresses = z.object({
 
 export const corpoTag = z.object({ name: texto(60), category: z.enum(['TECHNICAL', 'HOBBY']) });
 export const corpoPausa = z.object({ is_paused: z.boolean() });
+export const consultaTags = z.object({ category: z.enum(['TECHNICAL', 'HOBBY']).optional() });
 
 export function rotasPerfil(ctx, autenticar) {
   const router = Router();
@@ -81,7 +82,7 @@ export function rotasPerfil(ctx, autenticar) {
   });
 
   router.get('/tags', autenticar, async (req, res) => {
-    const categoria = z.enum(['TECHNICAL', 'HOBBY']).optional().parse(req.query.category);
+    const { category: categoria } = consultaTags.parse(req.query);
     res.json({ tags: await listarTags(banco, categoria) });
   });
 

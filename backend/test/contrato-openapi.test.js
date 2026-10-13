@@ -1,7 +1,14 @@
 import { readFile } from 'node:fs/promises';
+import express from 'express';
+import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
+import { criarApp } from '../src/app.js';
 import { gerarEspecificacao } from '../src/openapi/especificacao.js';
 import { criarAmbiente } from './ajudante.js';
+
+// As rotas de desenvolvimento e de teste entram na especificação, então precisam existir no app.
+const AMBIENTE = { AUTH_DEV_LOGIN: 'true', E2E_TEST_MODE: 'true' };
 
 const METODOS = ['get', 'post', 'put', 'patch', 'delete'];
 
@@ -33,29 +40,175 @@ const rotasDaEspecificacao = (especificacao) =>
     )
     .sort();
 
+const operacoesDa = (especificacao) =>
+  Object.entries(especificacao.paths).flatMap(([caminho, operacoes]) =>
+    Object.entries(operacoes)
+      .filter(([metodo]) => METODOS.includes(metodo))
+      .map(([metodo, op]) => ({ caminho, metodo, op })),
+  );
+
+const parametrosEm = (op, local) =>
+  (op.parameters ?? [])
+    .filter((p) => p.in === local)
+    .map((p) => p.name)
+    .sort();
+
+// Schema de resposta JSON da especificação, convertido de volta para zod para validar respostas reais.
+const schemaDaResposta = (especificacao, caminho, metodo, status) =>
+  z.fromJSONSchema(especificacao.paths[caminho][metodo].responses[status].content['application/json'].schema);
+
+// Registra as chaves de req.query que as rotas leem durante uma requisição.
+function espionarConsulta() {
+  const original = Object.getOwnPropertyDescriptor(express.request, 'query');
+  const lidas = new Set();
+  Object.defineProperty(express.request, 'query', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      const consulta = original.get.call(this);
+      return new Proxy(consulta, {
+        get(alvo, chave, receptor) {
+          if (typeof chave === 'string') lidas.add(chave);
+          return Reflect.get(alvo, chave, receptor);
+        },
+      });
+    },
+  });
+  return { lidas, restaurar: () => Object.defineProperty(express.request, 'query', original) };
+}
+
 describe('contrato OpenAPI', () => {
+  const especificacao = gerarEspecificacao();
   let a;
+  let pessoa;
+  let ids;
   beforeAll(async () => {
-    a = await criarAmbiente({ ambiente: { AUTH_DEV_LOGIN: 'true' }, ia: { extrairTags: vi.fn(), gerarQuebraGelo: vi.fn() } });
+    a = await criarAmbiente({ ambiente: AMBIENTE, ia: { extrairTags: vi.fn(), gerarQuebraGelo: vi.fn() } });
+    pessoa = await a.criarPessoa({ nome: 'Contrato Exemplo', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });
+    const outra = await a.criarPessoa({ nome: 'Contrato Par', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });
+    await a.como(pessoa.email).post('/matches', { receiver_id: outra.id });
+    const { body } = await a.como(outra.email).post('/matches', { receiver_id: pessoa.id });
+    ids = { '/matches': body.match_id, '/employees': outra.id };
   });
   afterAll(() => a.fechar());
 
+  const comIdReal = (caminho) => {
+    const prefixo = Object.keys(ids).find((p) => caminho.startsWith(p));
+    return caminho.replace('{id}', String(ids[prefixo]));
+  };
+
   it('o openapi.json publicado está igual ao gerado a partir das rotas (rode npm run openapi)', async () => {
     const publicado = JSON.parse(await readFile(new URL('../openapi.json', import.meta.url), 'utf8'));
-    expect(publicado).toEqual(gerarEspecificacao());
+    expect(publicado).toEqual(especificacao);
   });
 
   it('toda rota do Express está na especificação e toda operação da especificação existe', () => {
-    expect(rotasDaEspecificacao(gerarEspecificacao())).toEqual(rotasDoExpress(a.app));
+    expect(rotasDaEspecificacao(especificacao)).toEqual(rotasDoExpress(a.app));
+  });
+
+  it('os parâmetros de caminho declarados são exatamente os do caminho', () => {
+    for (const { caminho, metodo, op } of operacoesDa(especificacao)) {
+      const doCaminho = [...caminho.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+      expect(parametrosEm(op, 'path'), `${metodo} ${caminho}`).toEqual(doCaminho);
+    }
+  });
+
+  it('cada rota lê de req.query exatamente os parâmetros de consulta declarados', async () => {
+    const autorizacao = await a.entrar(pessoa.email);
+    const espiao = espionarConsulta();
+    try {
+      for (const { caminho, metodo, op } of operacoesDa(especificacao).filter((o) => o.metodo === 'get')) {
+        espiao.lidas.clear();
+        await a.http.get(`/api/v1${comIdReal(caminho)}`).set('Authorization', autorizacao);
+        expect([...espiao.lidas].sort(), `${metodo} ${caminho}`).toEqual(parametrosEm(op, 'query'));
+      }
+    } finally {
+      espiao.restaurar();
+    }
+  });
+
+  it('a exigência de login declarada é a que a rota aplica', async () => {
+    for (const { caminho, metodo, op } of operacoesDa(especificacao)) {
+      const resposta = await a.http[metodo](`/api/v1${comIdReal(caminho)}`);
+      const exigeLogin = op.security.length > 0;
+      expect(resposta.status === 401, `${metodo} ${caminho} devolveu ${resposta.status}`).toBe(exigeLogin);
+    }
   });
 
   it('toda operação descreve as respostas e as protegidas declaram 401', () => {
-    for (const [caminho, operacoes] of Object.entries(gerarEspecificacao().paths)) {
+    for (const [caminho, operacoes] of Object.entries(especificacao.paths)) {
       for (const [metodo, operacao] of Object.entries(operacoes)) {
         expect(Object.keys(operacao.responses).length, `${metodo} ${caminho}`).toBeGreaterThan(0);
         if (operacao.security.length) expect(operacao.responses, `${metodo} ${caminho}`).toHaveProperty('401');
       }
     }
+  });
+});
+
+describe('respostas tipadas', () => {
+  const especificacao = gerarEspecificacao();
+  const recomendacoes = schemaDaResposta(especificacao, '/matches/recommendations', 'get', 200);
+  const perfilPublico = schemaDaResposta(especificacao, '/employees/{id}', 'get', 200);
+  let a;
+  beforeAll(async () => {
+    a = await criarAmbiente({ ambiente: AMBIENTE, ia: { extrairTags: vi.fn(), gerarQuebraGelo: vi.fn() } });
+  });
+  afterAll(() => a.fechar());
+
+  it('recomendações e perfil de outra pessoa seguem a especificação, sem cargo e bio antes do match', async () => {
+    const eu = await a.criarPessoa({ nome: 'Tipada Exemplo', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });
+    const outra = await a.criarPessoa({ nome: 'Tipada Par', cargo: 'Cargo Fictício', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });
+    await a.banco.query('UPDATE employee SET bio = $1 WHERE id = $2', ['Bio fictícia.', outra.id]);
+
+    const sugestoes = await a.como(eu.email).get('/matches/recommendations');
+    expect(sugestoes.status).toBe(200);
+    expect(sugestoes.body.recommendations.map((r) => r.employee_id)).toContain(outra.id);
+    expect(recomendacoes.safeParse(sugestoes.body).success).toBe(true);
+
+    const antes = await a.como(eu.email).get(`/employees/${outra.id}`);
+    expect(antes.status).toBe(200);
+    expect(antes.body).not.toHaveProperty('position');
+    expect(antes.body).not.toHaveProperty('bio');
+    expect(perfilPublico.safeParse(antes.body).success).toBe(true);
+
+    await a.como(eu.email).post('/matches', { receiver_id: outra.id });
+    const pendente = await a.como(eu.email).get(`/employees/${outra.id}`);
+    expect(pendente.body.connection.status).toBe('PENDING');
+    expect(perfilPublico.safeParse(pendente.body).success).toBe(true);
+
+    await a.como(outra.email).post('/matches', { receiver_id: eu.id });
+    const depois = await a.como(eu.email).get(`/employees/${outra.id}`);
+    expect(depois.body).toMatchObject({ position: 'Cargo Fictício', bio: 'Bio fictícia.', connection: { status: 'ACCEPTED' } });
+    expect(perfilPublico.safeParse(depois.body).success).toBe(true);
+  });
+
+  it('o contrato recusa campos a mais: cargo ou bio antes do match, ou qualquer campo novo', async () => {
+    const eu = await a.criarPessoa({ nome: 'Vazamento Exemplo', tecnicas: ['Go', 'Rust'], hobbies: ['Corrida'] });
+    const outra = await a.criarPessoa({ nome: 'Vazamento Par', cargo: 'Cargo Fictício', tecnicas: ['Go', 'Rust'], hobbies: ['Corrida'] });
+    const { body } = await a.como(eu.email).get(`/employees/${outra.id}`);
+    expect(perfilPublico.safeParse(body).success).toBe(true);
+    expect(perfilPublico.safeParse({ ...body, position: 'Cargo Fictício' }).success).toBe(false);
+    expect(perfilPublico.safeParse({ ...body, bio: 'Bio fictícia.' }).success).toBe(false);
+    expect(perfilPublico.safeParse({ ...body, email: 'vazamento@exemplo.test' }).success).toBe(false);
+
+    const { body: lista } = await a.como(eu.email).get('/matches/recommendations');
+    expect(recomendacoes.safeParse(lista).success).toBe(true);
+    const comCargo = { ...lista, recommendations: lista.recommendations.map((r) => ({ ...r, position: 'Cargo Fictício' })) };
+    expect(lista.recommendations.length).toBeGreaterThan(0);
+    expect(recomendacoes.safeParse(comCargo).success).toBe(false);
+  });
+
+  it('o 429 do limite de requisições é JSON no formato de erro da API', async () => {
+    const app = criarApp({ banco: a.banco, config: a.config, ia: {}, limitarRequisicoes: true, registrarErro: () => {} });
+    const agente = request.agent(app);
+    let resposta;
+    for (let i = 0; i < 31; i += 1) resposta = await agente.get('/api/v1/auth/dev-users');
+    expect(resposta.status).toBe(429);
+    expect(resposta.headers['content-type']).toMatch(/^application\/json/);
+    expect(resposta.body).toEqual({ code: 'LIMITE_EXCEDIDO', message: expect.any(String) });
+    const erro = z.fromJSONSchema(especificacao.components.schemas.Erro);
+    expect(erro.safeParse(resposta.body).success).toBe(true);
+    expect(especificacao.paths['/auth/dev-users'].get.responses).toHaveProperty('429');
   });
 });
 
@@ -87,7 +240,7 @@ describe('fuzz guiado pela especificação', () => {
   let ids;
   beforeAll(async () => {
     a = await criarAmbiente({
-      ambiente: { AUTH_DEV_LOGIN: 'true' },
+      ambiente: AMBIENTE,
       ia: { extrairTags: vi.fn(async () => ({ technical_tags: [], hobby_tags: [], fallback: true })), gerarQuebraGelo: vi.fn() },
     });
     pessoa = await a.criarPessoa({ nome: 'Fuzz Exemplo', tecnicas: ['React', 'Node.js'], hobbies: ['Xadrez'] });

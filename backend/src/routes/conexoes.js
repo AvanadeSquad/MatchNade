@@ -9,6 +9,9 @@ export const corpoInteresse = z.object({ receiver_id: z.number().int().positive(
 export const corpoResposta = z.object({ action: z.enum(['accept', 'decline']) });
 export const corpoMensagem = z.object({ body: z.string() });
 export const consultaLista = z.object({ peek: z.enum(['true', 'false']).optional() });
+export const consultaRecomendacoes = z.object({
+  limit: z.coerce.number().int().positive().optional().describe('Quantidade de sugestões. Padrão 5; acima de 20 vira 20.'),
+});
 export const consultaMensagens = z.object({
   after: z.coerce.number().int().min(0).default(0),
   limit: z.coerce.number().int().min(1).max(200).default(100),
@@ -18,8 +21,8 @@ export function rotasConexoes(ctx, autenticar) {
   const router = Router();
 
   router.get('/matches/recommendations', autenticar, async (req, res) => {
-    const limite = z.coerce.number().int().positive().optional().parse(req.query.limit);
-    res.json(await recomendar(ctx, req.usuario.id, limite));
+    const { limit } = consultaRecomendacoes.parse(req.query);
+    res.json(await recomendar(ctx, req.usuario.id, limit));
   });
 
   router.get('/matches', autenticar, async (req, res) => {
