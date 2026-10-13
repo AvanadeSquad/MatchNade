@@ -57,7 +57,7 @@ O Google bloqueia login automatizado. A API só registra `POST /api/v1/test/logi
 - as animações ficam desligadas;
 - até 100 pixels diferentes são tolerados, para a suavização de bordas que muda entre versões do Chromium. Trocar a cor do nome no cartão da descoberta muda cerca de 850 pixels e é detectado.
 
-As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Depois de uma mudança visual intencional, gere as referências de novo no Linux, com o Chromium da versão do Playwright do projeto, e versione as imagens:
+As referências valem só para Linux, o sistema do CI. Em outros sistemas esses testes são pulados. Esses testes não são repetidos em caso de falha, mesmo no CI: a repetição encontraria no banco as pessoas da primeira tentativa e a tela mudaria. Depois de uma mudança visual intencional, gere as referências de novo no Linux, com o Chromium da versão do Playwright do projeto, e versione as imagens:
 
 ```bash
 npx playwright test tests/visual.spec.js --update-snapshots

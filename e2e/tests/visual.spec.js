@@ -6,6 +6,10 @@ import { autenticarPagina, chamar, criarPessoaPronta } from './helpers/api.js';
 //   npx playwright test tests/visual.spec.js --update-snapshots
 test.skip(process.platform !== 'linux', 'As linhas de base são geradas e comparadas no Linux, como no CI.');
 
+// Sem repetição: a segunda tentativa encontraria no banco as pessoas da primeira, com os mesmos
+// nomes e interesses, e a tela mudaria. Uma diferença visual também não some ao repetir.
+test.describe.configure({ retries: 0 });
+
 // Fonte fixa instalada pelo "playwright install --with-deps" no Ubuntu: evita que a Inter,
 // presente em algumas máquinas e ausente em outras, mude a captura.
 const FONTE_FIXA = `*, *::before, *::after { font-family: 'Liberation Sans', Arial, sans-serif !important; }`;
@@ -57,9 +61,13 @@ test.describe('regressão visual', () => {
     await expect(page.getByRole('heading', { name: 'É um match!' })).toBeVisible();
     await capturar(page, 'match');
 
+    // Marca as conexões como vistas antes de abrir a tela. Em desenvolvimento o React busca a lista
+    // duas vezes e a primeira busca já marca como visto; sem isso, o selo "Novo" dependeria de qual
+    // das duas respostas chega por último.
+    await chamar(request, a.token, 'get', '/matches');
     await page.goto('/conexoes');
     await page.getByRole('tab', { name: /Confirmadas/ }).click();
-    await expect(page.getByText('Wagner Visual')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Wagner Visual/ })).toBeVisible();
     await capturar(page, 'conexoes');
 
     await page.goto(`/chat/${matchId}`);
