@@ -101,17 +101,28 @@ describe('erros dos provedores', () => {
   const CHAVE = 'chave-secreta-de-teste-1234567890';
   afterEach(() => vi.unstubAllGlobals());
 
-  for (const [nome, criar] of [['gemini', provedorGemini], ['groq', provedorGroq]]) {
+  for (const [nome, criar] of [
+    ['gemini', provedorGemini],
+    ['groq', provedorGroq],
+  ]) {
     it(`${nome}: falha de rede e resposta de erro não levam a chave na mensagem`, async () => {
       const provedor = criar({ chave: CHAVE, modelo: 'modelo-teste' });
       const pedido = { sistema: 's', usuario: 'u', temperatura: 0, maxTokens: 10, schema: {} };
 
-      vi.stubGlobal('fetch', vi.fn(async () => { throw new Error(`falha ao chamar com ${CHAVE}`); }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => {
+          throw new Error(`falha ao chamar com ${CHAVE}`);
+        }),
+      );
       const deRede = await provedor.gerar(pedido).catch((erro) => erro);
       expect(String(deRede.message)).not.toContain(CHAVE);
       expect(String(deRede.stack)).not.toContain(CHAVE);
 
-      vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 401, json: async () => ({ error: `chave ${CHAVE} recusada` }) })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => ({ ok: false, status: 401, json: async () => ({ error: `chave ${CHAVE} recusada` }) })),
+      );
       const deStatus = await provedor.gerar(pedido).catch((erro) => erro);
       expect(deStatus.message).toBe('resposta 401');
       expect(String(deStatus.stack)).not.toContain(CHAVE);
