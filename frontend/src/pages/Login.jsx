@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { IconePessoas } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -45,8 +45,11 @@ export default function Login() {
     navegar(resposta.employee.profile_complete ? '/descobrir' : '/bem-vindo', { replace: true });
   }
   // O botão do Google é criado uma vez; o callback dele chama sempre a versão atual de concluir.
+  // A referência é atualizada depois de cada renderização, não durante ela, como o React exige.
   const concluirAtual = useRef(concluir);
-  concluirAtual.current = concluir;
+  useLayoutEffect(() => {
+    concluirAtual.current = concluir;
+  });
 
   // Login com Google, quando o ID do cliente está configurado.
   useEffect(() => {
