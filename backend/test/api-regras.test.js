@@ -54,7 +54,10 @@ describe('regras de borda da API', () => {
     });
 
     it('o índice do par impede duas conexões ativas em direções opostas', async () => {
-      await a.banco.query(`INSERT INTO connection_match (requester_id, receiver_id, status) VALUES ($1, $2, 'PENDING')`, [ana.id, bruno.id]);
+      await a.banco.query(`INSERT INTO connection_match (requester_id, receiver_id, status) VALUES ($1, $2, 'PENDING')`, [
+        ana.id,
+        bruno.id,
+      ]);
       await expect(
         a.banco.query(`INSERT INTO connection_match (requester_id, receiver_id, status) VALUES ($1, $2, 'PENDING')`, [bruno.id, ana.id]),
       ).rejects.toThrow();
@@ -103,7 +106,10 @@ describe('regras de borda da API', () => {
     });
 
     it('excluir os dados apaga também os registros de IA da pessoa', async () => {
-      await a.banco.query(`INSERT INTO ai_interaction_log (employee_id, prompt_type, prompt_version, status) VALUES ($1, 'ENRICH_BIO', 'v1', 'OK')`, [ana.id]);
+      await a.banco.query(
+        `INSERT INTO ai_interaction_log (employee_id, prompt_type, prompt_version, status) VALUES ($1, 'ENRICH_BIO', 'v1', 'OK')`,
+        [ana.id],
+      );
       expect((await a.como(ana.email).delete('/profile')).status).toBe(204);
       const restantes = await a.banco.query('SELECT 1 FROM ai_interaction_log WHERE employee_id = $1 OR employee_id IS NULL', [ana.id]);
       expect(restantes).toHaveLength(0);

@@ -33,7 +33,10 @@ describe('Disjuntor', () => {
 
 describe('executarComResiliencia', () => {
   it('refaz uma vez em erro repetível e devolve o sucesso', async () => {
-    const gerar = vi.fn().mockRejectedValueOnce(new ErroIa('429', { repetivel: true })).mockResolvedValueOnce('{"ok":true}');
+    const gerar = vi
+      .fn()
+      .mockRejectedValueOnce(new ErroIa('429', { repetivel: true }))
+      .mockResolvedValueOnce('{"ok":true}');
     const resultado = await executarComResiliencia({
       provedores: [provedor('a', gerar)],
       disjuntores: new Map(),
@@ -58,10 +61,18 @@ describe('executarComResiliencia', () => {
   });
 
   it('corta uma chamada que passa do timeout', async () => {
-    const lento = provedor('a', (_req, sinal) => new Promise((_ok, falha) => sinal.addEventListener('abort', () => falha(new ErroIa('tempo', { repetivel: true })))));
+    const lento = provedor(
+      'a',
+      (_req, sinal) => new Promise((_ok, falha) => sinal.addEventListener('abort', () => falha(new ErroIa('tempo', { repetivel: true })))),
+    );
     const inicio = Date.now();
     await expect(
-      executarComResiliencia({ provedores: [lento], disjuntores: new Map(), requisicao, config: { ...configIa, timeoutMs: 50, slaMs: 400 } }),
+      executarComResiliencia({
+        provedores: [lento],
+        disjuntores: new Map(),
+        requisicao,
+        config: { ...configIa, timeoutMs: 50, slaMs: 400 },
+      }),
     ).rejects.toBeInstanceOf(ErroIa);
     expect(Date.now() - inicio).toBeLessThan(600);
   });
@@ -71,7 +82,12 @@ describe('executarComResiliencia', () => {
     const disjuntor = new Disjuntor({ limite: 1 });
     disjuntor.registrarFalha();
     await expect(
-      executarComResiliencia({ provedores: [provedor('a', gerar)], disjuntores: new Map([['a', disjuntor]]), requisicao, config: configIa }),
+      executarComResiliencia({
+        provedores: [provedor('a', gerar)],
+        disjuntores: new Map([['a', disjuntor]]),
+        requisicao,
+        config: configIa,
+      }),
     ).rejects.toBeInstanceOf(ErroIa);
     expect(gerar).not.toHaveBeenCalled();
   });

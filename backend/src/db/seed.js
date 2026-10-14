@@ -1,6 +1,7 @@
 // Dados fictícios para desenvolvimento, demonstração e testes. Todas as pessoas, e-mails
 // e interesses são inventados; nenhum dado real entra no banco por aqui.
 
+// prettier-ignore
 export const TAGS_TECNICAS = [
   'React', 'Node.js', 'Azure', 'Python', 'Power BI', 'Figma', 'UX Research', 'Design Systems', 'Terraform',
   'TypeScript', 'Java', '.NET', 'SQL', 'Kubernetes', 'DevOps', 'Machine Learning', 'Engenharia de dados',
@@ -8,6 +9,7 @@ export const TAGS_TECNICAS = [
   'Acessibilidade', 'Mobile', 'Angular', 'Testes automatizados', 'Visualização de dados', 'SAP', 'Salesforce',
 ];
 
+// prettier-ignore
 export const TAGS_HOBBY = [
   'Xadrez', 'Corrida', 'Fotografia', 'Leitura de ficção', 'Viagens', 'Jogos de tabuleiro', 'Culinária',
   'Café especial', 'Ficção científica', 'Futebol', 'Música', 'Violão', 'Cinema', 'Ciclismo', 'Yoga', 'Trilhas',
@@ -15,12 +17,16 @@ export const TAGS_HOBBY = [
   'Vinho', 'Cervejas artesanais', 'Dança', 'Voluntariado',
 ];
 
+// prettier-ignore
 const UNIDADES = ['Experience Design', 'Tecnologia e Inovação', 'Data & AI', 'Cloud', 'Engenharia', 'Consultoria', 'Segurança', 'Operações'];
+// prettier-ignore
 const CIDADES = ['São Paulo', 'Recife', 'Rio de Janeiro', 'Belo Horizonte', 'Porto Alegre', 'Curitiba', 'Salvador', 'Brasília'];
+// prettier-ignore
 const CARGOS = ['Analista de UX', 'Desenvolvedora Pleno', 'Engenheiro de Dados Sênior', 'Consultora', 'Arquiteto de Soluções', 'Gerente de Projetos', 'Analista de Qualidade'];
 const OBJETIVOS = ['NETWORKING', 'TROCA_DE_CONHECIMENTO', 'HOBBY', 'MENTORIA', 'CONHECER_GENTE'];
 
 // Pessoas com interesses definidos à mão; as demais são geradas de forma determinística.
+// prettier-ignore
 const PESSOAS_FIXAS = [
   {
     nome: 'Ana Silva', unidade: 'Experience Design', cidade: 'São Paulo', cargo: 'Analista de UX',
@@ -60,6 +66,7 @@ const PESSOAS_FIXAS = [
   },
 ];
 
+// prettier-ignore
 const NOMES_GERADOS = [
   'Diego Alves', 'Helena Prado', 'Rafael Nunes', 'Beatriz Moura', 'Felipe Cardoso', 'Larissa Fontes', 'Thiago Ribeiro',
   'Juliana Matos', 'Gustavo Pires', 'Patrícia Neves', 'André Barros', 'Fernanda Lopes', 'Rodrigo Campos',
@@ -87,8 +94,7 @@ function sortear(lista, quantidade, aleatorio) {
   return escolhidos;
 }
 
-const emailDe = (nome) =>
-  `${nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '.')}@exemplo.test`;
+const emailDe = (nome) => `${nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '.')}@exemplo.test`;
 
 export function montarPessoas() {
   const aleatorio = gerador(2026);
@@ -127,11 +133,24 @@ export async function semear(banco, { demonstracao = true } = {}) {
       const [criada] = await query(
         `INSERT INTO employee (auth_provider_id, name, email, bio, position, department, location, connection_goals)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb) RETURNING id`,
-        [`seed-${pessoa.email}`, pessoa.nome, pessoa.email, pessoa.bio, pessoa.cargo, pessoa.unidade, pessoa.cidade, JSON.stringify(pessoa.objetivos)],
+        [
+          `seed-${pessoa.email}`,
+          pessoa.nome,
+          pessoa.email,
+          pessoa.bio,
+          pessoa.cargo,
+          pessoa.unidade,
+          pessoa.cidade,
+          JSON.stringify(pessoa.objetivos),
+        ],
       );
       idsPessoa.set(pessoa.nome, criada.id);
       for (const nome of [...pessoa.tecnicas, ...pessoa.hobbies]) {
-        await query('INSERT INTO employee_interest (employee_id, interest_id, source) VALUES ($1, $2, $3)', [criada.id, idsTag.get(nome), 'MANUAL']);
+        await query('INSERT INTO employee_interest (employee_id, interest_id, source) VALUES ($1, $2, $3)', [
+          criada.id,
+          idsTag.get(nome),
+          'MANUAL',
+        ]);
       }
     }
 

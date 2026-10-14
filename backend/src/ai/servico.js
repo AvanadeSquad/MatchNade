@@ -64,7 +64,7 @@ export function criarServicoIa({ config, banco, provedores = criarProvedores(con
     async extrairTags(employeeId, bio) {
       let limpa = limparTexto(bio).slice(0, MAX_BIO);
       // Remove as marcas até estabilizar, para </b</bio>io> não reconstruir uma marca válida.
-      for (let anterior = ''; anterior !== limpa; ) {
+      for (let anterior = ''; anterior !== limpa;) {
         anterior = limpa;
         limpa = limpa.replace(/<\/?bio>/gi, '');
       }
@@ -84,7 +84,12 @@ export function criarServicoIa({ config, banco, provedores = criarProvedores(con
           hobby_tags: tagsValidas(dados.hobby_tags),
           fallback: false,
         };
-        await registrar(employeeId, EXTRACAO, { modelo: resposta.modelo, status: 'OK', payload: resultado, latenciaMs: resposta.latenciaMs });
+        await registrar(employeeId, EXTRACAO, {
+          modelo: resposta.modelo,
+          status: 'OK',
+          payload: resultado,
+          latenciaMs: resposta.latenciaMs,
+        });
         return resultado;
       } catch {
         await registrar(employeeId, EXTRACAO, { status: 'ERRO', latenciaMs: Date.now() - inicio });
@@ -109,7 +114,12 @@ export function criarServicoIa({ config, banco, provedores = criarProvedores(con
           await registrar(employeeId, QUEBRA_GELO, { modelo: resposta.modelo, status: 'REJEITADO', latenciaMs: resposta.latenciaMs });
           return padrao;
         }
-        await registrar(employeeId, QUEBRA_GELO, { modelo: resposta.modelo, status: 'OK', payload: { match_summary: frase }, latenciaMs: resposta.latenciaMs });
+        await registrar(employeeId, QUEBRA_GELO, {
+          modelo: resposta.modelo,
+          status: 'OK',
+          payload: { match_summary: frase },
+          latenciaMs: resposta.latenciaMs,
+        });
         return { match_summary: frase, fallback: false };
       } catch {
         await registrar(employeeId, QUEBRA_GELO, { status: 'ERRO', latenciaMs: Date.now() - inicio });
