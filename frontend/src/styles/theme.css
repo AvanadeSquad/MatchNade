@@ -1,0 +1,17 @@
+/* Variáveis que complementam ou sobrescrevem tokens.css para contraste mínimo de 4,5:1 (WCAG AA)
+   em texto e de 3:1 em bordas de campos e botões. O laranja original continua em ícones e destaques. */
+:root {
+  --color-action: #CC4A00;            /* fundo de botão com texto branco: 4,6:1 */
+  --color-action-hover: #B93C00;
+  --color-primary-text: #C2410C;      /* texto laranja sobre claro: 4,7:1 */
+  --color-text-subtle: #6B7280;       /* sobrescreve o cinza claro: 4,6:1 */
+  --color-success-strong: #15803D;    /* botão verde com texto branco: 5,0:1 */
+  --color-danger-text: #B91C1C;       /* texto vermelho sobre fundo claro: 5,3:1 */
+  --color-match-bg: #C2410C;          /* fundo da tela de match com texto branco: 5,2:1 */
+  --color-border-campo: #838B99;      /* borda de campos e chips interativos: 3,5:1 */
+  --color-overlay: rgba(17, 24, 39, 0.5);
+  --shadow-card: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --altura-nav: 72px;
+  --largura-lateral: 248px;
+}
