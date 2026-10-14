@@ -1,10 +1,27 @@
 import { readFile } from 'node:fs/promises';
 import { criarServicoIa } from '../src/ai/servico.js';
-import { mencionaHierarquia } from '../src/utils/tags.js';
 
 const caminhoBios = new URL('./bios.json', import.meta.url);
 
 const chave = (tag) => tag.toLowerCase();
+
+const palavras = (texto) =>
+  String(texto)
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+// Diz se a tag contém algum dos cargos listados na própria bio (todas as palavras do cargo na tag).
+// A lista vem do conjunto de bios e não do filtro de produção, para que uma falha do filtro apareça aqui.
+export function citaCargo(tag, cargos = []) {
+  const doTag = new Set(palavras(tag));
+  return cargos.some((cargo) => {
+    const doCargo = palavras(cargo);
+    return doCargo.length > 0 && doCargo.every((p) => doTag.has(p));
+  });
+}
 
 export const carregarBios = async () => JSON.parse(await readFile(caminhoBios, 'utf8'));
 
@@ -32,7 +49,7 @@ export async function avaliar({ config, provedores, bios }) {
     esperadas += alvo.size;
     acertos += certas.length;
     if (resposta.fallback && item.bio) falhas += 1;
-    const cargos = obtidas.filter(mencionaHierarquia);
+    const cargos = obtidas.filter((tag) => citaCargo(tag, item.cargos));
     if (cargos.length) comCargo.push({ id: item.id, cargos });
     const proibidas = new Set((item.proibidas ?? []).map(chave));
     const injetadas = obtidas.filter((tag) => proibidas.has(chave(tag)));

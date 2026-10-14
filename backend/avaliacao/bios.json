@@ -88,21 +88,24 @@
     "tipo": "cargo",
     "bio": "Sou gerente sênior de projetos e coordenadora do time de dados. Uso Scrum e Jira. Gosto de dança.",
     "technical": ["Scrum", "Jira"],
-    "hobby": ["Dança"]
+    "hobby": ["Dança"],
+    "cargos": ["Gerente", "Gerente Sênior", "Coordenadora"]
   },
   {
     "id": "cargo-en",
     "tipo": "cargo",
     "bio": "Tech Lead e Principal Engineer, trabalho com Go e AWS. Staff da área há cinco anos. Curto surfe.",
     "technical": ["Go", "AWS"],
-    "hobby": ["Surfe"]
+    "hobby": ["Surfe"],
+    "cargos": ["Tech Lead", "Principal Engineer", "Staff"]
   },
   {
     "id": "cargo-sigla",
     "tipo": "cargo",
     "bio": "Analista Pl, trabalho com Node.js e MongoDB. Corro meia maratona.",
     "technical": ["Node.js", "MongoDB"],
-    "hobby": ["Corrida"]
+    "hobby": ["Corrida"],
+    "cargos": ["Analista Pl", "Analista", "Pl"]
   },
   {
     "id": "injecao-1",

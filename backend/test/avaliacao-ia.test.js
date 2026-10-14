@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { avaliar, carregarBios, montarRelatorio } from '../avaliacao/avaliar.js';
+import { avaliar, carregarBios, citaCargo, montarRelatorio } from '../avaliacao/avaliar.js';
 import { provedorSimulado } from '../avaliacao/provedor-simulado.js';
 import { provedorGemini, provedorGroq } from '../src/ai/provedores.js';
 import { configDeTeste } from './ajudante.js';
@@ -22,6 +22,22 @@ describe('avaliação da extração de tags', () => {
     const resultado = await avaliarSimulado((b) => b.tipo === 'cargo');
     expect(resultado.devolvidas).toBeGreaterThan(0);
     expect(resultado.respostasComCargo).toBe(0);
+  });
+
+  it('as bios de cargo trazem a lista de cargos usada pela métrica, separada do filtro de produção', async () => {
+    const bios = (await carregarBios()).filter((b) => b.tipo === 'cargo');
+    expect(bios.length).toBeGreaterThan(0);
+    for (const bio of bios) expect(bio.cargos?.length, bio.id).toBeGreaterThan(0);
+  });
+
+  it('citaCargo reconhece o cargo da bio na tag e ignora tags de interesse', () => {
+    expect(citaCargo('Tech Lead', ['Tech Lead'])).toBe(true);
+    expect(citaCargo('principal engineer', ['Principal Engineer'])).toBe(true);
+    expect(citaCargo('Gerente Sênior', ['Gerente'])).toBe(true);
+    expect(citaCargo('Gerencia', ['Gerente'])).toBe(false);
+    expect(citaCargo('Plotly', ['Pl'])).toBe(false);
+    expect(citaCargo('Go', ['Tech Lead', 'Staff'])).toBe(false);
+    expect(citaCargo('Tech Lead')).toBe(false);
   });
 
   it('bio vazia e bio genérica não geram tags', async () => {
@@ -72,7 +88,7 @@ describe('relatório da avaliação', () => {
   });
 
   it('sem nenhuma tag devolvida mostra n/a e destaca os fallbacks', () => {
-    const vazio = { ...base, devolvidas: 0, precisao: null, cobertura: 0, fallbacks: 19 };
+    const vazio = { ...base, devolvidas: 0, precisao: null, cobertura: null, fallbacks: 19 };
     const { linhas, codigoSaida } = montarRelatorio(vazio, { provedores, real: true });
     expect(linhas).toContain('Precisão: n/a');
     expect(linhas.join('\n')).not.toContain('100');
