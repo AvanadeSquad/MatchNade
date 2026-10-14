@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { criarAmbiente } from './ajudante.js';
+import request from 'supertest';
+import { criarApp } from '../src/app.js';
+import { configDeTeste, criarAmbiente } from './ajudante.js';
 
 describe('autenticação e perfil', () => {
   let a;
@@ -182,20 +184,29 @@ describe('autenticação e perfil', () => {
   });
 });
 
+// Cada teste monta só o app com a configuração que precisa, sobre um único banco criado no
+// beforeAll: inicializar um PGlite custa segundos sob carga, e um por teste estouraria o limite.
 describe('rotas de desenvolvimento', () => {
+  let base;
+  beforeAll(async () => {
+    base = await criarAmbiente();
+  });
+  afterAll(() => base.fechar());
+
+  const appCom = (ambiente) =>
+    request(criarApp({ banco: base.banco, config: configDeTeste(ambiente), limitarRequisicoes: false, registrarErro: () => {} }));
+
   it('não existem com as flags desligadas', async () => {
-    const a = await criarAmbiente({ ambiente: { E2E_TEST_MODE: 'false' } });
-    expect((await a.http.post('/api/v1/test/login').send({ email: 'x@exemplo.test' })).status).toBe(404);
-    expect((await a.http.post('/api/v1/auth/dev-login').send({ email: 'x@exemplo.test' })).status).toBe(404);
-    await a.fechar();
+    const http = appCom({ E2E_TEST_MODE: 'false' });
+    expect((await http.post('/api/v1/test/login').send({ email: 'x@exemplo.test' })).status).toBe(404);
+    expect((await http.post('/api/v1/auth/dev-login').send({ email: 'x@exemplo.test' })).status).toBe(404);
   });
 
   it('login de desenvolvimento só existe com AUTH_DEV_LOGIN e respeita a lista de e-mails', async () => {
-    const a = await criarAmbiente({ ambiente: { AUTH_DEV_LOGIN: 'true', ALLOWED_EMAIL_DOMAINS: 'exemplo.test' } });
-    const ok = await a.http.post('/api/v1/auth/dev-login').send({ email: 'novo@exemplo.test' });
+    const http = appCom({ AUTH_DEV_LOGIN: 'true', ALLOWED_EMAIL_DOMAINS: 'exemplo.test' });
+    const ok = await http.post('/api/v1/auth/dev-login').send({ email: 'novo@exemplo.test' });
     expect(ok.status).toBe(200);
-    expect((await a.http.post('/api/v1/auth/dev-login').send({ email: 'x@outro.com' })).status).toBe(403);
-    expect((await a.http.get('/api/v1/auth/dev-users')).status).toBe(200);
-    await a.fechar();
+    expect((await http.post('/api/v1/auth/dev-login').send({ email: 'x@outro.com' })).status).toBe(403);
+    expect((await http.get('/api/v1/auth/dev-users')).status).toBe(200);
   });
 });
