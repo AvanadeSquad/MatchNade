@@ -22,7 +22,12 @@ describe('provedor Gemini', () => {
     const corpo = JSON.parse(opcoes.body);
     expect(corpo.systemInstruction.parts[0].text).toBe('instrução');
     expect(corpo.contents[0].parts[0].text).toBe('texto');
-    expect(corpo.generationConfig).toMatchObject({ temperature: 0.1, maxOutputTokens: 300, responseMimeType: 'application/json', responseSchema: { type: 'OBJECT' } });
+    expect(corpo.generationConfig).toMatchObject({
+      temperature: 0.1,
+      maxOutputTokens: 300,
+      responseMimeType: 'application/json',
+      responseSchema: { type: 'OBJECT' },
+    });
   });
 
   it('resposta sem texto vira erro não repetível', async () => {
@@ -70,7 +75,9 @@ describe('classificação dos erros', () => {
 
     const tempo = Object.assign(new Error('tempo'), { name: 'TimeoutError' });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(tempo));
-    const erro = await provedorGroq({ chave: 'k', modelo: 'm' }).gerar(requisicao).catch((e) => e);
+    const erro = await provedorGroq({ chave: 'k', modelo: 'm' })
+      .gerar(requisicao)
+      .catch((e) => e);
     expect(erro).toBeInstanceOf(ErroIa);
     expect(erro.message).toBe('tempo esgotado');
   });

@@ -1,4 +1,5 @@
 // Termos genéricos que não identificam um interesse.
+// prettier-ignore
 const GENERICAS = new Set([
   'empresa', 'tecnologia', 'trabalho', 'projeto', 'projetos', 'equipe', 'time', 'area', 'área',
   'profissional', 'carreira', 'pessoas', 'tudo', 'coisas', 'vida',
@@ -9,6 +10,7 @@ const SIGLAS_HIERARQUIA = new Set(['cto', 'ceo', 'cfo', 'vp', 'jr', 'pl', 'sr'])
 
 // Cargo, senioridade e tempo de casa nunca viram tag: o produto não filtra,
 // pontua nem exibe hierarquia.
+// prettier-ignore
 const HIERARQUIA = new Set([
   'gerente', 'diretor', 'diretora', 'coordenador', 'coordenadora', 'supervisor', 'supervisora',
   'lider', 'líder', 'head', 'presidente', 'estagiario', 'estagiário', 'trainee', 'junior', 'júnior',
@@ -21,7 +23,10 @@ const OFENSIVAS = new Set(['porra', 'merda', 'caralho', 'puta', 'foda', 'idiota'
 
 const PADRAO_VALIDO = /^[\p{L}\p{N}][\p{L}\p{N} .+#&/'’-]*$/u;
 
-export const limparTexto = (texto) => String(texto ?? '').replace(/\s+/g, ' ').trim();
+export const limparTexto = (texto) =>
+  String(texto ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 // Devolve a tag normalizada ou null quando inválida.
 export function normalizarTag(nome) {
@@ -37,7 +42,9 @@ export function normalizarTag(nome) {
 
 // Verdadeiro se o texto cita cargo, senioridade ou hierarquia.
 export function mencionaHierarquia(texto) {
-  const palavras = String(texto).toLowerCase().split(/[^\p{L}\p{N}]+/u);
+  const palavras = String(texto)
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u);
   return palavras.some((p) => HIERARQUIA.has(p) || SIGLAS_HIERARQUIA.has(p) || ['hierarquia', 'chefe', 'subordinado'].includes(p));
 }
 
