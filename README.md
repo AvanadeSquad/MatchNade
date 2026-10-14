@@ -37,7 +37,7 @@ Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de lo
 
 ```powershell
 cd backend;     npm test               # regras de negócio e API (PGlite em memória)
-cd ..\frontend; npm run build          # confere que o app compila
+cd ..\frontend; npm test; npm run build   # testes dos componentes e confere que o app compila
 cd ..\e2e;      npm install; npx playwright install chromium; npm test   # navegador, desktop e celular
 ```
 

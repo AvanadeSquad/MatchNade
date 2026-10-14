@@ -40,9 +40,21 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 - Diretório raiz: `frontend`. Comando de build: `npm run build`. Saída: `dist`.
 - Variáveis: `VITE_API_URL` (URL da API com `/api/v1`) e `VITE_GOOGLE_CLIENT_ID`.
 - As rotas do app são do navegador; `frontend/vercel.json` e `frontend/public/_redirects` já redirecionam qualquer caminho para o `index.html`.
+- Os cabeçalhos de segurança, com a política de conteúdo (CSP), ficam em `frontend/vercel.json` (Vercel) e `frontend/public/_headers` (Netlify), com a mesma política nos dois. A CSP só deixa o app chamar o próprio site, o login do Google e `https://*.onrender.com`. Se a API for publicada em outro domínio, acrescente-o a `connect-src` **nos dois arquivos**; sem isso, o navegador bloqueia as chamadas à API. `npm run test:cabecalhos` confere que os dois continuam iguais.
 
 ## Conferência
 
 1. `GET <API>/health` responde `{"status":"ok"}`.
 2. Abra o frontend, entre com uma conta liberada e conclua o cadastro.
 3. Entre com uma conta fora da lista e confira a mensagem "Seu e-mail ainda não está liberado".
+
+## Depois de mesclar
+
+Itens que dependem das configurações do GitHub ou dos serviços e não são feitos por código:
+
+1. **Canal de vulnerabilidades:** com o repositório privado, o canal é o descrito no `SECURITY.md` (avisar a equipe pelo canal combinado do squad ou quem administra o repositório). Só se o repositório for público, ative em Settings, Code security, "Private vulnerability reporting", que passa a ser o canal.
+2. **Dependabot:** em Settings, Code security, confira se os alertas e as atualizações do Dependabot estão ativos. O arquivo `.github/dependabot.yml` só funciona com eles ligados.
+3. **CodeQL (opcional):** o job de `.github/workflows/codeql.yml` fica pulado até ser ativado. Para ativar, ligue o Code scanning em Settings, Code security (em repositório privado, isso exige o recurso de segurança do GitHub no plano; em repositório público, é gratuito) e depois crie, em Settings, Secrets and variables, Actions, aba Variables, a variável de repositório `CODEQL_ATIVO` com o valor `true`.
+4. **Proteção das branches:** em Settings, Branches, proteja `main` e `develop` exigindo pull request e os jobs do CI aprovados antes de mesclar. Não marque o CodeQL como verificação obrigatória enquanto ele estiver desligado: o GitHub conta o job pulado como aprovado, então a exigência não protege nada, e se a variável for criada antes de ligar o Code scanning, o job falha e trava todos os merges.
+5. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
+6. **Referências visuais:** se a primeira execução do CI falhar nos testes visuais por diferença de desenho do Chromium, gere as referências no mesmo ambiente do CI, seguindo `e2e/README.md`.
