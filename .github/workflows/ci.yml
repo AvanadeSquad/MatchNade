@@ -66,7 +66,7 @@ jobs:
           TEST_DATABASE_URL: postgresql://teste:teste@localhost:5432/matchnade_teste
 
   frontend:
-    name: Frontend (build)
+    name: Frontend (testes e build)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -80,7 +80,31 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - run: npm test
+      - run: npm run test:cabecalhos
       - run: npm run build
+
+  lint:
+    name: Lint e formatação
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        pasta: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.pasta }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.pasta }}/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
 
   e2e:
     name: Ponta a ponta (Playwright)
