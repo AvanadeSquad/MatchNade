@@ -90,14 +90,14 @@ describe('GET /api/v1/health/ready', () => {
     expect(estado.consultas).toBe(1);
   });
 
-  it('não tem limite de requisições: com o limite ligado, 200 chamadas seguidas recebem 200 e viram uma consulta', async () => {
-    const { banco, estado } = bancoFalso();
+  it('fica fora do limitador de requisições: a rota não conta no limite e as demais contam', async () => {
+    const { banco } = bancoFalso();
     const app = criarApp({ banco, config: a.config, ia: {}, limitarRequisicoes: true, log: logMudo });
-    const agente = request.agent(app);
-    const status = [];
-    for (let i = 0; i < 200; i += 1) status.push((await agente.get('/api/v1/health/ready')).status);
-    expect(status.every((s) => s === 200)).toBe(true);
-    expect(estado.consultas).toBe(1);
+    const comLimite = await request(app).get('/api/v1/health');
+    expect(comLimite.headers).toHaveProperty('ratelimit-limit');
+    const prontidao = await request(app).get('/api/v1/health/ready');
+    expect(prontidao.status).toBe(200);
+    expect(prontidao.headers).not.toHaveProperty('ratelimit-limit');
   });
 
   it('o aviso de banco indisponível leva o request_id da requisição', async () => {
