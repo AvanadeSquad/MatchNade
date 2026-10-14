@@ -1,13 +1,12 @@
 /* Tokens de design do Avanade Connect.
-   Valores extraidos das telas exportadas do Figma (390x844).
-   Conferir com os estilos do Figma. Fonte, raios e sombras ainda nao definidos. */
+   Valores extraídos das telas exportadas do Figma (390x844). */
 :root {
   /* marca */
   --color-primary: #FF6D00;
   --color-primary-hover: #FF8F38;
   --color-primary-soft: #FFF3E0;
 
-  /* fundo e superficies */
+  /* fundo e superfícies */
   --color-bg: #F9FAFB;
   --color-surface: #FFFFFF;
   --color-border: #E5E7EB;
@@ -24,10 +23,10 @@
   --color-danger: #EF4444;
   --color-danger-soft: #FEE2E2;
 
-  /* percentual de afinidade na lista de conexoes (valor aproximado) */
+  /* percentual de afinidade na lista de conexões */
   --color-accent-purple: #7C3AED;
 
-  /* formas observadas: botoes em pilula, cartoes com borda fina */
+  /* botões em pílula, cartões com borda fina */
   --radius-pill: 999px;
   --radius-card: 16px;
 }
