@@ -12,7 +12,8 @@
     "dev": "node --watch src/index.js",
     "seed": "node src/db/seed-cli.js",
     "test": "vitest run",
-    "medir": "node scripts/medir.js"
+    "medir": "node scripts/medir.js",
+    "avaliar-ia": "node avaliacao/avaliar-ia.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
