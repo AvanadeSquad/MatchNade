@@ -1,5 +1,5 @@
-// Pessoas que a usuária ignorou na descoberta. Ficam na sessão do navegador, separadas por usuária,
-// para não reaparecerem ao recarregar nem vazarem para outra conta usada na mesma aba.
+// Pessoas que quem usa o app ignorou na descoberta. Ficam na sessão do navegador, separadas por
+// conta, para não reaparecerem ao recarregar nem vazarem para outra conta usada na mesma aba.
 const chave = (usuarioId) => `ignorados:${usuarioId}`;
 
 export function lerIgnorados(usuarioId) {
