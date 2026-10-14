@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import 'dotenv/config';
+import { NIVEIS } from '../utils/log.js';
 
 const lista = (valor) =>
   (valor || '')
@@ -27,6 +28,8 @@ export function carregarConfig(origem = process.env) {
     // Sem JWT_SECRET, gera um segredo aleatório: nunca existe um valor padrão conhecido que permita forjar tokens.
     jwtSecret: origem.JWT_SECRET || randomBytes(32).toString('hex'),
     trustProxy: inteiro(origem.TRUST_PROXY, producao ? 1 : 0),
+    // Nos testes o padrão é silencioso, para os logs não poluírem a saída do vitest.
+    logLevel: NIVEIS.includes(origem.LOG_LEVEL) ? origem.LOG_LEVEL : origem.NODE_ENV === 'test' ? 'silent' : 'info',
     jwtExpiresIn: origem.JWT_EXPIRES_IN || '8h',
     frontendUrl: origem.FRONTEND_URL || 'http://localhost:5173',
     google: { clientId: origem.GOOGLE_CLIENT_ID || '' },

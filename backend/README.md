@@ -121,6 +121,19 @@ Um banco criado antes das migrações (sem `schema_migrations`) é adotado: a `0
 - Uma recusa é permanente: se alguém tentar demonstrar interesse de novo em quem recusou, ou em quem foi recusado, a API devolve `409 JA_EXISTE`.
 - A IA nunca bloqueia o fluxo: timeout de 2,5 s, uma nova tentativa após 500 ms, disjuntor (3 falhas em 60 s), prazo total de 8 s (dá tempo de o provedor reserva responder) e fallback para tags manuais e texto padrão.
 
+## Logs e verificação de saúde
+
+A API escreve uma linha JSON por evento na saída padrão, com `time`, `level` e `msg`. Cada requisição recebe um id: ele volta no cabeçalho `X-Request-Id` e aparece no campo `request_id` da linha registrada ao fim da requisição, junto com método, caminho sem a query string, status, duração em milissegundos e o id da pessoa logada. Se quem chamou já mandou um `X-Request-Id` com 8 a 64 letras, números ou hifens, ele é aproveitado.
+
+Os logs nunca trazem corpo de requisição, token, e-mail, bio ou mensagens do chat. Erros inesperados são registrados com nome, código e pilha, sem a mensagem, porque erros do banco podem conter valores dos dados.
+
+O nível vem de `LOG_LEVEL` (`debug`, `info`, `warn`, `error` ou `silent`). O padrão é `info`, e `silent` nos testes.
+
+| Rota | Resposta |
+|---|---|
+| `GET /health` e `GET /api/v1/health` | `200 {"status":"ok"}` quando o processo responde |
+| `GET /api/v1/health/ready` | `200 {"status":"ok","banco":"ok"}` quando o banco responde em até 2 segundos; senão `503 {"status":"indisponivel","banco":"erro"}` |
+
 ## Variáveis de ambiente
 
 Veja `.env.example`. Em produção a API recusa iniciar sem `JWT_SECRET` forte, `DATABASE_URL`, `GOOGLE_CLIENT_ID` e lista de e-mails liberados, e recusa `AUTH_DEV_LOGIN` e `E2E_TEST_MODE`.
