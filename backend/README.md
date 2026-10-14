@@ -60,6 +60,22 @@ npm test
 
 O arquivo `test/compatibilidade-banco.test.js` confere, nos dois bancos, os pontos em que pg e PGlite poderiam divergir: contagens e `bigint` como número (o pg devolveria texto sem o ajuste em `src/db/index.js`), `REAL`, `TIMESTAMPTZ` e `JSONB`, o índice único parcial do par, `ON CONFLICT` sobre `LOWER(name)` e a trava consultiva de transação.
 
+## Medir o desempenho
+
+```powershell
+npm run medir
+```
+
+Cria 5 mil pessoas fictícias com 6 interesses cada (em PGlite, em memória) e mede a mediana e o p90 de 20 execuções da descoberta, da lista de conexões e do perfil de outra pessoa. Com `MEDIR_DATABASE_URL` mede num PostgreSQL vazio.
+
+As três rotas carregam a base de perfis inteira para calcular a afinidade. A consulta busca uma linha por pessoa, com os ids das tags agregados, e o catálogo de tags à parte. Números medidos numa máquina de desenvolvimento:
+
+| Rota | PGlite antes | PGlite depois | PostgreSQL 16 antes | PostgreSQL 16 depois |
+|---|---|---|---|---|
+| Descoberta | 340 ms | 83 ms | 53 ms | 42 ms |
+| Lista de conexões | 349 ms | 82 ms | 78 ms | 39 ms |
+| Perfil de outra pessoa | 363 ms | 87 ms | 59 ms | 43 ms |
+
 ## Estrutura
 
 ```
@@ -73,6 +89,7 @@ src/
   services/        regras de negócio (afinidade, conexões, chat, bloqueios, perfil)
   ai/              provedores (Gemini, Groq), prompts, disjuntor e serviço de IA
   middlewares/     autenticação e tratamento de erros
+scripts/          medição de desempenho
 test/              testes com vitest e supertest
 ```
 
