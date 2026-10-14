@@ -13,7 +13,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:cabecalhos": "node --test testes-config/cabecalhos.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
