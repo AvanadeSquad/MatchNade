@@ -12,6 +12,7 @@ import { rotasDev } from './routes/dev.js';
 import { rotasPerfil } from './routes/perfil.js';
 import { rotasPessoas } from './routes/pessoas.js';
 import { criarAutenticacao } from './services/autenticacao.js';
+import { criarProntidao } from './services/prontidao.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
 // Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorGoogle` e `log`
@@ -52,21 +53,14 @@ export function criarApp({
   const saude = (_req, res) => res.json({ status: 'ok' });
   app.get('/health', saude);
 
-  // Prontidão: além de o processo responder, o banco precisa atender em até 2 segundos.
+  // Prontidão: além de o processo responder, o banco precisa atender. A rota não tem limite de
+  // requisições: a sonda do serviço de hospedagem a chama com frequência, e um 429 tiraria a
+  // instância de rotação sem nada quebrado. O resultado guardado por alguns segundos já limita as
+  // consultas ao banco, por mais chamadas que cheguem.
+  const verificarProntidao = criarProntidao({ banco, log });
   const prontidao = async (req, res) => {
-    let espera;
-    const tempoEsgotado = new Promise((_, rejeitar) => {
-      espera = setTimeout(() => rejeitar(new Error('banco não respondeu a tempo')), 2000);
-    });
-    try {
-      await Promise.race([banco.query('SELECT 1'), tempoEsgotado]);
-      res.json({ status: 'ok', banco: 'ok' });
-    } catch (erro) {
-      log.warn('banco indisponivel', { request_id: req.id, ...resumirErro(erro) });
-      res.status(503).json({ status: 'indisponivel', banco: 'erro' });
-    } finally {
-      clearTimeout(espera);
-    }
+    if (await verificarProntidao({ request_id: req.id })) res.json({ status: 'ok', banco: 'ok' });
+    else res.status(503).json({ status: 'indisponivel', banco: 'erro' });
   };
   app.get('/api/v1/health/ready', prontidao);
 
