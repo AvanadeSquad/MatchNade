@@ -1,0 +1,21 @@
+{
+  "name": "matchnade-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Testes de ponta a ponta com Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install chromium"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
