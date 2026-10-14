@@ -1,14 +1,27 @@
+import { basename } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { autenticarPagina, chamar, criarPessoaPronta } from './helpers/api.js';
 
 // Regressão visual das telas principais. As linhas de base ficam em tests/visual.spec.js-snapshots
 // e valem para Linux com o Chromium do Playwright, que é o ambiente do CI. Para atualizar:
-//   npx playwright test tests/visual.spec.js --update-snapshots
+//   npm run test:visual:atualizar
 test.skip(process.platform !== 'linux', 'As linhas de base são geradas e comparadas no Linux, como no CI.');
 
 // Sem repetição: a segunda tentativa encontraria no banco as pessoas da primeira, com os mesmos
 // nomes e interesses, e a tela mudaria. Uma diferença visual também não some ao repetir.
 test.describe.configure({ retries: 0 });
+
+// Quando uma captura não bate com a referência (ou a referência não existe), anexa a imagem real
+// com o nome exato do arquivo de referência. Assim o relatório HTML que o CI publica traz, ao lado
+// das imagens esperada, real e de diferença, o arquivo pronto para copiar para a pasta de referências.
+test.afterEach(async ({}, info) => {
+  if (info.status === info.expectedStatus) return;
+  for (const anexo of info.attachments) {
+    if (!anexo.path || !anexo.name.endsWith('-actual.png')) continue;
+    const referencia = basename(info.snapshotPath(anexo.name.replace(/-actual\.png$/, '.png'), { kind: 'screenshot' }));
+    await info.attach(`nova-referencia/${referencia}`, { path: anexo.path, contentType: 'image/png' });
+  }
+});
 
 // Fonte fixa instalada pelo "playwright install --with-deps" no Ubuntu: evita que a Inter,
 // presente em algumas máquinas e ausente em outras, mude a captura.
