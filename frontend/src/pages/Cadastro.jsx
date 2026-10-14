@@ -42,7 +42,15 @@ export default function Cadastro() {
       <form className="formulario" onSubmit={enviar}>
         <label className="campo">
           <span>Nome completo</span>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Ana Silva" required minLength={2} maxLength={120} autoComplete="name" />
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Ex.: Ana Silva"
+            required
+            minLength={2}
+            maxLength={120}
+            autoComplete="name"
+          />
         </label>
         <label className="campo">
           <span>E-mail corporativo</span>
@@ -50,20 +58,41 @@ export default function Cadastro() {
         </label>
         <label className="campo">
           <span>Unidade</span>
-          <input value={unidade} onChange={(e) => setUnidade(e.target.value)} placeholder="Ex.: Experience Design" required maxLength={80} />
+          <input
+            value={unidade}
+            onChange={(e) => setUnidade(e.target.value)}
+            placeholder="Ex.: Experience Design"
+            required
+            maxLength={80}
+          />
         </label>
         <label className="campo">
           <span>Cidade</span>
-          <input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex.: São Paulo" required maxLength={80} autoComplete="address-level2" />
+          <input
+            value={cidade}
+            onChange={(e) => setCidade(e.target.value)}
+            placeholder="Ex.: São Paulo"
+            required
+            maxLength={80}
+            autoComplete="address-level2"
+          />
         </label>
         <label className="marcar">
           <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} required />
           <span>Li e concordo com os termos de uso e a política de privacidade do Avanade Connect.</span>
         </label>
-        {erro && <p className="erro-campo" role="alert">{erro}</p>}
-        <button type="submit" className="botao botao--primario" disabled={salvando || !aceite}>Conectar-se</button>
+        {erro && (
+          <p className="erro-campo" role="alert">
+            {erro}
+          </p>
+        )}
+        <button type="submit" className="botao botao--primario" disabled={salvando || !aceite}>
+          Conectar-se
+        </button>
       </form>
-      <button type="button" className="botao botao--texto" onClick={sairDaConta}>Entrei com a conta errada: sair</button>
+      <button type="button" className="botao botao--texto" onClick={sairDaConta}>
+        Entrei com a conta errada: sair
+      </button>
     </main>
   );
 }

@@ -96,7 +96,9 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
   if (estado.indisponivel) {
     return (
       <Vazio titulo="Conversa indisponível" texto="Esta conversa não existe ou foi encerrada.">
-        <Link className="botao botao--contorno botao--auto" to="/chat">Voltar às conversas</Link>
+        <Link className="botao botao--contorno botao--auto" to="/chat">
+          Voltar às conversas
+        </Link>
       </Vazio>
     );
   }
@@ -104,7 +106,9 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
   return (
     <>
       <header className="chat__topo">
-        <button type="button" className="icone-botao chat__voltar" aria-label="Voltar" onClick={aoVoltar}><IconeVoltar /></button>
+        <button type="button" className="icone-botao chat__voltar" aria-label="Voltar" onClick={aoVoltar}>
+          <IconeVoltar />
+        </button>
         <Avatar nome={conexao.name} tamanho={40} />
         <div className="chat__quem">
           <strong>{conexao.name}</strong>
@@ -116,12 +120,18 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
       {quebraGelo && (
         <aside className="quebra-gelo" aria-label="Sugestão para começar a conversa">
           <span>{quebraGelo}</span>
-          <button type="button" onClick={() => setQuebraGelo(null)}>Fechar</button>
+          <button type="button" onClick={() => setQuebraGelo(null)}>
+            Fechar
+          </button>
         </aside>
       )}
 
       <div className="chat__mensagens" role="log" aria-live="polite" aria-label="Mensagens">
-        {!mensagens.length && <p className="pequeno" style={{ textAlign: 'center' }}>Diga oi para {conexao.name.split(' ')[0]}.</p>}
+        {!mensagens.length && (
+          <p className="pequeno" style={{ textAlign: 'center' }}>
+            Diga oi para {conexao.name.split(' ')[0]}.
+          </p>
+        )}
         {mensagens.map((m) => (
           <div key={m.id} className={`bolha${m.sender_id === perfil.id ? ' bolha--minha' : ''}`}>
             {m.body}
@@ -132,8 +142,16 @@ function Conversa({ id, conexao, aoVoltar, aoBloquear }) {
       </div>
 
       <form className="chat__envio" onSubmit={enviar}>
-        <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Digite uma mensagem..." aria-label="Mensagem" maxLength={1000} />
-        <button type="submit" aria-label="Enviar" disabled={!texto.trim() || enviando}><IconeEnviar /></button>
+        <input
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Digite uma mensagem..."
+          aria-label="Mensagem"
+          maxLength={1000}
+        />
+        <button type="submit" aria-label="Enviar" disabled={!texto.trim() || enviando}>
+          <IconeEnviar />
+        </button>
       </form>
     </>
   );
@@ -149,11 +167,25 @@ export default function Chats() {
 
   let painel = <p className="chats__vazio">Escolha uma conversa na lista para começar.</p>;
   if (id && carregando) painel = <Carregando />;
-  else if (id && conexao) painel = <Conversa key={id} id={id} conexao={conexao} aoVoltar={() => navegar('/chat')} aoBloquear={() => { navegar('/chat', { replace: true }); recarregar(); }} />;
+  else if (id && conexao)
+    painel = (
+      <Conversa
+        key={id}
+        id={id}
+        conexao={conexao}
+        aoVoltar={() => navegar('/chat')}
+        aoBloquear={() => {
+          navegar('/chat', { replace: true });
+          recarregar();
+        }}
+      />
+    );
   else if (id && dados) {
     painel = (
       <Vazio titulo="Conversa indisponível" texto="Esta conversa não existe ou foi encerrada.">
-        <Link className="botao botao--contorno botao--auto" to="/chat">Voltar às conversas</Link>
+        <Link className="botao botao--contorno botao--auto" to="/chat">
+          Voltar às conversas
+        </Link>
       </Vazio>
     );
   }
@@ -168,7 +200,9 @@ export default function Chats() {
             {erro && <Erro erro={erro} aoTentarDeNovo={recarregar} />}
             {dados && !dados.confirmadas.length && (
               <Vazio titulo="Nenhuma conversa ainda" texto="O chat abre quando duas pessoas demonstram interesse uma pela outra.">
-                <Link className="botao botao--primario botao--auto" to="/descobrir">Descobrir pessoas</Link>
+                <Link className="botao botao--primario botao--auto" to="/descobrir">
+                  Descobrir pessoas
+                </Link>
               </Vazio>
             )}
             {dados?.confirmadas.map((c) => (
@@ -176,12 +210,16 @@ export default function Chats() {
                 <Avatar nome={c.name} />
                 <span>
                   <strong>{c.name}</strong>
-                  <span className="pequeno" style={{ display: 'block' }}>{c.department}</span>
+                  <span className="pequeno" style={{ display: 'block' }}>
+                    {c.department}
+                  </span>
                 </span>
               </NavLink>
             ))}
           </section>
-          <section className="chats__conversa" aria-label="Conversa">{painel}</section>
+          <section className="chats__conversa" aria-label="Conversa">
+            {painel}
+          </section>
         </div>
       </main>
       <Navegacao />

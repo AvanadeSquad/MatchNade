@@ -59,7 +59,8 @@ export function Erro({ erro, aoTentarDeNovo }) {
   );
 }
 
-const FOCAVEIS = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const FOCAVEIS =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // Janela de diálogo acessível: foco inicial no diálogo, Tab preso dentro dele, Esc e clique fora fecham.
 // Com `ocupado`, nada fecha (por exemplo, enquanto uma ação está sendo enviada).
@@ -120,7 +121,12 @@ export function Modal({ titulo, aoFechar, ocupado = false, children }) {
 // Chip que alterna entre selecionado e não selecionado.
 export function ChipEscolha({ selecionado, aoAlternar, children }) {
   return (
-    <button type="button" className={`chip chip--escolha${selecionado ? ' chip--ativo' : ''}`} aria-pressed={selecionado} onClick={aoAlternar}>
+    <button
+      type="button"
+      className={`chip chip--escolha${selecionado ? ' chip--ativo' : ''}`}
+      aria-pressed={selecionado}
+      onClick={aoAlternar}
+    >
       {children}
     </button>
   );

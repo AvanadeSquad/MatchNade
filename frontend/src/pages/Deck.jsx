@@ -53,8 +53,21 @@ export default function Deck() {
   else if (erro) conteudo = <Erro erro={erro} aoTentarDeNovo={recarregar} />;
   else if (!atual) {
     conteudo = (
-      <Vazio titulo={cotaEsgotada ? 'Você usou a cota da semana' : 'Por enquanto é só'} texto={dados.message ?? 'Você já viu todas as pessoas. Volte mais tarde para ver novidades.'}>
-        <button type="button" className="botao botao--contorno botao--auto" onClick={() => { limparIgnorados(perfil.id); setIgnorados(new Set()); recarregar(); }}>Atualizar</button>
+      <Vazio
+        titulo={cotaEsgotada ? 'Você usou a cota da semana' : 'Por enquanto é só'}
+        texto={dados.message ?? 'Você já viu todas as pessoas. Volte mais tarde para ver novidades.'}
+      >
+        <button
+          type="button"
+          className="botao botao--contorno botao--auto"
+          onClick={() => {
+            limparIgnorados(perfil.id);
+            setIgnorados(new Set());
+            recarregar();
+          }}
+        >
+          Atualizar
+        </button>
       </Vazio>
     );
   } else {
@@ -69,25 +82,57 @@ export default function Deck() {
             <h2>{atual.name}</h2>
             <p className="pequeno">{atual.department}</p>
           </div>
-          {atual.city && <p className="meta"><IconePino /> {atual.city}</p>}
+          {atual.city && (
+            <p className="meta">
+              <IconePino /> {atual.city}
+            </p>
+          )}
           <div>
             <p className="rotulo">Interesses em comum</p>
             {atual.shared_interests.length ? (
               <div className="chips" style={{ marginTop: 8 }}>
-                {atual.shared_interests.map((tag) => <span className="chip chip--marca" key={tag}>{tag}</span>)}
+                {atual.shared_interests.map((tag) => (
+                  <span className="chip chip--marca" key={tag}>
+                    {tag}
+                  </span>
+                ))}
               </div>
             ) : (
-              <p className="pequeno" style={{ marginTop: 8 }}>Nenhum ainda, mas pode ser um bom começo de conversa.</p>
+              <p className="pequeno" style={{ marginTop: 8 }}>
+                Nenhum ainda, mas pode ser um bom começo de conversa.
+              </p>
             )}
           </div>
-          <Link className="link-simples" to={`/pessoa/${atual.employee_id}`}>Ver perfil completo</Link>
+          <Link className="link-simples" to={`/pessoa/${atual.employee_id}`}>
+            Ver perfil completo
+          </Link>
         </article>
 
         <div className="acoes">
-          <button type="button" className="acao acao--pular" aria-label="Ignorar" onClick={() => marcarComoVista(atual.employee_id)} disabled={enviando}><IconeX /></button>
-          <button type="button" className="acao acao--curtir" aria-label="Demonstrar interesse" onClick={demonstrarInteresse} disabled={enviando || cotaEsgotada}><IconeCoracao /></button>
+          <button
+            type="button"
+            className="acao acao--pular"
+            aria-label="Ignorar"
+            onClick={() => marcarComoVista(atual.employee_id)}
+            disabled={enviando}
+          >
+            <IconeX />
+          </button>
+          <button
+            type="button"
+            className="acao acao--curtir"
+            aria-label="Demonstrar interesse"
+            onClick={demonstrarInteresse}
+            disabled={enviando || cotaEsgotada}
+          >
+            <IconeCoracao />
+          </button>
         </div>
-        {cotaEsgotada && <p className="erro-campo" style={{ textAlign: 'center' }}>Você já usou suas {perfil.quota.max} solicitações desta semana.</p>}
+        {cotaEsgotada && (
+          <p className="erro-campo" style={{ textAlign: 'center' }}>
+            Você já usou suas {perfil.quota.max} solicitações desta semana.
+          </p>
+        )}
       </>
     );
   }
@@ -102,14 +147,23 @@ export default function Deck() {
             <section className="cartao">
               <p className="rotulo">Sua semana</p>
               <p className="quota">
-                <strong>{perfil.quota.used} de {perfil.quota.max}</strong>
-                <span>Solicitações desta semana: {perfil.quota.used} de {perfil.quota.max}</span>
+                <strong>
+                  {perfil.quota.used} de {perfil.quota.max}
+                </strong>
+                <span>
+                  Solicitações desta semana: {perfil.quota.used} de {perfil.quota.max}
+                </span>
               </p>
-              <p className="pequeno" style={{ marginTop: 8 }}>A cota renova toda segunda-feira. Receber ou aceitar um pedido não gasta a sua.</p>
+              <p className="pequeno" style={{ marginTop: 8 }}>
+                A cota renova toda segunda-feira. Receber ou aceitar um pedido não gasta a sua.
+              </p>
             </section>
             <section className="cartao">
               <p className="rotulo">Como funciona</p>
-              <p className="pequeno" style={{ marginTop: 8 }}>Demonstre interesse em quem tem a ver com você. Se a outra pessoa também quiser, vira match e o chat abre. Cargo e senioridade não aparecem aqui.</p>
+              <p className="pequeno" style={{ marginTop: 8 }}>
+                Demonstre interesse em quem tem a ver com você. Se a outra pessoa também quiser, vira match e o chat abre. Cargo e
+                senioridade não aparecem aqui.
+              </p>
             </section>
           </aside>
         </div>

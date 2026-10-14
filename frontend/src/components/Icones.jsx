@@ -24,7 +24,12 @@ export const IconeBussola = icone('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M15.
 export const IconeMatches = icone('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M8 12l3 3 5-6');
 export const IconeChat = icone('M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z');
 export const IconePerfil = icone('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M4 21a8 8 0 0 1 16 0');
-export const IconePessoas = icone('M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z', 'M2.5 20a6.5 6.5 0 0 1 13 0', 'M16 4.2a3.5 3.5 0 0 1 0 6.6', 'M18 14.2a6.5 6.5 0 0 1 3.5 5.8');
+export const IconePessoas = icone(
+  'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
+  'M2.5 20a6.5 6.5 0 0 1 13 0',
+  'M16 4.2a3.5 3.5 0 0 1 0 6.6',
+  'M18 14.2a6.5 6.5 0 0 1 3.5 5.8',
+);
 export const IconeX = icone('M6 6l12 12M18 6L6 18');
 export const IconeCoracao = icone('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z');
 export const IconeVoltar = icone('M19 12H5', 'M12 19l-7-7 7-7');

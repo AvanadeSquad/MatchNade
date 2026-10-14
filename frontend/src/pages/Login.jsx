@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { IconePessoas } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -44,6 +44,12 @@ export default function Login() {
     entrar(resposta.token, resposta.employee);
     navegar(resposta.employee.profile_complete ? '/descobrir' : '/bem-vindo', { replace: true });
   }
+  // O botão do Google é criado uma vez; o callback dele chama sempre a versão atual de concluir.
+  // A referência é atualizada depois de cada renderização, não durante ela, como o React exige.
+  const concluirAtual = useRef(concluir);
+  useLayoutEffect(() => {
+    concluirAtual.current = concluir;
+  });
 
   // Login com Google, quando o ID do cliente está configurado.
   useEffect(() => {
@@ -57,19 +63,25 @@ export default function Login() {
           callback: async ({ credential }) => {
             setErro('');
             try {
-              concluir(await API.loginGoogle(credential));
+              concluirAtual.current(await API.loginGoogle(credential));
             } catch (e) {
               setErro(mensagemDeErro(e));
             }
           },
         });
-        window.google.accounts.id.renderButton(botaoGoogle.current, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', width: 320, locale: 'pt-BR' });
+        window.google.accounts.id.renderButton(botaoGoogle.current, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: 'continue_with',
+          width: 320,
+          locale: 'pt-BR',
+        });
       })
       .catch((e) => ativo && setErro(e.message));
     return () => {
       ativo = false;
     };
-    // O botão do Google deve ser criado uma única vez; o callback usa apenas funções estáveis.
   }, []);
 
   // Em desenvolvimento a API oferece uma lista de pessoas para entrar sem Google.
@@ -101,7 +113,9 @@ export default function Login() {
   return (
     <main className="auth">
       <section className="auth__marca">
-        <div className="entrada__logo"><IconePessoas /></div>
+        <div className="entrada__logo">
+          <IconePessoas />
+        </div>
         <h2>Conheça pessoas da Avanade pelo que vocês têm em comum</h2>
         <p>Interesses profissionais e pessoais aproximam. Cargo e senioridade ficam de fora.</p>
       </section>
@@ -119,7 +133,9 @@ export default function Login() {
               <span>Entrar como</span>
               <select value={emailDev} onChange={(e) => setEmailDev(e.target.value)}>
                 {usuariosDev.map((u) => (
-                  <option key={u.email} value={u.email}>{u.name}</option>
+                  <option key={u.email} value={u.email}>
+                    {u.name}
+                  </option>
                 ))}
                 <option value={NOVO_CADASTRO}>Novo cadastro (outro e-mail)</option>
               </select>
@@ -127,15 +143,27 @@ export default function Login() {
             {emailDev === NOVO_CADASTRO && (
               <label className="campo">
                 <span>E-mail do novo cadastro</span>
-                <input type="email" value={emailNovo} onChange={(e) => setEmailNovo(e.target.value)} placeholder="nome@exemplo.test" required />
+                <input
+                  type="email"
+                  value={emailNovo}
+                  onChange={(e) => setEmailNovo(e.target.value)}
+                  placeholder="nome@exemplo.test"
+                  required
+                />
               </label>
             )}
-            <button type="submit" className="botao botao--primario" disabled={entrando}>Entrar</button>
+            <button type="submit" className="botao botao--primario" disabled={entrando}>
+              Entrar
+            </button>
           </form>
         )}
 
         {semLogin && <p className="pequeno">O login ainda não está configurado neste ambiente.</p>}
-        {erro && <p className="erro-campo" role="alert">{erro}</p>}
+        {erro && (
+          <p className="erro-campo" role="alert">
+            {erro}
+          </p>
+        )}
       </section>
     </main>
   );

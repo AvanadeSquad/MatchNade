@@ -15,7 +15,9 @@ export default function Bio() {
     <main className="tela tela--painel">
       <Cabecalho titulo="Sua bio" aoVoltar={() => navegar('/bem-vindo')} />
       <h1>Conte um pouco sobre você</h1>
-      <p className="subtitulo">Escreva do seu jeito. A IA sugere seus interesses profissionais e pessoais a partir do texto, e você revisa antes de salvar.</p>
+      <p className="subtitulo">
+        Escreva do seu jeito. A IA sugere seus interesses profissionais e pessoais a partir do texto, e você revisa antes de salvar.
+      </p>
 
       <label className="campo">
         <span className="so-leitor">Sua bio</span>
@@ -26,10 +28,17 @@ export default function Bio() {
           rows={7}
           placeholder="Conte o que você faz e do que gosta fora do trabalho"
         />
-        <p className="campo__ajuda">{bio.length}/{LIMITE} caracteres. Não precisa citar cargo nem tempo de casa.</p>
+        <p className="campo__ajuda">
+          {bio.length}/{LIMITE} caracteres. Não precisa citar cargo nem tempo de casa.
+        </p>
       </label>
 
-      <button type="button" className="botao botao--primario" disabled={!bio.trim()} onClick={() => navegar('/perfil/analisando', { state: { bio } })}>
+      <button
+        type="button"
+        className="botao botao--primario"
+        disabled={!bio.trim()}
+        onClick={() => navegar('/perfil/analisando', { state: { bio } })}
+      >
         Analisar minha bio
       </button>
       <button type="button" className="botao botao--texto" onClick={() => navegar('/perfil/interesses')}>

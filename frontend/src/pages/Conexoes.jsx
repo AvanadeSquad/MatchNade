@@ -33,12 +33,28 @@ function CartaoConexao({ conexao, aba, aoResponder, ocupado }) {
       </Link>
       {aba === 'recebidas' && (
         <div className="barra-acoes">
-          <button type="button" className="botao botao--perigo botao--pequeno" disabled={ocupado} onClick={() => aoResponder(conexao, 'decline')}>Recusar</button>
-          <button type="button" className="botao botao--sucesso botao--pequeno" disabled={ocupado} onClick={() => aoResponder(conexao, 'accept')}>Aceitar</button>
+          <button
+            type="button"
+            className="botao botao--perigo botao--pequeno"
+            disabled={ocupado}
+            onClick={() => aoResponder(conexao, 'decline')}
+          >
+            Recusar
+          </button>
+          <button
+            type="button"
+            className="botao botao--sucesso botao--pequeno"
+            disabled={ocupado}
+            onClick={() => aoResponder(conexao, 'accept')}
+          >
+            Aceitar
+          </button>
         </div>
       )}
       {aba === 'confirmadas' && (
-        <Link className="botao botao--suave botao--pequeno" to={`/chat/${conexao.match_id}`}>Enviar mensagem</Link>
+        <Link className="botao botao--suave botao--pequeno" to={`/chat/${conexao.match_id}`}>
+          Enviar mensagem
+        </Link>
       )}
     </li>
   );
@@ -103,7 +119,8 @@ export default function Conexoes() {
               tabIndex={aba === id ? 0 : -1}
               onClick={() => setAba(id)}
             >
-              {rotulo}{dados ? ` (${dados[id].length})` : ''}
+              {rotulo}
+              {dados ? ` (${dados[id].length})` : ''}
             </button>
           ))}
         </div>
@@ -114,7 +131,9 @@ export default function Conexoes() {
           {dados && !lista.length && <Vazio titulo="Nada por aqui" texto={atual.vazio} />}
           {dados && lista.length > 0 && (
             <ul className="lista lista--grade">
-              {lista.map((c) => <CartaoConexao key={c.match_id} conexao={c} aba={aba} aoResponder={responder} ocupado={ocupado} />)}
+              {lista.map((c) => (
+                <CartaoConexao key={c.match_id} conexao={c} aba={aba} aoResponder={responder} ocupado={ocupado} />
+              ))}
             </ul>
           )}
         </div>

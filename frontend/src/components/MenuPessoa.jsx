@@ -102,7 +102,15 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
   return (
     <>
       <div className="menu" ref={raiz}>
-        <button type="button" ref={botao} className="icone-botao" aria-label="Mais opções" aria-haspopup="menu" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
+        <button
+          type="button"
+          ref={botao}
+          className="icone-botao"
+          aria-label="Mais opções"
+          aria-haspopup="menu"
+          aria-expanded={aberto}
+          onClick={() => setAberto(!aberto)}
+        >
           <IconeMais />
         </button>
         {aberto && (
@@ -120,10 +128,18 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
       {dialogo === 'bloquear' && (
         <Modal titulo={`Bloquear ${nome}?`} aoFechar={fechar} ocupado={enviando}>
           <p>Vocês deixam de se ver na descoberta e a conversa é encerrada. Você pode desbloquear depois, em Perfil.</p>
-          {erro && <p className="erro-campo" role="alert">{erro}</p>}
+          {erro && (
+            <p className="erro-campo" role="alert">
+              {erro}
+            </p>
+          )}
           <div className="modal__acoes">
-            <button type="button" className="botao botao--contorno" onClick={fechar} disabled={enviando}>Cancelar</button>
-            <button type="button" className="botao botao--perigo" disabled={enviando} onClick={confirmarBloqueio}>Bloquear</button>
+            <button type="button" className="botao botao--contorno" onClick={fechar} disabled={enviando}>
+              Cancelar
+            </button>
+            <button type="button" className="botao botao--perigo" disabled={enviando} onClick={confirmarBloqueio}>
+              Bloquear
+            </button>
           </div>
         </Modal>
       )}
@@ -133,12 +149,26 @@ export default function MenuPessoa({ pessoaId, nome, aoBloquear }) {
           <form onSubmit={enviarDenuncia}>
             <label className="campo">
               <span>O que aconteceu?</span>
-              <textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={4} placeholder="Descreva o motivo da denúncia" />
+              <textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                maxLength={500}
+                rows={4}
+                placeholder="Descreva o motivo da denúncia"
+              />
             </label>
-            {erro && <p className="erro-campo" role="alert">{erro}</p>}
+            {erro && (
+              <p className="erro-campo" role="alert">
+                {erro}
+              </p>
+            )}
             <div className="modal__acoes">
-              <button type="button" className="botao botao--contorno" onClick={fechar} disabled={enviando}>Cancelar</button>
-              <button type="submit" className="botao botao--primario" disabled={enviando}>Enviar denúncia</button>
+              <button type="button" className="botao botao--contorno" onClick={fechar} disabled={enviando}>
+                Cancelar
+              </button>
+              <button type="submit" className="botao botao--primario" disabled={enviando}>
+                Enviar denúncia
+              </button>
             </div>
           </form>
         </Modal>

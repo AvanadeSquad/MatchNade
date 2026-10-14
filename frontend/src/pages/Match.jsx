@@ -25,17 +25,34 @@ export default function Match() {
     return { pessoa, quebraGelo };
   }, [id]);
 
-  if (carregando) return <main className="tela"><Carregando texto="Preparando seu match..." /></main>;
-  if (erro) return <main className="tela"><Erro erro={erro} aoTentarDeNovo={recarregar} /><Link className="botao botao--contorno" to="/conexoes">Voltar</Link></main>;
+  if (carregando)
+    return (
+      <main className="tela">
+        <Carregando texto="Preparando seu match..." />
+      </main>
+    );
+  if (erro)
+    return (
+      <main className="tela">
+        <Erro erro={erro} aoTentarDeNovo={recarregar} />
+        <Link className="botao botao--contorno" to="/conexoes">
+          Voltar
+        </Link>
+      </main>
+    );
 
   const { pessoa, quebraGelo } = dados;
   const comuns = pessoa.shared_interests.slice(0, 3);
 
   return (
     <main className="tela tela--centro match">
-      <div className="match__icone"><IconeCoracao /></div>
+      <div className="match__icone">
+        <IconeCoracao />
+      </div>
       <h1>É um match!</h1>
-      <p>Você e <strong>{pessoa.name}</strong> demonstraram interesse mútuo.</p>
+      <p>
+        Você e <strong>{pessoa.name}</strong> demonstraram interesse mútuo.
+      </p>
 
       <div className="match__avatares">
         <Avatar nome={perfil.name} tamanho={88} />
@@ -44,18 +61,27 @@ export default function Match() {
 
       {comuns.length > 0 && (
         <div>
-          <p className="rotulo" style={{ color: '#fff' }}>Conexão em comum</p>
+          <p className="rotulo" style={{ color: '#fff' }}>
+            Conexão em comum
+          </p>
           <p style={{ fontSize: 20, fontWeight: 700 }}>{listaEmTexto(comuns)}</p>
         </div>
       )}
 
       <section className="match__porque" aria-label="Por que houve match?">
         <p className="rotulo">Por que houve match?</p>
-        <p style={{ marginTop: 6 }}>{quebraGelo?.match_summary ?? (comuns.length ? `Vocês têm em comum ${listaEmTexto(comuns)}.` : 'Vocês demonstraram interesse um no outro.')}</p>
+        <p style={{ marginTop: 6 }}>
+          {quebraGelo?.match_summary ??
+            (comuns.length ? `Vocês têm em comum ${listaEmTexto(comuns)}.` : 'Vocês demonstraram interesse um no outro.')}
+        </p>
       </section>
 
-      <button type="button" className="botao botao--primario" onClick={() => navegar(`/chat/${id}`)}>Enviar mensagem</button>
-      <button type="button" className="botao botao--contorno" onClick={() => navegar('/descobrir')}>Continuar descobrindo</button>
+      <button type="button" className="botao botao--primario" onClick={() => navegar(`/chat/${id}`)}>
+        Enviar mensagem
+      </button>
+      <button type="button" className="botao botao--contorno" onClick={() => navegar('/descobrir')}>
+        Continuar descobrindo
+      </button>
     </main>
   );
 }

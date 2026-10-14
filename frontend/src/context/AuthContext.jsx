@@ -73,7 +73,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ token, perfil, carregando, erroPerfil, tentarDeNovo: buscarPerfil, entrar, sair, recarregarPerfil, atualizarPerfilEmSilencio, definirPerfil: setPerfil, rascunho, setRascunho }),
+    () => ({
+      token,
+      perfil,
+      carregando,
+      erroPerfil,
+      tentarDeNovo: buscarPerfil,
+      entrar,
+      sair,
+      recarregarPerfil,
+      atualizarPerfilEmSilencio,
+      definirPerfil: setPerfil,
+      rascunho,
+      setRascunho,
+    }),
     [token, perfil, carregando, erroPerfil, buscarPerfil, entrar, sair, recarregarPerfil, atualizarPerfilEmSilencio, rascunho],
   );
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
