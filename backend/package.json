@@ -1,17 +1,46 @@
 {
-  "name": "matchnade",
-  "version": "0.1.0",
-  "description": "Projeto Avanade",
+  "name": "matchnade-backend",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
   "main": "src/index.js",
-  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "echo \"sem testes configurados ainda\" && exit 0"
+    "seed": "node src/db/seed-cli.js",
+    "test": "vitest run",
+    "medir": "node scripts/medir.js",
+    "avaliar-ia": "node avaliacao/avaliar-ia.js",
+    "openapi": "node src/openapi/gerar-cli.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "mutacao": "stryker run",
+    "mutacao:resumo": "node scripts/resumo-mutacao.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "UNLICENSED",
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "google-auth-library": "^11.2.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@stryker-mutator/core": "10.0.0",
+    "eslint": "9.39.5",
+    "globals": "16.5.0",
+    "prettier": "3.9.9",
+    "supertest": "^7.3.1",
+    "vitest": "^5.0.3"
+  }
 }

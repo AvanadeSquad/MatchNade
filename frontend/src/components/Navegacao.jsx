@@ -20,8 +20,12 @@ export default function Navegacao() {
     <>
       <aside className="lateral">
         <div className="lateral__marca">
-          <span className="lateral__logo"><IconePessoas /></span>
-          <strong>Avanade <span className="destaque">Connect</span></strong>
+          <span className="lateral__logo">
+            <IconePessoas />
+          </span>
+          <strong>
+            Avanade <span className="destaque">Connect</span>
+          </strong>
         </div>
         <nav aria-label="Navegação principal">
           {itens.map(({ para, rotulo, Icone }) => (

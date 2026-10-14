@@ -24,11 +24,18 @@ function RotaProtegida() {
     return (
       <main className="tela">
         <Erro erro={erroPerfil} aoTentarDeNovo={tentarDeNovo} />
-        <button type="button" className="botao botao--texto" onClick={sair}>Sair da conta</button>
+        <button type="button" className="botao botao--texto" onClick={sair}>
+          Sair da conta
+        </button>
       </main>
     );
   }
-  if (carregando || (token && !perfil)) return <main className="tela"><Carregando /></main>;
+  if (carregando || (token && !perfil))
+    return (
+      <main className="tela">
+        <Carregando />
+      </main>
+    );
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 }
 

@@ -12,6 +12,8 @@ export function useCarregar(buscar, dependencias = []) {
     buscar()
       .then((dados) => minha === versao.current && setEstado({ dados, erro: null, carregando: false }))
       .catch((erro) => minha === versao.current && setEstado({ dados: null, erro, carregando: false }));
+    // As dependências são as de quem chama o hook, que decide quando a busca muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencias);
 
   useEffect(() => {

@@ -43,7 +43,9 @@ export default function Objetivos() {
       <div className="lista" role="group" aria-label="Objetivos de conexão">
         {OBJETIVOS.map(({ id, titulo, descricao, Icone }) => (
           <button key={id} type="button" className="opcao" aria-pressed={escolhidos.includes(id)} onClick={() => alternar(id)}>
-            <span className="opcao__icone"><Icone /></span>
+            <span className="opcao__icone">
+              <Icone />
+            </span>
             <span>
               <strong>{titulo}</strong>
               <span className="pequeno">{descricao}</span>
@@ -52,8 +54,14 @@ export default function Objetivos() {
         ))}
       </div>
 
-      {erro && <p className="erro-campo" role="alert">{erro}</p>}
-      <button type="button" className="botao botao--primario" disabled={!escolhidos.length || salvando} onClick={continuar}>Continuar</button>
+      {erro && (
+        <p className="erro-campo" role="alert">
+          {erro}
+        </p>
+      )}
+      <button type="button" className="botao botao--primario" disabled={!escolhidos.length || salvando} onClick={continuar}>
+        Continuar
+      </button>
     </main>
   );
 }

@@ -1,0 +1,29 @@
+# Fim de linha LF no repositório e no checkout, em qualquer sistema. Sem isso, o
+# core.autocrlf do Windows converte para CRLF e o format:check do Prettier falha.
+* text=auto eol=lf
+
+# Tipos de texto do projeto, declarados para não depender da detecção automática.
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.svg text eol=lf
+
+# Binários: nunca converter. Os PDFs de docs/design seriam vistos como texto pela
+# detecção automática e corrompidos pela conversão de fim de linha.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

@@ -38,6 +38,8 @@ export default function Interesses() {
     if (!catalogo.dados) return;
     const conhecidas = new Set(catalogo.dados.tags.map((t) => t.name.toLowerCase()));
     setExtras([...selecionadas.values()].filter((t) => !conhecidas.has(t.nome.toLowerCase())));
+    // Roda só quando o catálogo chega: recalcular a cada seleção tiraria das opções a tag desmarcada.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalogo.dados]);
 
   const alternar = (nome, categoria) =>
@@ -68,7 +70,11 @@ export default function Interesses() {
     setSalvando(true);
     let atualizado;
     try {
-      const interests = [...selecionadas.values()].map((t) => ({ name: t.nome, category: t.categoria, source: t.fonte === 'AI' ? 'AI' : 'MANUAL' }));
+      const interests = [...selecionadas.values()].map((t) => ({
+        name: t.nome,
+        category: t.categoria,
+        source: t.fonte === 'AI' ? 'AI' : 'MANUAL',
+      }));
       atualizado = await API.salvarInteresses(interests);
       definirPerfil(atualizado);
     } catch (e) {
@@ -81,8 +87,18 @@ export default function Interesses() {
     navegar(editando || atualizado?.connection_goals.length ? '/eu' : '/perfil/objetivos');
   }
 
-  if (catalogo.carregando) return <main className="tela"><Carregando /></main>;
-  if (catalogo.erro) return <main className="tela"><Erro erro={catalogo.erro} aoTentarDeNovo={catalogo.recarregar} /></main>;
+  if (catalogo.carregando)
+    return (
+      <main className="tela">
+        <Carregando />
+      </main>
+    );
+  if (catalogo.erro)
+    return (
+      <main className="tela">
+        <Erro erro={catalogo.erro} aoTentarDeNovo={catalogo.recarregar} />
+      </main>
+    );
 
   const grupos = [
     { titulo: 'Interesses profissionais', categoria: 'TECHNICAL' },
@@ -92,7 +108,14 @@ export default function Interesses() {
 
   return (
     <main className="tela tela--painel">
-      <Cabecalho titulo="Seus interesses" acao={<button type="button" className="botao botao--texto botao--auto" onClick={() => setSelecionadas(new Map())}>Limpar</button>} />
+      <Cabecalho
+        titulo="Seus interesses"
+        acao={
+          <button type="button" className="botao botao--texto botao--auto" onClick={() => setSelecionadas(new Map())}>
+            Limpar
+          </button>
+        }
+      />
 
       {grupos.map(({ titulo, categoria }) => {
         const doCatalogo = catalogo.dados.tags.filter((t) => t.category === categoria).map((t) => t.name);
@@ -114,23 +137,42 @@ export default function Interesses() {
       <form className="cartao" onSubmit={criarTag}>
         <h2 className="bloco__titulo">+ Criar tag</h2>
         <div className="nova-tag">
-          <input value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} placeholder="Ex.: Jardinagem" aria-label="Nome da nova tag" maxLength={40} required />
+          <input
+            value={novo.nome}
+            onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+            placeholder="Ex.: Jardinagem"
+            aria-label="Nome da nova tag"
+            maxLength={40}
+            required
+          />
           <select value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} aria-label="Tipo da nova tag">
             <option value="TECHNICAL">Profissional</option>
             <option value="HOBBY">Pessoal</option>
           </select>
-          <button type="submit" className="botao botao--suave">Criar</button>
+          <button type="submit" className="botao botao--suave">
+            Criar
+          </button>
         </div>
       </form>
 
-      {erro && <p className="erro-campo" role="alert">{erro}</p>}
+      {erro && (
+        <p className="erro-campo" role="alert">
+          {erro}
+        </p>
+      )}
 
       <div className="rodape-fixo">
         <p className="contador" aria-live="polite">
           <span>{plural(selecionadas.size, 'selecionado', 'selecionados')}</span>
           {faltam > 0 && <span className="pequeno">Escolha mais {faltam}</span>}
         </p>
-        <button type="button" className="botao botao--primario" disabled={selecionadas.size < MINIMO || salvando} onClick={salvar} style={{ marginTop: 8 }}>
+        <button
+          type="button"
+          className="botao botao--primario"
+          disabled={selecionadas.size < MINIMO || salvando}
+          onClick={salvar}
+          style={{ marginTop: 8 }}
+        >
           Salvar interesses
         </button>
       </div>
