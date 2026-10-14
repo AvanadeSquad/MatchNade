@@ -5,6 +5,7 @@
   "description": "Testes de ponta a ponta com Playwright",
   "scripts": {
     "test": "playwright test",
+    "test:visual:atualizar": "playwright test tests/visual.spec.js --update-snapshots",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "report": "playwright show-report",
