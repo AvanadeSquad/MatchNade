@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import pg from 'pg';
 import request from 'supertest';
 import { criarApp } from '../src/app.js';
 import { carregarConfig } from '../src/config/env.js';
@@ -7,10 +9,35 @@ export const SEGREDO = 'segredo-de-teste-com-mais-de-trinta-e-dois-caracteres';
 
 export const configDeTeste = (extra = {}) => carregarConfig({ NODE_ENV: 'test', JWT_SECRET: SEGREDO, E2E_TEST_MODE: 'true', ...extra });
 
-// Cria um ambiente isolado: banco PGlite em memória, app Express e atalhos de teste.
+// Com TEST_DATABASE_URL os testes usam PostgreSQL real: cada ambiente ganha um schema próprio,
+// criado vazio e apagado ao fechar, para arquivos rodando em paralelo não se enxergarem.
+// Sem a variável, usa PGlite em memória.
+async function criarBancoDeTeste() {
+  const url = process.env.TEST_DATABASE_URL;
+  if (!url) return { banco: await criarBanco(), descartar: async () => {} };
+
+  const schema = `teste_${randomUUID().replace(/-/g, '')}`;
+  const admin = new pg.Client({ connectionString: url });
+  await admin.connect();
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  await admin.end();
+
+  const comSchema = new URL(url);
+  comSchema.searchParams.set('options', `-c search_path=${schema}`);
+  const banco = await criarBanco({ databaseUrl: comSchema.toString() });
+  const descartar = async () => {
+    const limpeza = new pg.Client({ connectionString: url });
+    await limpeza.connect();
+    await limpeza.query(`DROP SCHEMA ${schema} CASCADE`);
+    await limpeza.end();
+  };
+  return { banco, descartar };
+}
+
+// Cria um ambiente isolado: banco de teste, app Express e atalhos de teste.
 export async function criarAmbiente({ ambiente = {}, ia, verificadorGoogle } = {}) {
   const config = configDeTeste(ambiente);
-  const banco = await criarBanco();
+  const { banco, descartar } = await criarBancoDeTeste();
   const app = criarApp({ banco, config, ia, verificadorGoogle, limitarRequisicoes: false, registrarErro: () => {} });
   const http = request(app);
   const tokens = new Map();
@@ -76,7 +103,10 @@ export async function criarAmbiente({ ambiente = {}, ia, verificadorGoogle } = {
       return { get: comAuth('get'), post: comAuth('post'), put: comAuth('put'), patch: comAuth('patch'), delete: comAuth('delete') };
     },
 
-    fechar: () => banco.close(),
+    async fechar() {
+      await banco.close();
+      await descartar();
+    },
   };
   return ambienteDeTeste;
 }

@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express from 'express';
-import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from './middlewares/limite.js';
 import helmet from 'helmet';
 import { criarServicoIa } from './ai/servico.js';
 import { autenticar } from './middlewares/autenticar.js';

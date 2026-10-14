@@ -12,6 +12,9 @@
     "dev": "node --watch src/index.js",
     "seed": "node src/db/seed-cli.js",
     "test": "vitest run",
+    "medir": "node scripts/medir.js",
+    "avaliar-ia": "node avaliacao/avaliar-ia.js",
+    "openapi": "node src/openapi/gerar-cli.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

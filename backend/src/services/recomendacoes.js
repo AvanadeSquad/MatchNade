@@ -4,37 +4,42 @@ import { expirarPendentes } from './expiracao.js';
 import { exigirPerfilCompleto, usoDaCota } from './perfil.js';
 
 // Carrega os perfis ativos com seus interesses e calcula os pesos de raridade (IDF).
+// Busca uma linha por pessoa, com os ids das tags agregados, e o catálogo de tags à parte:
+// um JOIN plano repetiria nome e categoria da tag em cada par pessoa e tag.
 export async function carregarBase(consulta) {
-  const linhas = await consulta(
-    `SELECT e.id, e.name, e.department, e.location, e.is_paused,
-            t.id AS tag_id, t.name AS tag_name, t.category
-       FROM employee e
-       LEFT JOIN employee_interest ei ON ei.employee_id = e.id
-       LEFT JOIN interest_tag t ON t.id = ei.interest_id
-      WHERE e.is_active`,
-  );
+  const [linhas, catalogo] = await Promise.all([
+    consulta(
+      `SELECT e.id, e.name, e.department, e.location, e.is_paused,
+              COALESCE(array_agg(ei.interest_id ORDER BY ei.interest_id) FILTER (WHERE ei.interest_id IS NOT NULL), '{}') AS tags
+         FROM employee e
+         LEFT JOIN employee_interest ei ON ei.employee_id = e.id
+        WHERE e.is_active
+        GROUP BY e.id`,
+    ),
+    consulta('SELECT id, name, category FROM interest_tag'),
+  ]);
 
+  const categorias = new Map(catalogo.map((t) => [t.id, { nome: t.name, categoria: t.category }]));
   const perfis = new Map();
   const nomes = new Map();
   const contagem = new Map();
   for (const linha of linhas) {
-    if (!perfis.has(linha.id)) {
-      perfis.set(linha.id, {
-        id: linha.id,
-        nome: linha.name,
-        unidade: linha.department,
-        cidade: linha.location,
-        pausado: linha.is_paused,
-        tecnicas: [],
-        hobbies: [],
-      });
+    const perfil = {
+      id: linha.id,
+      nome: linha.name,
+      unidade: linha.department,
+      cidade: linha.location,
+      pausado: linha.is_paused,
+      tecnicas: [],
+      hobbies: [],
+    };
+    for (const tagId of linha.tags) {
+      const tag = categorias.get(tagId);
+      (tag.categoria === 'TECHNICAL' ? perfil.tecnicas : perfil.hobbies).push(tagId);
+      nomes.set(tagId, tag);
+      contagem.set(tagId, (contagem.get(tagId) ?? 0) + 1);
     }
-    if (linha.tag_id) {
-      const perfil = perfis.get(linha.id);
-      (linha.category === 'TECHNICAL' ? perfil.tecnicas : perfil.hobbies).push(linha.tag_id);
-      nomes.set(linha.tag_id, { nome: linha.tag_name, categoria: linha.category });
-      contagem.set(linha.tag_id, (contagem.get(linha.tag_id) ?? 0) + 1);
-    }
+    perfis.set(linha.id, perfil);
   }
   return { perfis, nomes, idf: calcularIdf(perfis.size, contagem) };
 }

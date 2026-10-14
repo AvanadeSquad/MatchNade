@@ -4,7 +4,7 @@ import { bloquear, denunciar, desbloquear, listarBloqueados } from '../services/
 import { perfilDaPessoa } from '../services/pessoas.js';
 import { lerId } from '../utils/validacao.js';
 
-const corpoDenuncia = z.object({ reason: z.string().max(500).optional() });
+export const corpoDenuncia = z.object({ reason: z.string().max(500).optional() });
 
 export function rotasPessoas(ctx, autenticar) {
   const router = Router();
