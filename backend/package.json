@@ -17,7 +17,9 @@
     "openapi": "node src/openapi/gerar-cli.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "mutacao": "stryker run",
+    "mutacao:resumo": "node scripts/resumo-mutacao.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@stryker-mutator/core": "10.0.0",
     "eslint": "9.39.5",
     "globals": "16.5.0",
     "prettier": "3.9.9",
