@@ -116,3 +116,22 @@ Um banco criado antes das migrações (sem `schema_migrations`) é adotado: a `0
 Veja `.env.example`. Em produção a API recusa iniciar sem `JWT_SECRET` forte, `DATABASE_URL`, `GOOGLE_CLIENT_ID` e lista de e-mails liberados, e recusa `AUTH_DEV_LOGIN` e `E2E_TEST_MODE`.
 
 A API completa está em `docs/api.md`.
+
+## Contrato da API (OpenAPI)
+
+`openapi.json`, nesta pasta, é a especificação OpenAPI 3.1 da API. Ela é gerada por `src/openapi/especificacao.js`: os corpos, os parâmetros de consulta (inclusive `category` em `/tags` e `limit` em `/matches/recommendations`) e o `id` do caminho vêm dos mesmos schemas zod que as rotas usam para validar. As respostas de `GET /matches/recommendations` e `GET /employees/{id}` são tipadas em `src/openapi/respostas.js`, com `additionalProperties: false`; o perfil de outra pessoa tem duas formas, antes do match (sem `position` e `bio`) e depois. Os resumos, as demais respostas e os códigos de erro são descritos à mão. Depois de mudar uma rota ou um schema:
+
+```powershell
+npm run openapi
+```
+
+O teste `test/contrato-openapi.test.js` falha se:
+
+- o `openapi.json` estiver desatualizado;
+- uma rota do Express não estiver na especificação, ou o contrário;
+- os parâmetros de caminho declarados forem diferentes dos do caminho, ou uma rota ler de `req.query` um parâmetro não declarado (ou deixar de ler um declarado);
+- uma rota declarada com login responder sem ele, ou o contrário;
+- as respostas reais de recomendações e do perfil de outra pessoa não seguirem os schemas da especificação, inclusive se `position` ou `bio` aparecerem antes do match;
+- o fuzz guiado pela especificação receber erro 500 ou um status não documentado ao enviar corpos e ids malformados.
+
+O limite de requisições responde 429 em JSON, no mesmo formato dos outros erros: `{ "code": "LIMITE_EXCEDIDO", "message": "..." }`.

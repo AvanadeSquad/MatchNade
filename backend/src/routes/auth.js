@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { montarPerfil, obterOuCriarPorGoogle } from '../services/perfil.js';
 
-const corpoGoogle = z.object({ credential: z.string().min(10) });
+export const corpoGoogle = z.object({ credential: z.string().min(10) });
 
 // Login com Google: valida o ID token, cria a pessoa no primeiro acesso e devolve o JWT.
 export function rotasAuth(ctx) {
