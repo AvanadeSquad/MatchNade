@@ -1,26 +1,37 @@
 import { useEffect, useId, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { iniciais } from '../utils/formatar.js';
+import { iniciais, tomDoNome } from '../utils/formatar.js';
 import { IconeVoltar } from './Icones.jsx';
 
-// Avatar com as iniciais do nome. `tamanho` em pixels.
-export function Avatar({ nome, tamanho = 48 }) {
+// Avatar com as iniciais do nome e uma cor fixa por pessoa. `tamanho` em pixels.
+// `quadrado` usa cantos arredondados em vez de círculo; `children` vira um selo no canto.
+export function Avatar({ nome, tamanho = 48, quadrado = false, children }) {
   return (
-    <div className="avatar" style={{ width: tamanho, height: tamanho, fontSize: tamanho * 0.36 }} aria-hidden="true">
-      {iniciais(nome)}
+    <div
+      className={`avatar${quadrado ? ' avatar--quadrado' : ''}`}
+      style={{ width: tamanho, height: tamanho, fontSize: tamanho * 0.36, '--tom': tomDoNome(nome) }}
+      aria-hidden={children ? undefined : 'true'}
+    >
+      <span aria-hidden="true">{iniciais(nome)}</span>
+      {children}
     </div>
   );
 }
 
-// Cabeçalho das telas internas: botão de voltar, título e uma ação opcional à direita.
-export function Cabecalho({ titulo, aoVoltar, acao }) {
+// Barra superior das telas de celular: botão de voltar, título centralizado e uma ação opcional à direita.
+// O título é um rótulo de navegação; o título da página (h1) fica no conteúdo.
+export function Cabecalho({ titulo, aoVoltar, acao, semVoltar = false }) {
   const navegar = useNavigate();
   return (
     <header className="cabecalho">
-      <button type="button" className="icone-botao" aria-label="Voltar" onClick={aoVoltar ?? (() => navegar(-1))}>
-        <IconeVoltar />
-      </button>
-      <h1 className="cabecalho__titulo">{titulo}</h1>
+      {semVoltar ? (
+        <span aria-hidden="true" />
+      ) : (
+        <button type="button" className="icone-botao" aria-label="Voltar" onClick={aoVoltar ?? (() => navegar(-1))}>
+          <IconeVoltar />
+        </button>
+      )}
+      <p className="cabecalho__titulo">{titulo}</p>
       <div className="cabecalho__acao">{acao}</div>
     </header>
   );

@@ -1,6 +1,6 @@
 # Frontend
 
-React com Vite. O layout é pensado para desktop (menu lateral e conteúdo em colunas) e se adapta a celular abaixo de 900 px, com coluna única e barra de navegação inferior. O conteúdo e o estilo seguem as telas de `docs/design/telas`.
+React com Vite. Há duas versões de cada tela, seguindo os layouts de desktop e de celular: acima de 900 px, cabeçalho com navegação em pílulas e conteúdo em colunas; abaixo, as telas do layout mobile, com barra de navegação inferior. Onde a estrutura muda (cadastro dividido em mais telas, cartão da descoberta, lista de conexões, menu do perfil, tela de match), a página usa o hook `useCelular`; no resto, o CSS adapta.
 
 ## Rodar
 
@@ -28,7 +28,8 @@ Testes de unidade com Vitest e Testing Library, em jsdom, ao lado do código (`*
 - `hooks/useCarregar.test.js`: descarte de respostas e erros de execuções antigas, e nenhuma atualização de estado pedida depois de desmontar (o teste conta os pedidos, porque o React 18 ignora em silêncio as atualizações de um componente desmontado).
 - `context/AuthContext.test.jsx`: resposta 401 encerra a sessão; falha de rede mantém a sessão e permite tentar de novo.
 - `utils/formatar.test.js` e `utils/ignorados.test.js`: formatação e lista de ignorados por pessoa.
-- `pages/Interesses.test.jsx`: mínimo de 3 interesses, dados enviados ao salvar, tag vinda da análise e erro ao salvar.
+- `App.celular.test.jsx`: versões de celular de todas as telas, com o cadastro em duas telas e o fluxo objetivo, importação com IA, interesses e revisão.
+- `pages/CadastroInteresses.test.jsx`: mínimo de 3 interesses, interesses e objetivos enviados ao salvar, objetivos preservados quando o propósito não muda, tags vindas da análise com IA e erro ao salvar.
 
 A API é simulada com `vi.spyOn` no objeto `API`, sem rede.
 
@@ -54,30 +55,44 @@ O ESLint usa as regras recomendadas e as regras `rules-of-hooks` e `exhaustive-d
 
 ```
 src/
-  styles/       tokens.css (cópia de docs/design), theme.css (contraste AA) e global.css
-                (desktop como base, bloco responsivo para celular no fim)
-  pages/        uma página por tela: login, cadastro, bio, análise, revisão, interesses,
-                objetivos, descoberta, perfil da pessoa, match, conexões, chat e perfil
-  components/   navegação (menu lateral e barra inferior), ícones SVG, modal, menu de ações
+  styles/       tokens.css, theme.css e global.css (visual "Global Connect": desktop como base,
+                blocos responsivos para telas médias e celular no fim)
+  pages/        login, cadastro em 3 etapas (dados, interesses & IA, preferências), descobrir,
+                matches bilaterais, mensagens & chat, meu perfil, perfil de outra pessoa e match
+  components/   Layout (cabeçalho com navegação em pílulas, sino, rodapé e barra inferior no celular),
+                Passos, SeletorTags, Controles (segmentado, equilíbrio, polos, interruptor), EdicaoPerfil,
+                ícones SVG, modal e menu de ações
   context/      sessão (token e perfil) e avisos
-  hooks/        useCarregar (busca com descarte de respostas antigas)
+  hooks/        useCarregar (busca com descarte de respostas antigas) e usePreferencias
   services/     api.js (cliente da API) e sessao.js (token)
-  utils/        formatação, objetivos de conexão e pessoas ignoradas
+  utils/        formatação, objetivos, preferências locais, convites de café, lidas e ignorados
 ```
 
 ## Rotas
 
-Públicas: `/` e `/login`. As demais exigem sessão. Quem ainda não concluiu o cadastro (unidade, 3 interesses e um objetivo) é levado a `/bem-vindo`.
+Públicas: `/` (redireciona) e `/login`. As demais exigem sessão. Quem ainda não concluiu o cadastro (unidade, 3 interesses e um objetivo) é levado a `/cadastro/dados`.
 
 | Rota | Tela |
 |---|---|
-| `/bem-vindo`, `/perfil/bio`, `/perfil/analisando`, `/perfil/revisao`, `/perfil/interesses`, `/perfil/objetivos` | Cadastro |
-| `/descobrir` | Sugestões por afinidade |
-| `/pessoa/:id` | Perfil de outra pessoa |
-| `/match/:id` | Tela de match |
-| `/conexoes` | Recebidas, confirmadas e aguardando |
-| `/chat`, `/chat/:id` | Conversas (lista e conversa lado a lado no desktop) |
-| `/eu` | Perfil, privacidade e configurações |
+| `/cadastro/dados`, `/cadastro/interesses`, `/cadastro/preferencias` | Cadastro em 3 etapas |
+| `/descobrir` (`?q=` filtra pela busca do cabeçalho) | Sugestões por afinidade, com filtros |
+| `/matches` | Destaque do match novo, solicitações recebidas, matches ativos e aguardando |
+| `/chat`, `/chat/:id` (`?cafe=1` abre a proposta de café) | Conversas lado a lado no desktop |
+| `/eu` | Perfil, parâmetros, objetivos, privacidade e sessão |
+| `/pessoa/:id`, `/match/:id` | Perfil de outra pessoa e comemoração do match |
+
+`/bem-vindo`, `/perfil/*` e `/conexoes` redirecionam para as rotas novas.
+
+## O que fica só no navegador
+
+A API não tem campos para alguns itens das telas. Eles ficam no `localStorage`, separados por conta:
+
+- telefone, hub e CEP (cadastro), equilíbrio profissional x pessoal, alcance geográfico, polos habilitados e o aviso do sino (`utils/preferencias.js`). O equilíbrio reordena as sugestões usando a afinidade por eixo que a API devolve; o alcance "Local" filtra pela cidade; polos dão um pequeno bônus;
+- conversas lidas (`utils/lidas.js`) e cafés agendados por conversa (`utils/cafe.js`).
+
+Convites de Coffee Chat são mensagens comuns do chat com o prefixo `[Coffee Chat]`, então as duas pessoas veem o convite e o aceite sem rota nova na API.
+
+Login: a API valida só o Google (`/auth/google`) e, em desenvolvimento, o e-mail (`/auth/dev-login`, sem conferir senha). Os botões Microsoft 365 e LinkedIn avisam que o SSO ainda não está habilitado.
 
 ## Regras do produto que a interface respeita
 
