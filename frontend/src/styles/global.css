@@ -1,4 +1,4 @@
-/* Avanade Connect — visual "Global Connect".
+/* Avanade Connect: visual "Global Connect".
    Desktop primeiro: o bloco @media (max-width: 899px) no fim adapta para celular
    (coluna única, navegação na barra inferior). Laranja vivo em ícones e destaques;
    o laranja dos botões é mais escuro para manter contraste 4,5:1 com texto branco. */
@@ -901,7 +901,6 @@ h1.perfil__nome { font-size: 28px; }
   .login__form form { gap: 16px; margin-top: 24px; }
   .login__esqueci { align-self: flex-end; margin-top: 6px; }
   .login__sso { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .login__linkedin { order: -1; }
   .login__sso .google-botao { min-width: 0; overflow: hidden; }
 
   /* Cadastro */

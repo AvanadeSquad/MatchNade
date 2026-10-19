@@ -154,7 +154,7 @@ export default function MeuPerfil() {
 
   const totalConexoes = conexoes.dados
     ? conexoes.dados.confirmadas.length + conexoes.dados.aguardando.length + conexoes.dados.recebidas.length
-    : '—';
+    : 'n/d';
   const mapeadosPorIA = perfil.tags.technical.some((t) => t.source === 'AI');
   const visivel = !pausado;
 
