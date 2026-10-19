@@ -134,6 +134,17 @@ describe('serviço de IA', () => {
     expect(resultado.hobby_tags).toEqual(['Culinária']);
   });
 
+  it('descarta dados sensíveis devolvidos pela IA e mantém o resto (CA-05)', async () => {
+    const ia = criar(
+      JSON.stringify({ technical_tags: ['React', 'Opinião política'], hobby_tags: ['Xadrez', 'Religião', 'Saúde Mental', 'Corrida'] }),
+    );
+    const resultado = await ia.extrairTags(funcionarioId, 'Curto React e xadrez, corro aos domingos e voto sempre no mesmo partido.');
+    expect(resultado.technical_tags).toEqual(['React']);
+    expect(resultado.hobby_tags).toEqual(['Xadrez', 'Corrida']);
+    const [registro] = await ambiente.banco.query('SELECT response_payload FROM ai_interaction_log');
+    expect(JSON.stringify(registro.response_payload)).not.toMatch(/pol[ií]tica|religi|sa[uú]de/i);
+  });
+
   it('resposta fora do schema vira fallback', async () => {
     const ia = criar('Claro! Aqui estão as tags: React');
     expect((await ia.extrairTags(funcionarioId, 'texto')).fallback).toBe(true);
@@ -169,6 +180,11 @@ describe('serviço de IA', () => {
 
     it('rejeita frase que menciona cargo', async () => {
       expect((await chamar('Sendo você um analista e ela uma gerente, falem de Node.js')).fallback).toBe(true);
+    });
+
+    it('rejeita frase que cita dado sensível, mesmo citando interesse em comum', async () => {
+      const r = await chamar('Vocês dois curtem Node.js e têm a mesma religião. Que tal conversar?');
+      expect(r.fallback).toBe(true);
     });
 
     it('rejeita frase com mais de 250 caracteres', async () => {

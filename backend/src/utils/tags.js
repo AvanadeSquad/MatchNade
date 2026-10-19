@@ -19,6 +19,19 @@ const HIERARQUIA = new Set([
   'associate', 'partner', 'executive', 'chief', 'president',
 ]);
 
+// Dados pessoais sensíveis (LGPD, art. 5º, II): a IA não pode extrair nem repetir estes temas a partir da bio (CA-05).
+// Termos em minúsculas e sem acento, casados como palavra inteira ("politica" não pega "politicas").
+// Só a saída da IA passa por este filtro: o que a própria pessoa digita na revisão fica sob o controle dela.
+// prettier-ignore
+const DADOS_SENSIVEIS = [
+  'politica', 'politico', 'politicos', 'partido', 'partidos', 'eleicao', 'eleicoes', 'eleitoral',
+  'religiao', 'religioso', 'religiosa', 'igreja', 'evangelico', 'catolico', 'espirita', 'umbanda', 'candomble',
+  'ateu', 'ateismo', 'budismo', 'islamismo', 'judaismo',
+  'depressao', 'ansiedade', 'doenca', 'cancer', 'hiv', 'diabetes', 'saude mental', 'psiquiatra', 'tratamento medico',
+  'autismo', 'tdah', 'orientacao sexual', 'vida sexual', 'sindicato', 'sindicalizado', 'etnia',
+];
+const PADRAO_SENSIVEL = new RegExp(`(?:^|[^a-z0-9])(?:${DADOS_SENSIVEIS.join('|')})(?:[^a-z0-9]|$)`);
+
 const OFENSIVAS = new Set(['porra', 'merda', 'caralho', 'puta', 'foda', 'idiota', 'burro']);
 
 const PADRAO_VALIDO = /^[\p{L}\p{N}][\p{L}\p{N} .+#&/'’-]*$/u;
@@ -46,6 +59,15 @@ export function mencionaHierarquia(texto) {
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u);
   return palavras.some((p) => HIERARQUIA.has(p) || SIGLAS_HIERARQUIA.has(p) || ['hierarquia', 'chefe', 'subordinado'].includes(p));
+}
+
+// Verdadeiro se o texto toca em dado pessoal sensível (política, religião, saúde, orientação sexual, sindicato, etnia).
+export function mencionaDadoSensivel(texto) {
+  const semAcento = String(texto ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase();
+  return PADRAO_SENSIVEL.test(semAcento);
 }
 
 // Remove duplicatas ignorando maiúsculas e mantém a primeira grafia.
