@@ -192,6 +192,7 @@ test.describe('acessibilidade (axe)', () => {
 
     const dialogos = [
       { botao: 'Pessoas bloqueadas', secao: 'Privacidade' },
+      { botao: 'Definir senha', secao: 'Privacidade' },
       { botao: 'Ler diretrizes', secao: 'Privacidade' },
       { botao: 'Excluir meus dados', secao: 'Conta' },
     ];
