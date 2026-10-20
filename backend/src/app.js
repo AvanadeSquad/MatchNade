@@ -12,22 +12,26 @@ import { rotasDev } from './routes/dev.js';
 import { rotasPerfil } from './routes/perfil.js';
 import { rotasPessoas } from './routes/pessoas.js';
 import { criarAutenticacao } from './services/autenticacao.js';
+import { criarCredenciais } from './services/credenciais.js';
 import { criarProntidao } from './services/prontidao.js';
+import { criarSenhas } from './services/senhas.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
-// Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorGoogle` e `log`
+// Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorGoogle`, `senhas` e `log`
 // podem ser injetados (testes) e `limitarRequisicoes: false` desliga o limite.
 export function criarApp({
   banco,
   config,
   ia,
   verificadorGoogle,
+  senhas = criarSenhas(),
   limitarRequisicoes = true,
   registrarErro,
   log = criarLog({ nivel: config.logLevel }),
 }) {
   const autenticacao = criarAutenticacao(config, verificadorGoogle);
   const ctx = { banco, config, autenticacao, ia: ia ?? criarServicoIa({ config, banco }) };
+  ctx.credenciais = criarCredenciais({ banco, senhas, autenticacao });
   // Limites por pessoa nas rotas que gastam a cota gratuita de IA.
   ctx.limitarPorPessoa = (max, janelaMs) =>
     limitarRequisicoes
@@ -71,7 +75,7 @@ export function criarApp({
   const api = express.Router();
   api.get('/health', saude);
   api.use('/auth', limitarRequisicoes ? limite(30) : semLimite);
-  api.use(rotasAuth(ctx));
+  api.use(rotasAuth(ctx, exigirLogin));
   api.use(rotasDev(ctx));
   api.use(rotasPerfil(ctx, exigirLogin));
   api.use(rotasConexoes(ctx, exigirLogin));

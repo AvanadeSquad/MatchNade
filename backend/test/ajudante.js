@@ -4,8 +4,12 @@ import request from 'supertest';
 import { criarApp } from '../src/app.js';
 import { carregarConfig } from '../src/config/env.js';
 import { criarBanco } from '../src/db/index.js';
+import { criarSenhas } from '../src/services/senhas.js';
 
 export const SEGREDO = 'segredo-de-teste-com-mais-de-trinta-e-dois-caracteres';
+
+// Custo baixo do scrypt: nos testes o importante é a lógica, e o custo real deixaria a suíte lenta.
+export const senhasDeTeste = () => criarSenhas({ N: 2 ** 10, r: 8, p: 1 });
 
 export const configDeTeste = (extra = {}) => carregarConfig({ NODE_ENV: 'test', JWT_SECRET: SEGREDO, E2E_TEST_MODE: 'true', ...extra });
 
@@ -35,10 +39,10 @@ async function criarBancoDeTeste() {
 }
 
 // Cria um ambiente isolado: banco de teste, app Express e atalhos de teste.
-export async function criarAmbiente({ ambiente = {}, ia, verificadorGoogle } = {}) {
+export async function criarAmbiente({ ambiente = {}, ia, verificadorGoogle, senhas = senhasDeTeste() } = {}) {
   const config = configDeTeste(ambiente);
   const { banco, descartar } = await criarBancoDeTeste();
-  const app = criarApp({ banco, config, ia, verificadorGoogle, limitarRequisicoes: false, registrarErro: () => {} });
+  const app = criarApp({ banco, config, ia, verificadorGoogle, senhas, limitarRequisicoes: false, registrarErro: () => {} });
   const http = request(app);
   const tokens = new Map();
 

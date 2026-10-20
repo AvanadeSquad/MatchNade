@@ -16,6 +16,10 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API e 30 por 15 min
 |---|---|---|---|
 | `GET /health` | Verifica se o serviço está de pé. | `200 { "status": "ok" }` | |
 | `POST /auth/google` | Valida o ID token do Google, cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 GOOGLE_NAO_CONFIGURADO` |
+| `POST /auth/senha` | Entra com e-mail e senha. Corpo: `{ "email", "senha" }`. A resposta de erro é a mesma para senha errada, e-mail sem conta, conta sem senha e conta bloqueada. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO`, `400` corpo inválido |
+| `PUT /auth/senha` | Define ou troca a senha de quem está logado. Corpo: `{ "senha_atual"?, "nova_senha" }`; quem já tem senha precisa informar a atual. | `200 { has_password }` | `400 SENHA_FRACA`, `403 SENHA_ATUAL_INCORRETA`, `429 MUITAS_TENTATIVAS` |
+
+Sobre a senha: ela é uma credencial a mais de quem já tem conta, definida depois do primeiro acesso por SSO. A API não cria conta só com e-mail e senha, porque sem confirmar o e-mail qualquer pessoa registraria o e-mail de outra antes dela. A senha tem de 10 a 128 caracteres, não pode ser igual ao e-mail e é guardada com scrypt (sal próprio e custo junto do hash). Depois de 5 erros seguidos a conta fica 15 minutos sem aceitar senha, inclusive a certa, e a mensagem não revela isso. O perfil informa só `has_password`.
 
 Só em desenvolvimento e testes (a API recusa iniciar em produção com estas flags):
 
