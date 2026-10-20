@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { autenticarPagina, chamar, criarPessoaPronta, entrarPorApi, identificadorUnico, interessesExclusivos } from './helpers/api.js';
 
+// No celular o perfil é um menu de seções; no desktop os controles ficam na própria página.
+async function abrirSecao(page, nome) {
+  await page.goto('/eu');
+  if (page.viewportSize().width < 900) await page.getByRole('button', { name: nome, exact: true }).click();
+}
+
 const cartaoDe = (pagina, nome) => pagina.getByRole('article', { name: `Sugestão: ${nome}` });
 
 // Cria duas pessoas com afinidade máxima entre si; a segunda tem cargo.
@@ -81,7 +87,7 @@ test.describe('segurança entre pessoas', () => {
     await expect(page.getByRole('menu')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Mais opções' }).click();
-    await page.locator('.cabecalho__titulo').click({ position: { x: 5, y: 5 } });
+    await page.getByRole('heading', { level: 1 }).click({ position: { x: 2, y: 2 } });
     await expect(page.getByRole('menu')).toHaveCount(0);
   });
 
@@ -100,26 +106,11 @@ test.describe('segurança entre pessoas', () => {
     await expect(page.getByRole('menuitem', { name: 'Denunciar' })).toBeFocused();
   });
 
-  test('as abas de Conexões aceitam Home e End', async ({ page, request }) => {
-    const { a } = await parDePessoas(request, 'Xênia Exemplo', 'Yuri Exemplo');
-    await autenticarPagina(page, a.token);
-    await page.goto('/conexoes');
-
-    await page.getByRole('tab', { name: /Recebidas/ }).focus();
-    await page.keyboard.press('End');
-    await expect(page.getByRole('tab', { name: /Aguardando/ })).toBeFocused();
-    await expect(page.getByRole('tab', { name: /Aguardando/ })).toHaveAttribute('aria-selected', 'true');
-    await page.keyboard.press('Home');
-    await expect(page.getByRole('tab', { name: /Recebidas/ })).toBeFocused();
-    await expect(page.getByRole('tab', { name: /Recebidas/ })).toHaveAttribute('aria-selected', 'true');
-  });
-
   test('desbloquear devolve a pessoa à lista e ao perfil', async ({ page, request }) => {
     const { a, b } = await parDePessoas(request, 'Tânia Exemplo', 'Ubirajara Exemplo');
     await chamar(request, a.token, 'post', `/employees/${b.id}/block`);
     await autenticarPagina(page, a.token);
-    await page.goto('/eu');
-
+    await abrirSecao(page, 'Privacidade');
     await page.getByRole('button', { name: 'Pessoas bloqueadas' }).click();
     await expect(page.getByRole('dialog')).toContainText('Ubirajara Exemplo');
     await page.getByRole('button', { name: 'Desbloquear' }).click();
@@ -132,11 +123,11 @@ test.describe('segurança entre pessoas', () => {
     await chamar(request, a.token, 'post', '/matches', { receiver_id: b.id });
     await autenticarPagina(page, b.token);
 
-    await page.goto('/conexoes');
-    await expect(page.getByText('Vera Exemplo')).toBeVisible();
+    await page.goto('/matches');
+    await expect(page.getByText('Vera Exemplo').first()).toBeVisible();
     await page.getByRole('button', { name: 'Recusar' }).click();
     await expect(page.getByText('Solicitação recusada.')).toBeVisible();
-    await expect(page.getByRole('tab', { name: /Recebidas \(0\)/ })).toBeVisible();
+    await expect(page.getByText('Vera Exemplo')).toHaveCount(0);
   });
 });
 
@@ -144,8 +135,7 @@ test.describe('conta e sessão', () => {
   test('excluir os dados encerra a sessão e invalida o token', async ({ page, request }) => {
     const { a } = await parDePessoas(request, 'Xavier Exemplo', 'Yara Exemplo');
     await autenticarPagina(page, a.token);
-    await page.goto('/eu');
-
+    await abrirSecao(page, 'Conta');
     await page.getByRole('button', { name: 'Excluir meus dados' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir tudo' }).click();
     await expect(page).toHaveURL(/\/login$/);
@@ -162,7 +152,8 @@ test.describe('conta e sessão', () => {
     const { a } = await parDePessoas(request, 'Zélia Exemplo', 'Átila Exemplo');
     await autenticarPagina(page, a.token);
     await page.goto('/descobrir');
-    await expect(page.getByRole('heading', { name: 'Descobrir' })).toBeVisible();
+    await expect(page).toHaveURL(/\/descobrir$/);
+    await expect(page.getByRole('main')).toBeVisible();
 
     await page.route('**/api/v1/matches/recommendations*', (rota) =>
       rota.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ code: 'NAO_AUTENTICADO', message: 'Sessão expirada.' }) }),
@@ -174,14 +165,16 @@ test.describe('conta e sessão', () => {
   test('quem entrou com a conta errada consegue sair do cadastro', async ({ page, request }) => {
     const email = `${identificadorUnico('sair')}@exemplo.test`;
     await autenticarPagina(page, await entrarPorApi(request, email));
-    await page.goto('/bem-vindo');
-    await page.getByRole('button', { name: /sair/i }).click();
+    await page.goto('/cadastro/dados');
+    await page.getByRole('button', { name: /Cancelar|conta errada/ }).click();
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('sem login configurado a tela de entrada avisa', async ({ page }) => {
+  test('sem login por e-mail habilitado a tela de entrada avisa', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByText('O login ainda não está configurado neste ambiente.')).toBeVisible();
+    await page.getByLabel(/E-mail/).fill('alguem@exemplo.test');
+    await page.getByRole('button', { name: /Acessar o Global Connect/ }).click();
+    await expect(page.getByRole('alert')).toContainText('O acesso por e-mail ainda não está habilitado neste ambiente.');
   });
 });
 
@@ -196,7 +189,7 @@ test.describe('cota semanal', () => {
 
     await autenticarPagina(page, a.token);
     await page.goto('/descobrir');
-    await expect(page.getByText('Solicitações desta semana: 1 de 1')).toBeVisible();
+    if (page.viewportSize().width >= 900) await expect(page.getByText('Solicitações desta semana: 1 de 1')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Você usou a cota da semana' })).toBeVisible();
     await expect(page.getByText(/Você já usou suas 1 solicitações/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Demonstrar interesse' })).toHaveCount(0);
@@ -204,24 +197,23 @@ test.describe('cota semanal', () => {
 });
 
 test.describe('layout por tamanho de tela', () => {
-  test('menu lateral no desktop e barra inferior no celular', async ({ page, request }) => {
+  test('menu superior no desktop e barra inferior no celular', async ({ page, request }) => {
     const { a } = await parDePessoas(request, 'Eli Exemplo', 'Fabi Exemplo');
     await autenticarPagina(page, a.token);
     await page.goto('/descobrir');
 
     const largura = page.viewportSize().width;
-    const lateral = page.locator('aside.lateral');
-    const inferior = page.locator('nav.nav-inferior');
+    const superior = page.getByRole('navigation', { name: 'Navegação principal', exact: true });
+    const inferior = page.getByRole('navigation', { name: 'Navegação principal (celular)' });
     if (largura >= 900) {
-      await expect(lateral).toBeVisible();
+      await expect(superior).toBeVisible();
       await expect(inferior).toBeHidden();
-      await expect(lateral.getByRole('link', { name: 'Conexões' })).toBeVisible();
-      // O conteúdo ocupa a área ao lado do menu, e não uma coluna estreita no meio da tela.
-      const caixa = await page.locator('.deck').boundingBox();
-      expect(caixa.x).toBeGreaterThan(240);
+      await expect(superior.getByRole('link', { name: 'Matches Bilaterais' })).toBeVisible();
+      // O conteúdo ocupa a largura útil da tela, e não uma coluna estreita no meio.
+      const caixa = await page.locator('main').boundingBox();
       expect(caixa.width).toBeGreaterThan(700);
     } else {
-      await expect(lateral).toBeHidden();
+      await expect(superior).toBeHidden();
       await expect(inferior).toBeVisible();
       await expect(inferior.getByRole('link', { name: 'Perfil' })).toBeVisible();
     }
@@ -235,12 +227,12 @@ test.describe('layout por tamanho de tela', () => {
 
     const desktop = page.viewportSize().width >= 900;
     await page.goto('/chat');
-    await expect(page.getByRole('link', { name: /Hana Exemplo/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Hana Exemplo/ })).toBeVisible();
     await expect(page.getByText('Escolha uma conversa na lista para começar.')).toBeVisible({ visible: desktop });
 
     await page.goto(`/chat/${match.match_id}`);
-    await expect(page.getByLabel('Mensagem')).toBeVisible();
-    await expect(page.getByRole('link', { name: /Hana Exemplo/ })).toBeVisible({ visible: desktop });
+    await expect(page.getByLabel('Mensagem', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Hana Exemplo/ })).toBeVisible({ visible: desktop });
   });
 
   test('as telas não geram rolagem horizontal', async ({ page, request }) => {
@@ -250,8 +242,8 @@ test.describe('layout por tamanho de tela', () => {
     await autenticarPagina(page, a.token);
 
     const rotas = [
-      '/descobrir', '/conexoes', '/chat', `/chat/${match.match_id}`, `/pessoa/${b.id}`, `/match/${match.match_id}`,
-      '/eu', '/perfil/interesses?de=eu', '/perfil/objetivos?de=eu', '/perfil/bio', '/bem-vindo',
+      '/descobrir', '/matches', '/chat', `/chat/${match.match_id}`, `/pessoa/${b.id}`, `/match/${match.match_id}`,
+      '/eu', '/cadastro/dados', '/cadastro/interesses', '/cadastro/preferencias',
     ];
     for (const rota of rotas) {
       await page.goto(rota);

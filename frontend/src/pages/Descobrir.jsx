@@ -60,7 +60,7 @@ function apresentacao(detalhe) {
 
 const ICONES_AFINIDADE = [IconeLampada, IconeEstrela, IconePessoas, IconeCha];
 
-// Cartão compacto do celular: interesses em texto corrido e as ações ✕ (pular) e ♥ (demonstrar interesse).
+// Cartão compacto do celular: interesses em texto corrido e as ações de pular e de demonstrar interesse.
 function CartaoSugestaoCelular({ sugestao, detalhe, valorSinergia, enviando, cotaEsgotada, aoPular, aoConectar }) {
   const tecnicas = detalhe?.tags.technical.map((t) => t.name) ?? [];
   const hobbies = detalhe?.tags.hobby.map((t) => t.name) ?? [];

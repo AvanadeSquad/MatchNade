@@ -47,7 +47,7 @@ async function parVisual(request, rotulo, projeto) {
 test.describe('regressão visual', () => {
   test('login', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Acesse sua conta|Bem-vindo ao Global Connect/ })).toBeVisible();
     await capturar(page, 'login');
   });
 
@@ -71,20 +71,19 @@ test.describe('regressão visual', () => {
     await autenticarPagina(page, a.token);
 
     await page.goto(`/match/${matchId}`);
-    await expect(page.getByRole('heading', { name: 'É um match!' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /É um Match( Bilateral)?!/ })).toBeVisible();
     await capturar(page, 'match');
 
     // Marca as conexões como vistas antes de abrir a tela. Em desenvolvimento o React busca a lista
     // duas vezes e a primeira busca já marca como visto; sem isso, o selo "Novo" dependeria de qual
     // das duas respostas chega por último.
     await chamar(request, a.token, 'get', '/matches');
-    await page.goto('/conexoes');
-    await page.getByRole('tab', { name: /Confirmadas/ }).click();
-    await expect(page.getByRole('link', { name: /Wagner Visual/ })).toBeVisible();
+    await page.goto('/matches');
+    await expect(page.getByText('Wagner Visual').first()).toBeVisible();
     await capturar(page, 'conexoes');
 
     await page.goto(`/chat/${matchId}`);
-    await expect(page.getByRole('textbox')).toBeVisible();
+    await expect(page.getByLabel('Mensagem', { exact: true })).toBeVisible();
     await capturar(page, 'chat');
   });
 
