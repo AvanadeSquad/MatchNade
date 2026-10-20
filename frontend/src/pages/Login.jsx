@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { IconeCheckCirculo, IconeGoogle, IconeMicrosoft, IconeSeta } from '../components/Icones.jsx';
+import { IconeCheckCirculo, IconeGoogle, IconeMicrosoft, IconeOlho, IconeOlhoFechado, IconeSeta } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCelular } from '../hooks/useCelular.js';
@@ -39,6 +39,8 @@ export default function Login() {
   const navegar = useNavigate();
   const botaoGoogle = useRef(null);
   const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [verSenha, setVerSenha] = useState(false);
   const [erro, setErro] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [usuariosDev, setUsuariosDev] = useState(null);
@@ -99,13 +101,13 @@ export default function Login() {
   async function enviar(evento) {
     evento.preventDefault();
     setErro('');
-    if (!acessoPorEmail) {
-      setErro('O acesso por e-mail ainda não está habilitado neste ambiente. Use o SSO corporativo abaixo.');
+    if (!senha && !acessoPorEmail) {
+      setErro('Informe a senha ou entre pelo SSO corporativo abaixo.');
       return;
     }
     setEntrando(true);
     try {
-      concluir(await API.loginDesenvolvimento(email.trim()));
+      concluir(senha ? await API.loginComSenha(email.trim(), senha) : await API.loginDesenvolvimento(email.trim()));
     } catch (e) {
       setErro(mensagemDeErro(e));
     } finally {
@@ -118,6 +120,8 @@ export default function Login() {
       `O SSO ${provedor} ainda não está habilitado na API. ${CLIENT_ID ? 'Use o botão do Google.' : 'Use o e-mail corporativo.'}`,
       'info',
     );
+
+  const esqueciSenha = () => avisar('Entre pelo SSO corporativo e defina uma nova senha em Meu Perfil, na seção Privacidade.', 'info');
 
   const solicitarAcesso = () =>
     avisar(
@@ -171,9 +175,37 @@ export default function Login() {
                 required
               />
             </label>
+            <div className="campo">
+              <span className="campo__linha">
+                <label htmlFor="senha">Senha</label>
+                <button type="button" className="link-acao" onClick={esqueciSenha}>
+                  Esqueceu sua senha?
+                </button>
+              </span>
+              <span className="campo__com-icone">
+                <input
+                  id="senha"
+                  className="campo__controle"
+                  type={verSenha ? 'text' : 'password'}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder="Digite sua senha"
+                  autoComplete="current-password"
+                  maxLength={128}
+                />
+                <button
+                  type="button"
+                  className="campo__acao"
+                  aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  onClick={() => setVerSenha(!verSenha)}
+                >
+                  {verSenha ? <IconeOlhoFechado /> : <IconeOlho />}
+                </button>
+              </span>
+            </div>
             {acessoPorEmail && (
               <p className="nota-dev">
-                Ambiente de desenvolvimento: a API libera o acesso pelo e-mail. Contas de demonstração:{' '}
+                Ambiente de desenvolvimento: com a senha em branco, a API libera o acesso pelo e-mail. Contas de demonstração:{' '}
                 {usuariosDev.slice(0, 5).map((u, i) => (
                   <span key={u.email}>
                     {i > 0 && ', '}

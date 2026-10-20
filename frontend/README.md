@@ -92,7 +92,7 @@ A API não tem campos para alguns itens das telas. Eles ficam no `localStorage`,
 
 Convites de Coffee Chat são mensagens comuns do chat com o prefixo `[Coffee Chat]`, então as duas pessoas veem o convite e o aceite sem rota nova na API.
 
-Login: a API valida só o Google (`/auth/google`) e, em desenvolvimento, o e-mail (`/auth/dev-login`, sem conferir senha). Os botões Microsoft 365 e LinkedIn avisam que o SSO ainda não está habilitado.
+Login: a API aceita o Google (`/auth/google`), e-mail e senha (`/auth/senha`) e, em desenvolvimento, só o e-mail (`/auth/dev-login`, com a senha em branco). A senha é definida depois do primeiro acesso, em Meu Perfil, Privacidade (diálogo `DefinirSenha`). O botão Microsoft 365 avisa que o SSO ainda não está habilitado.
 
 ## Regras do produto que a interface respeita
 
