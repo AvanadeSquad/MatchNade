@@ -507,7 +507,7 @@ export default function MeuPerfil() {
         />
         <section className="cartao bloco perfil-celular">
           <Avatar nome={perfil.name} tamanho={64}>
-            <span className="selo-check" aria-label="Perfil verificado">
+            <span className="selo-check" role="img" aria-label="Perfil verificado">
               <IconeCheck />
             </span>
           </Avatar>
@@ -579,7 +579,7 @@ export default function MeuPerfil() {
           <section className="cartao bloco perfil__cartao">
             <div className="linha linha--entre linha--topo">
               <Avatar nome={perfil.name} tamanho={84}>
-                <span className="selo-check" aria-label="Perfil verificado">
+                <span className="selo-check" role="img" aria-label="Perfil verificado">
                   <IconeCheck />
                 </span>
               </Avatar>
