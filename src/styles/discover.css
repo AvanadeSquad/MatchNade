@@ -185,3 +185,17 @@
 @media(prefers-reduced-motion:reduce){.dc-filter-tags button{transition:none;}}
 .dc-person-photo>.avatar{padding:0;border-radius:14px;}
 @media(max-width:620px){.dc-mobile-search{display:flex;align-items:center;gap:8px;padding:13px 14px;background:#fff;border:1px solid #e9e7f6;border-radius:10px;margin-bottom:10px;color:#9b8d94;}.dc-mobile-search input{font:inherit;font-size:12px;min-width:0;width:100%;border:0;outline:none;color:#171d32;background:transparent;}.dc-mobile-search input::placeholder{color:#9b8d94;}.dc-mobile-search>svg{flex-shrink:0;}.dc-sidebar .dc-side-search{display:none;}.mt-hero-tags .chip{font-size:8px;padding:3px 6px;}}
+
+/* Acessibilidade: destaque dos campos de pesquisa */
+.dc-side-search:focus-within,
+.dc-mobile-search:focus-within,
+.mt-search:focus-within {
+  outline: 2px solid #ff5800;
+  outline-offset: 2px;
+}
+
+.dc-side-search input:focus-visible,
+.dc-mobile-search input:focus-visible,
+.mt-search input:focus-visible {
+  outline: none;
+}
