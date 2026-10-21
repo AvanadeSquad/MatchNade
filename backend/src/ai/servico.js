@@ -1,4 +1,4 @@
-import { limparTexto, mencionaDadoSensivel, mencionaHierarquia, normalizarTag, unicas } from '../utils/tags.js';
+import { limparTexto, mencionaHierarquia, normalizarTag, unicas } from '../utils/tags.js';
 import { criarProvedores } from './provedores.js';
 import { EXTRACAO, QUEBRA_GELO } from './prompts.js';
 import { Disjuntor, executarComResiliencia } from './resiliencia.js';
@@ -20,7 +20,7 @@ function tagsValidas(lista) {
   const normalizadas = lista
     .filter((item) => typeof item === 'string')
     .map(normalizarTag)
-    .filter((tag) => tag && !mencionaDadoSensivel(tag));
+    .filter(Boolean);
   return unicas(normalizadas).slice(0, MAX_TAGS_POR_EIXO);
 }
 
@@ -109,12 +109,7 @@ export function criarServicoIa({ config, banco, provedores = criarProvedores(con
         const dados = interpretarJson(resposta.texto);
         const frase = typeof dados?.match_summary === 'string' ? limparTexto(dados.match_summary) : '';
         const cita = tagsComuns.some((tag) => frase.toLowerCase().includes(tag.toLowerCase()));
-        const aceita =
-          frase.length > 0 &&
-          frase.length <= QUEBRA_GELO.limiteCaracteres &&
-          !mencionaHierarquia(frase) &&
-          !mencionaDadoSensivel(frase) &&
-          cita;
+        const aceita = frase.length > 0 && frase.length <= QUEBRA_GELO.limiteCaracteres && !mencionaHierarquia(frase) && cita;
         if (!aceita) {
           await registrar(employeeId, QUEBRA_GELO, { modelo: resposta.modelo, status: 'REJEITADO', latenciaMs: resposta.latenciaMs });
           return padrao;

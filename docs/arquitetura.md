@@ -28,7 +28,6 @@ Tudo roda em planos gratuitos. Não usa Docker.
 ## Regras de produto que a arquitetura garante
 
 - **Sem hierarquia.** Cargo e senioridade não entram no cálculo, na descoberta, nas tags (a normalização recusa) nem no texto da IA (o texto gerado é rejeitado se citar cargo). O cargo só é devolvido nas conexões confirmadas e no perfil depois do match.
-- **Sem dados sensíveis na saída da IA.** Tags devolvidas pela IA que tocam em política, religião, saúde, orientação sexual, sindicato ou etnia são descartadas (CA-05, LGPD), e um quebra-gelo que cite esses temas é rejeitado. O filtro vale só para a IA: o que a pessoa digita na revisão de tags não é filtrado. Ele é conservador ("Política de Segurança" também cai); nesse caso a pessoa pode adicionar a tag à mão.
 - **Consentimento mútuo.** Match só existe com interesse dos dois lados. Chat e quebra-gelo exigem conexão aceita e sem bloqueio, e quem não participa da conexão recebe 404.
 - **Cota semanal.** De 1 a 5 solicitações por semana, de segunda a domingo. A checagem roda em transação com trava, então pedidos simultâneos não passam do limite.
 - **Expiração.** Solicitações pendentes há mais de 14 dias expiram.
