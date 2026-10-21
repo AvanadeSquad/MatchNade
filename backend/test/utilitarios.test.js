@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { carregarConfig } from '../src/config/env.js';
 import { inicioDaSemana } from '../src/services/semana.js';
-import { mencionaHierarquia, normalizarTag, unicas } from '../src/utils/tags.js';
+import { mencionaDadoSensivel, mencionaHierarquia, normalizarTag, unicas } from '../src/utils/tags.js';
 
 describe('normalizarTag', () => {
   it('aceita interesses comuns e normaliza espaços', () => {
@@ -41,6 +41,39 @@ describe('mencionaHierarquia', () => {
   it('detecta cargo e senioridade em frases', () => {
     expect(mencionaHierarquia('Sendo você um analista e ela uma gerente')).toBe(true);
     expect(mencionaHierarquia('Vocês dois curtem Node.js e xadrez.')).toBe(false);
+  });
+});
+
+describe('mencionaDadoSensivel', () => {
+  it('detecta política, religião, saúde, orientação sexual, sindicato e etnia, com ou sem acento', () => {
+    for (const texto of [
+      'Política',
+      'opinião política forte',
+      'Religião',
+      'IGREJA evangélica',
+      'Saúde Mental',
+      'depressão',
+      'orientação sexual',
+      'sindicato',
+      'Etnia',
+    ]) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+  });
+
+  it('não barra interesses comuns nem palavras que só contêm o termo', () => {
+    for (const texto of ['React', 'Xadrez', 'Cafés Especiais', 'Políticas Públicas', 'Archive', 'Cancerologia de dados']) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(false);
+    }
+  });
+
+  it('aceita texto vazio ou ausente', () => {
+    expect(mencionaDadoSensivel('')).toBe(false);
+    expect(mencionaDadoSensivel(undefined)).toBe(false);
+  });
+
+  it('não interfere em normalizarTag: o que a pessoa digita não é filtrado', () => {
+    expect(normalizarTag('Política de Segurança')).toBe('Política de Segurança');
   });
 });
 
