@@ -1,0 +1,3 @@
+# Saídas do teste de mutação
+reports/
+.stryker-tmp/
