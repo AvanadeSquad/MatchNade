@@ -137,7 +137,9 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: relatorio-playwright
-          path: e2e/playwright-report
+          path: |
+              e2e/playwright-report
+              e2e/test-results
           retention-days: 7
 
   auditoria:

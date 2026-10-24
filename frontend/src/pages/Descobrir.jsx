@@ -75,7 +75,6 @@ function CartaoSugestaoCelular({ sugestao, detalhe, valorSinergia, enviando, cot
           </span>
           <span className="pilula pilula--contorno">{Math.round(valorSinergia * 100)}% compatível</span>
         </div>
-        <h2>{sugestao.name}</h2>
         {sugestao.city && (
           <p className="pequeno meta">
             <IconePino /> {sugestao.city}
