@@ -57,7 +57,7 @@ test.describe('acesso e cadastro', () => {
     await page.goto('/descobrir');
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole('heading', { name: /Acesse sua conta|Bem-vindo ao Global Connect/ })).toBeVisible();
-    await expect(page.getByLabel(/senha/i)).toHaveCount(0);
+    await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /linkedin/i })).toHaveCount(0);
   });
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { corpoGoogle } from '../routes/auth.js';
+import { corpoDefinirSenha, corpoGoogle, corpoLoginSenha } from '../routes/auth.js';
 import {
   consultaLista,
   consultaMensagens,
@@ -108,6 +108,27 @@ export function gerarEspecificacao() {
             409: erro('CONTA_INATIVA'),
             429: limiteExcedido,
             503: erro('GOOGLE_NAO_CONFIGURADO'),
+          },
+        }),
+      },
+      '/auth/senha': {
+        post: operacao('Sessão', 'Entra com e-mail e senha. A mensagem de erro não diz se o e-mail tem conta.', {
+          login: false,
+          requisicao: corpo(corpoLoginSenha),
+          respostas: {
+            200: json('{ token, employee, is_new }'),
+            400: invalidos,
+            401: erro('NAO_AUTENTICADO: e-mail ou senha incorretos, ou bloqueio temporário depois de 5 erros seguidos.'),
+            429: limiteExcedido,
+          },
+        }),
+        put: operacao('Sessão', 'Define ou troca a senha de quem está logado. Quem já tem senha informa a atual.', {
+          requisicao: corpo(corpoDefinirSenha),
+          respostas: {
+            200: json('{ has_password }'),
+            400: erro('SENHA_FRACA ou DADOS_INVALIDOS.'),
+            403: erro('SENHA_ATUAL_INCORRETA'),
+            429: erro('MUITAS_TENTATIVAS ou limite de requisições.'),
           },
         }),
       },

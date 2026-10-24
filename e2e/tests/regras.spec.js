@@ -170,11 +170,11 @@ test.describe('conta e sessão', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('sem login por e-mail habilitado a tela de entrada avisa', async ({ page }) => {
+  test('sem senha e sem login por e-mail habilitado a tela de entrada avisa', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel(/E-mail/).fill('alguem@exemplo.test');
     await page.getByRole('button', { name: /Acessar o Global Connect/ }).click();
-    await expect(page.getByRole('alert')).toContainText('O acesso por e-mail ainda não está habilitado neste ambiente.');
+    await expect(page.getByRole('alert')).toContainText('Informe a senha ou entre pelo SSO corporativo abaixo.');
   });
 });
 
