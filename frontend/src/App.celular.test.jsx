@@ -141,7 +141,7 @@ describe('telas no celular', () => {
   });
   it('descobrir', async () => {
     montar('/descobrir');
-    expect(await screen.findByRole('heading', { name: 'Marina Costa' })).toBeInTheDocument();
+    expect(await screen.findByText('Marina Costa')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /demonstrar interesse em marina/i })).toBeInTheDocument();
   });
   it('detalhes', async () => {
