@@ -34,6 +34,7 @@ const DADOS_SENSIVEIS = [
   'opiniao politica', 'opinioes politicas', 'orientacao politica', 'posicao politica', 'ideologia politica',
   'militancia politica', 'militante politico', 'militante politica', 'ativismo politico', 'ativista politico',
   'partido politico', 'partidos politicos', 'filiado a partido', 'filiada a partido', 'filiacao partidaria',
+  'militante do partido', 'filiado ao partido', 'filiada ao partido',
   'comunismo', 'comunista', 'socialismo', 'socialista', 'fascismo', 'fascista', 'anarquismo', 'anarquista',
   // Convicção religiosa, crenças e quem as pratica.
   'religiao', 'religioes', 'religioso', 'religiosa', 'religiosidade', 'crenca religiosa', 'igreja', 'igrejas',
@@ -41,28 +42,36 @@ const DADOS_SENSIVEIS = [
   'catolico', 'catolica', 'catolicos', 'catolicismo', 'espirita', 'espiritismo', 'umbanda', 'candomble',
   'ateu', 'ateia', 'ateus', 'ateismo', 'agnostico', 'agnostica', 'budismo', 'budista', 'islamismo', 'islam',
   'muculmano', 'muculmana', 'judaismo', 'judeu', 'judia', 'judaico', 'hinduismo', 'hindu', 'biblia',
-  'gospel', 'missa', 'culto religioso', 'maconaria', 'pastor(?! alem)', 'padre', 'terreiro',
+  'umbandista', 'candomblecista', 'testemunha de jeova', 'mormon',
+  // "Padre Cícero" e "História das religiões" continuam barrados: o nome e o estudo histórico não se
+  // separam da religião pela grafia, e a saída da IA nesse caso cai no texto padrão.
+  'gospel', 'missa', 'culto religioso', 'maconaria', 'pastor(?! alem)', 'padre', 'terreiro(?! de cafe)',
   // Saúde e deficiência: condições e tratamentos. Palavras como "saude", "doenca", "terapia", "cirurgia",
   // "medicamento", "deficiencia" e "pcd" soltas ficam de fora, porque aparecem como setor ou técnica
   // ("Doenças tropicais", "Cirurgia robótica", "Inclusão de PCD"); entram expressões que falam da pessoa.
   'saude mental', 'condicao de saude', 'problema de saude', 'problemas de saude', 'estado de saude',
-  'depressao', 'depressivo', 'depressiva', 'ansiedade', 'transtorno', 'transtornos', 'transtorno bipolar',
-  'bipolar', 'toc', 'esquizofrenia', 'epilepsia', 'alcoolismo', 'alzheimer',
+  'depressao', 'depressivo', 'depressiva', 'ansiedade', 'transtorno(?! de compilacao)', 'transtornos', 'transtorno bipolar',
+  'bipolar', 'toc', 'esquizofrenia', 'epilepsia', 'alcoolismo', 'alcoolatra', 'alzheimer',
+  'soropositivo', 'soropositiva', 'hipertensao', 'fibromialgia', 'dislexia', 'anorexia', 'bulimia',
+  'sindrome do panico', 'dependencia quimica', 'doenca de crohn', 'doenca celiaca', 'cirurgia bariatrica',
   'cancer', 'hiv', 'aids', 'diabetes', 'diabetico', 'diabetica', 'autismo', 'autista', 'tdah',
   'psiquiatra', 'psiquiatrico', 'quimioterapia', 'tratamento medico', 'em tratamento', 'faco terapia',
   'faco tratamento', 'tenho doenca', 'tenho uma doenca', 'tomo remedio', 'tomo remedios', 'tomo medicamento',
-  'tomo medicamentos', 'gravidez', 'gravida', 'gestante',
+  'tomo medicamentos', 'uso medicamento controlado', 'uso de medicamento controlado', 'tomo medicamento controlado',
+  'gravidez', 'gravida', 'gestante',
   'pessoa com deficiencia', 'pessoas com deficiencia', 'tenho deficiencia', 'tenho uma deficiencia', 'sou pcd',
-  'cadeirante', 'surdez', 'cegueira', 'sindrome de down',
+  'cadeirante', 'surdez', 'cegueira', 'sindrome de down', 'sou surdo', 'sou surda', 'sou cego', 'sou cega',
+  'paraplegico', 'paraplegica', 'tetraplegico', 'tetraplegica',
   // Orientação sexual, vida sexual e identidade de gênero.
   'orientacao sexual', 'vida sexual', 'identidade de genero', 'lgbt', 'lgbtq', 'lgbtqi', 'lgbtqia',
   'gay', 'gays', 'lesbica', 'lesbicas', 'bissexual', 'bissexuais', 'homossexual', 'homossexuais',
   'heterossexual', 'transexual', 'transgenero', 'travesti', 'queer', 'nao binario', 'nao binaria',
-  'pessoa trans', 'pessoas trans', 'mulher trans', 'homem trans',
+  'pessoa trans', 'pessoas trans', 'mulher trans', 'homem trans', 'assexual', 'pansexual', 'intersexo',
   // Origem racial ou étnica.
   // "raca" solta fica de fora ("Raças de cães"); entram expressões que falam da pessoa.
   'origem racial', 'origem etnica', 'minha raca', 'pessoa de raca', 'racial', 'etnia', 'etnias', 'etnico', 'etnica',
   'cor da pele', 'pessoa negra', 'pessoas negras', 'pessoa parda', 'origem indigena', 'movimento negro',
+  'raca negra', 'afrodescendente', 'sou negro', 'sou negra', 'pessoa indigena', 'sou indigena', 'sou quilombola',
   // "negro", "indígena" e "quilombola" soltos ficam de fora: aparecem em "Cerveja negra", "Arte indígena"
   // e "Comunidades quilombolas" como interesse cultural ou trabalho voluntário.
   // Filiação a sindicato.
@@ -71,6 +80,20 @@ const DADOS_SENSIVEIS = [
   'dado genetico', 'dados geneticos', 'teste genetico', 'dado biometrico', 'dados biometricos',
 ];
 const PADRAO_SENSIVEL = new RegExp(`(?:^|[^a-z0-9])(?:${DADOS_SENSIVEIS.join('|')})(?:[^a-z0-9]|$)`);
+
+// Condições que também nomeiam público ou técnica ("Tecnologia assistiva para deficiência visual"): só contam
+// quando são o texto inteiro ou vêm depois de "sou", "tenho", "com" ou "pessoa com". O mesmo vale para "pcd".
+const CONDICOES_DA_PESSOA = [
+  'deficiente visual',
+  'deficiente auditivo',
+  'deficiente auditiva',
+  'deficiente intelectual',
+  'deficiencia visual',
+  'deficiencia auditiva',
+  'deficiencia intelectual',
+  'pcd',
+];
+const PADRAO_CONDICAO = new RegExp(`^(?:(?:sou|tenho|com|pessoa com) )?(?:${CONDICOES_DA_PESSOA.join('|')})$`);
 
 const OFENSIVAS = new Set(['porra', 'merda', 'caralho', 'puta', 'foda', 'idiota', 'burro']);
 
@@ -109,8 +132,10 @@ export function mencionaDadoSensivel(texto) {
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     // Hífen, barra e sublinhado viram espaço: "Saúde-mental" e "Não-binário" casam com as expressões.
-    .replace(/[-/_]/g, ' ');
-  return PADRAO_SENSIVEL.test(semAcento);
+    .replace(/[-/_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return PADRAO_SENSIVEL.test(semAcento) || PADRAO_CONDICAO.test(semAcento);
 }
 
 // Remove duplicatas ignorando maiúsculas e mantém a primeira grafia.
