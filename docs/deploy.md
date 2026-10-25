@@ -50,11 +50,11 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 
 ## Depois de mesclar
 
-Itens que dependem das configurações do GitHub ou dos serviços e não são feitos por código:
+Estado do repositório e o que conferir nas configurações, que não são feitas por código:
 
-1. **Canal de vulnerabilidades:** com o repositório privado, o canal é o descrito no `SECURITY.md` (avisar a equipe pelo canal combinado do squad ou quem administra o repositório). Só se o repositório for público, ative em Settings, Code security, "Private vulnerability reporting", que passa a ser o canal.
-2. **Dependabot:** em Settings, Code security, confira se os alertas e as atualizações do Dependabot estão ativos. O arquivo `.github/dependabot.yml` só funciona com eles ligados.
-3. **CodeQL (opcional):** o job de `.github/workflows/codeql.yml` fica pulado até ser ativado. Para ativar, ligue o Code scanning em Settings, Code security (em repositório privado, isso exige o recurso de segurança do GitHub no plano; em repositório público, é gratuito) e depois crie, em Settings, Secrets and variables, Actions, aba Variables, a variável de repositório `CODEQL_ATIVO` com o valor `true`.
-4. **Proteção das branches:** em Settings, Branches, proteja `main` e `develop` exigindo pull request e os jobs do CI aprovados antes de mesclar. Não marque o CodeQL como verificação obrigatória enquanto ele estiver desligado: o GitHub conta o job pulado como aprovado, então a exigência não protege nada, e se a variável for criada antes de ligar o Code scanning, o job falha e trava todos os merges.
+1. **Canal de vulnerabilidades:** o repositório é público. O canal é o reporte privado do GitHub (aba **Security**, **Report a vulnerability**), como diz o `SECURITY.md`; confira em Settings, Code security, se "Private vulnerability reporting" está ativo.
+2. **Dependabot:** os alertas estão ativos e o `.github/dependabot.yml` propõe atualizações semanais para backend, frontend, testes de ponta a ponta e GitHub Actions.
+3. **CodeQL:** `.github/workflows/codeql.yml` roda em todo pull request, em todo push em `main` e `develop` e toda semana, com o job "Análise do JavaScript". O job só roda com a variável de repositório `CODEQL_ATIVO` igual a `true`; se ela for removida, o job fica pulado.
+4. **Proteção das branches:** `main` e `develop` só recebem mudanças por pull request, com 1 aprovação e conversas resolvidas. Na `develop`, os checks do CI precisam passar, inclusive "Análise do JavaScript". A lista dos checks está no `CONTRIBUTING.md`.
 5. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
-6. **Referências visuais:** se a primeira execução do CI falhar nos testes visuais por diferença de desenho do Chromium, gere as referências no mesmo ambiente do CI, seguindo `e2e/README.md`.
+6. **Referências visuais:** as imagens de `e2e/tests/visual.spec.js-snapshots/` são geradas no ambiente do CI. Quando uma tela muda de propósito, atualize as referências pelo passo a passo do `e2e/README.md`.
