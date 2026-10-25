@@ -11,19 +11,24 @@ Lista de pontos conhecidos, por área. Não é uma promessa de escopo: serve par
 
 ## Produto
 
-- **Descoberta:** busca por nome ou unidade, filtros, preferências de alcance e paginação. Hoje as pessoas ignoradas ficam só no navegador; guardar no servidor evita que reapareçam em outro aparelho.
-- **Chat:** indicador de mensagens não lidas, avisos fora do app (e-mail ou Teams) e troca do polling por envio em tempo real se a hospedagem permitir.
+- **Descoberta:** a busca e os filtros rodam no navegador sobre as sugestões já carregadas (até 20 por vez); falta paginação. As pessoas ignoradas ficam só no navegador; guardar no servidor evita que reapareçam em outro aparelho.
+- **Chat:** avisos fora do app (e-mail ou Teams) e troca do polling por envio em tempo real se a hospedagem permitir. As conversas lidas são marcadas só no navegador.
 - **Perfil:** foto, edição da bio com nova análise e histórico de conexões.
 - **Moderação:** tela para quem administra tratar denúncias e gerenciar a lista de e-mails liberados. Hoje as denúncias só ficam gravadas.
 
 ## Qualidade e segurança
 
-- **Acessibilidade:** auditoria com leitor de tela, testes automáticos de contraste e foco, e modo escuro.
-- **Segurança:** política de conteúdo (CSP), avaliação de guardar o token em cookie `httpOnly` no lugar do `localStorage`, auditoria periódica de dependências e política de retenção do registro de IA.
+- **Acessibilidade:** auditoria com leitor de tela e modo escuro.
+- **Segurança:** avaliação de guardar o token em cookie `httpOnly` no lugar do `localStorage` e política de retenção do registro de IA.
 - **Privacidade:** confirmar a base legal e o uso de dados pelo plano gratuito do provedor de IA antes de enviar bios reais.
-- **Testes:** testes de componente no frontend, o fluxo de revisão de tags com a IA respondendo e um teste de carga simples na API.
-- **Código:** padronizar formatação e análise estática, e adotar migrações versionadas no banco no lugar do esquema idempotente.
-- **Operação:** logs estruturados, métricas e alertas, e um `/health` que confira o banco.
+- **Testes:** um teste de ponta a ponta do fluxo de revisão de tags com a IA respondendo pela API (hoje a tela só é conferida pela acessibilidade, com a resposta simulada no navegador) e um teste de carga simples na API.
+- **Operação:** métricas e alertas.
+
+## Pontos conhecidos
+
+- **Preferências de descoberta no navegador.** Equilíbrio entre interesses profissionais e pessoais, alcance geográfico, polos habilitados e hub ficam no `localStorage`, separados por conta. Não acompanham a pessoa em outro aparelho.
+- **Catálogo de tags sem moderação nem sinônimos.** Qualquer pessoa cria tags; a API recusa cargo, termos genéricos e ofensivos, mas não junta grafias diferentes da mesma tag nem trata sinônimos.
+- **Filtro de dados sensíveis só na saída da IA.** Tags e quebra-gelos gerados pela IA são filtrados; o que a própria pessoa digita não passa pelo filtro.
 
 ## Design
 
