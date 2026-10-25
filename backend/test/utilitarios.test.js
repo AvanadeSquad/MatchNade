@@ -45,26 +45,36 @@ describe('mencionaHierarquia', () => {
 });
 
 describe('mencionaDadoSensivel', () => {
-  it('detecta política, religião, saúde, orientação sexual, sindicato e etnia, com ou sem acento', () => {
-    for (const texto of [
-      'Política',
-      'opinião política forte',
-      'Religião',
-      'IGREJA evangélica',
-      'Saúde Mental',
-      'depressão',
-      'orientação sexual',
-      'sindicato',
-      'Etnia',
-    ]) {
+  it('detecta os temas sensíveis da LGPD, com ou sem acento e sem diferenciar maiúscula', () => {
+    // prettier-ignore
+    const sensiveis = [
+      'orientação sexual', 'LGBT', 'LGBTQIA+', 'gay', 'homossexual', 'religião', 'cristão', 'evangélico', 'católico',
+      'espírita', 'ateu', 'Bíblia', 'depressão', 'ansiedade', 'câncer', 'HIV', 'diabetes', 'autismo', 'TDAH',
+      'deficiência', 'saúde mental', 'origem racial', 'dado genético', 'filiação a sindicato', 'opinião política',
+      'partido político', 'opinião política forte', 'IGREJA evangélica', 'Saúde Mental', 'Etnia', 'Raça', 'Gospel',
+      'Hinduísmo', 'Terapia', 'Medicamento', 'Cirurgia', 'Gravidez', 'identidade de gênero',
+    ];
+    for (const texto of sensiveis) {
       expect(mencionaDadoSensivel(texto), texto).toBe(true);
     }
   });
 
-  it('não barra interesses comuns nem palavras que só contêm o termo', () => {
-    for (const texto of ['React', 'Xadrez', 'Cafés Especiais', 'Políticas Públicas', 'Archive', 'Cancerologia de dados']) {
+  it('deixa passar termos de setor, de técnica e expressões comuns com palavras parecidas', () => {
+    // prettier-ignore
+    const legitimos = [
+      'Política de segurança', 'Política de privacidade', 'Políticas públicas', 'Partido alto', 'Coração partido',
+      'Saúde digital', 'Health tech', 'Acessibilidade', 'Yoga', 'Meditação', 'Futebol', 'Cibersegurança',
+      'Engenharia de dados', 'Biometria', 'Eleições', 'React', 'Xadrez', 'Cafés Especiais', 'Archive',
+      'Cancerologia de dados', 'Cerveja negra', 'Arte indígena',
+    ];
+    for (const texto of legitimos) {
       expect(mencionaDadoSensivel(texto), texto).toBe(false);
     }
+  });
+
+  it('"Política" e "Saúde" sozinhas são ambíguas e passam', () => {
+    expect(mencionaDadoSensivel('Política')).toBe(false);
+    expect(mencionaDadoSensivel('Saúde')).toBe(false);
   });
 
   it('aceita texto vazio ou ausente', () => {
