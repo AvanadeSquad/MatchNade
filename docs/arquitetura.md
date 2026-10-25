@@ -153,6 +153,9 @@ O arquivo `matchnade_schema.sql`, na raiz, é um dump anterior do banco, mantido
 - as chaves estrangeiras de `connection_match`, `chat_message.sender_id`, `employee_block`, `employee_report` e `ai_interaction_log` não apagam em cascata;
 - não há os `CHECK` de `connection_match.status`, `interest_tag.category`, `employee.max_weekly_matches` (de 1 a 5) e `employee_interest.source`;
 - `ai_interaction_log.model` e `ai_interaction_log.latency_ms` são obrigatórios, e nas migrações aceitam nulo;
+- as chaves primárias e estrangeiras são `bigint`, e não `integer` (`SERIAL`);
+- `connection_match.requester_id` e `receiver_id` aceitam nulo, assim como `chat_message.match_id` e `sender_id` e `employee_report.reporter_id` e `reported_id`;
+- `employee.is_active` e `is_paused` aceitam nulo;
 - não existe a tabela `schema_migrations`.
 
 ## Testes
