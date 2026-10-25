@@ -56,6 +56,93 @@ Oito tabelas: `employee`, `interest_tag`, `employee_interest`, `connection_match
 
 O `ai_interaction_log` registra tipo, versão do prompt, modelo, status e tempo; não guarda a bio.
 
+Tabelas e relações, conforme as migrações:
+
+```mermaid
+erDiagram
+  employee ||--o{ employee_interest : "tem"
+  interest_tag ||--o{ employee_interest : "aparece em"
+  employee ||--o{ connection_match : "pede (requester_id)"
+  employee ||--o{ connection_match : "recebe (receiver_id)"
+  connection_match ||--o{ chat_message : "tem"
+  employee ||--o{ chat_message : "envia (sender_id)"
+  employee ||--o{ employee_block : "bloqueia (blocker_id)"
+  employee ||--o{ employee_block : "é bloqueada (blocked_id)"
+  employee ||--o{ employee_report : "denuncia (reporter_id)"
+  employee ||--o{ employee_report : "é denunciada (reported_id)"
+  employee |o--o{ ai_interaction_log : "gera"
+
+  employee {
+    serial id PK
+    text auth_provider_id UK
+    text name
+    text email UK
+    text bio
+    text position
+    text department
+    text location
+    jsonb connection_goals
+    integer max_weekly_matches
+    boolean is_active
+    boolean is_paused
+    timestamptz last_seen_at
+    timestamptz created_at
+  }
+  interest_tag {
+    serial id PK
+    text name UK
+    text category
+  }
+  employee_interest {
+    integer employee_id PK, FK
+    integer interest_id PK, FK
+    text source
+    real confidence_score
+  }
+  connection_match {
+    serial id PK
+    integer requester_id FK
+    integer receiver_id FK
+    text status
+    real match_score
+    text icebreaker
+    timestamptz created_at
+    timestamptz responded_at
+  }
+  chat_message {
+    serial id PK
+    integer match_id FK
+    integer sender_id FK
+    text body
+    timestamptz created_at
+  }
+  employee_block {
+    integer blocker_id PK, FK
+    integer blocked_id PK, FK
+    timestamptz created_at
+  }
+  employee_report {
+    serial id PK
+    integer reporter_id FK
+    integer reported_id FK
+    text reason
+    timestamptz created_at
+  }
+  ai_interaction_log {
+    serial id PK
+    integer employee_id FK
+    text prompt_type
+    text prompt_version
+    text model
+    text status
+    jsonb response_payload
+    integer latency_ms
+    timestamptz created_at
+  }
+```
+
+Todas as chaves estrangeiras apagam em cascata (a do `ai_interaction_log` passou a apagar em cascata na migração `002`). Os nomes únicos de `employee.email` e `interest_tag.name` não diferenciam maiúsculas. A tabela `schema_migrations` (versão, nome e data) é criada por `migrar.js` e fica fora do diagrama.
+
 O arquivo `matchnade_schema.sql`, na raiz, é um dump anterior do banco, mantido só como referência. A API não o lê, e ele difere das migrações:
 
 - `connection_goals` é `text[]`, e não `JSONB`;
@@ -64,6 +151,8 @@ O arquivo `matchnade_schema.sql`, na raiz, é um dump anterior do banco, mantido
 - `department` e `location` são obrigatórios, e os textos são `varchar` com tamanho;
 - as datas são `timestamp` sem fuso;
 - as chaves estrangeiras de `connection_match`, `chat_message.sender_id`, `employee_block`, `employee_report` e `ai_interaction_log` não apagam em cascata;
+- não há os `CHECK` de `connection_match.status`, `interest_tag.category`, `employee.max_weekly_matches` (de 1 a 5) e `employee_interest.source`;
+- `ai_interaction_log.model` e `ai_interaction_log.latency_ms` são obrigatórios, e nas migrações aceitam nulo;
 - não existe a tabela `schema_migrations`.
 
 ## Testes
