@@ -117,6 +117,17 @@ describe('SeletorTags: sugestões ao digitar', () => {
     expect(campo()).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('sair do campo com Tab fecha a lista', async () => {
+    const u = userEvent.setup();
+    render(<Seletor />);
+    await u.type(campo(), 'react');
+    expect(campo()).toHaveAttribute('aria-expanded', 'true');
+    await u.tab();
+    expect(campo()).not.toHaveFocus();
+    expect(campo()).toHaveAttribute('aria-expanded', 'false');
+    expect(opcoes()).toHaveLength(0);
+  });
+
   it('digitar não cria tag nem chama a API', async () => {
     const u = userEvent.setup();
     const aoCriar = vi.fn();

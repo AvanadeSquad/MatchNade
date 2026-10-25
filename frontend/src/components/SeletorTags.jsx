@@ -17,6 +17,7 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
   const [fechada, setFechada] = useState(false);
   const [parecida, setParecida] = useState(null);
   const raiz = useRef(null);
+  const lista = useRef(null);
   const idLista = useId();
 
   const escolhidasDaCategoria = [...selecionadas.values()].filter((t) => t.categoria === categoria).map((t) => t.nome);
@@ -49,6 +50,15 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
     setAtiva(-1);
     setParecida(null);
   };
+
+  // O foco saindo do campo (pelo Tab, por exemplo) fecha as sugestões, inclusive quando vai para o botão
+  // Adicionar. O clique numa opção não dispara isso, porque as opções impedem a perda de foco no mousedown.
+  function aoSairDoCampo(evento) {
+    if (!lista.current?.contains(evento.relatedTarget)) {
+      setFechada(true);
+      setAtiva(-1);
+    }
+  }
 
   const escolher = (nome) => {
     if (!selecionadas.has(nome.toLowerCase())) aoAlternar(nome, categoria);
@@ -143,6 +153,7 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
               value={novo}
               onChange={aoDigitar}
               onKeyDown={aoTeclar}
+              onBlur={aoSairDoCampo}
               placeholder={categoria === 'TECHNICAL' ? 'Outra skill (ex.: Terraform)' : 'Outro hobby (ex.: Escalada)'}
               aria-label={categoria === 'TECHNICAL' ? 'Adicionar outra skill' : 'Adicionar outro hobby'}
               maxLength={40}
@@ -157,7 +168,14 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
               <IconeSomar /> Adicionar
             </button>
           </form>
-          <ul id={idLista} role="listbox" aria-label="Sugestões do catálogo" className="seletor-tags__sugestoes" hidden={!aberta}>
+          <ul
+            ref={lista}
+            id={idLista}
+            role="listbox"
+            aria-label="Sugestões do catálogo"
+            className="seletor-tags__sugestoes"
+            hidden={!aberta}
+          >
             {aberta &&
               sugestoes.map((nome, indice) => (
                 <li
