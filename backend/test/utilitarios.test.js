@@ -59,6 +59,37 @@ describe('mencionaDadoSensivel', () => {
     }
   });
 
+  it('deixa passar temas de setor e de técnica sobre saúde, deficiência e raça', () => {
+    // prettier-ignore
+    const setores = [
+      'Inclusão de PCD', 'Acessibilidade para PcD', 'Tecnologia assistiva para deficiência visual', 'Cirurgia robótica',
+      'Medicamentos genéricos', 'Doenças tropicais', 'Raças de cães', 'Terapia de casal', 'Pastor alemão',
+    ];
+    for (const texto of setores) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(false);
+    }
+  });
+
+  it('detecta as expressões e os termos novos sobre a pessoa', () => {
+    // prettier-ignore
+    const novos = [
+      'Sou PcD', 'Pessoa com deficiência', 'Tenho uma doença', 'Em tratamento', 'Faço terapia', 'Minha raça',
+      'Epilepsia', 'Bipolar', 'Transtorno bipolar', 'TOC', 'Esquizofrenia', 'Alcoolismo', 'Alzheimer', 'Surdez',
+      'Cegueira', 'Síndrome de Down', 'Pessoa trans', 'Mulher trans', 'Homem trans', 'Pastor da igreja', 'Padre',
+      'Terreiro', 'Cadeirante',
+    ];
+    for (const texto of novos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+  });
+
+  it('trata hífen, barra e sublinhado como espaço', () => {
+    for (const texto of ['Saúde-mental', 'Não-binário', 'nao_binaria', 'Pessoa/trans', 'Síndrome-de-Down']) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+    expect(mencionaDadoSensivel('Health-tech')).toBe(false);
+  });
+
   it('deixa passar termos de setor, de técnica e expressões comuns com palavras parecidas', () => {
     // prettier-ignore
     const legitimos = [
