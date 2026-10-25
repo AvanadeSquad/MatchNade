@@ -28,7 +28,16 @@ Tudo roda em planos gratuitos. Não usa Docker.
 ## Regras de produto que a arquitetura garante
 
 - **Sem hierarquia.** Cargo e senioridade não entram no cálculo, na descoberta, nas tags (a normalização recusa) nem no texto da IA (o texto gerado é rejeitado se citar cargo). O cargo só é devolvido nas conexões confirmadas e no perfil depois do match.
-- **Sem dados sensíveis na saída da IA.** Tags devolvidas pela IA que tocam em política, religião, saúde, orientação sexual, sindicato ou etnia são descartadas (CA-05, LGPD), e um quebra-gelo que cite esses temas é rejeitado. O filtro vale só para a IA: o que a pessoa digita na revisão de tags não é filtrado. Ele é conservador ("Política de Segurança" também cai); nesse caso a pessoa pode adicionar a tag à mão.
+- **Sem dados sensíveis na saída da IA.** Segue os dados pessoais sensíveis da LGPD (Lei 13.709/2018, art. 5º, II). Tags devolvidas pela IA são descartadas, e um quebra-gelo é rejeitado, quando revelam:
+  - opinião política ou filiação partidária;
+  - convicção religiosa (religiões, crenças e quem as pratica);
+  - condição ou tratamento de saúde, inclusive deficiência e saúde mental;
+  - orientação sexual, vida sexual ou identidade de gênero;
+  - origem racial ou étnica;
+  - filiação a sindicato;
+  - dado genético ou biométrico da pessoa.
+
+  O filtro procura termos sobre a pessoa, não termos de setor ou de técnica: "Política de privacidade", "Políticas públicas", "Saúde digital", "Health tech", "Biometria" e "Eleições" como domínio de sistemas passam. Termos ambíguos ficam de fora para não barrar interesses legítimos; "Política" ou "Saúde" sozinhas, por exemplo, passam. O filtro vale só para a IA: o que a pessoa digita na revisão de tags não é filtrado. A lista está em `backend/src/utils/tags.js` (`DADOS_SENSIVEIS`).
 - **Consentimento mútuo.** Match só existe com interesse dos dois lados. Chat e quebra-gelo exigem conexão aceita e sem bloqueio, e quem não participa da conexão recebe 404.
 - **Cota semanal.** De 1 a 5 solicitações por semana, de segunda a domingo. A checagem roda em transação com trava, então pedidos simultâneos não passam do limite.
 - **Expiração.** Solicitações pendentes há mais de 14 dias expiram.

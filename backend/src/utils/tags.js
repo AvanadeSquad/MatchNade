@@ -19,16 +19,50 @@ const HIERARQUIA = new Set([
   'associate', 'partner', 'executive', 'chief', 'president',
 ]);
 
-// Dados pessoais sensíveis (LGPD, art. 5º, II): a IA não pode extrair nem repetir estes temas a partir da bio (CA-05).
-// Termos em minúsculas e sem acento, casados como palavra inteira ("politica" não pega "politicas").
+// Dados pessoais sensíveis (LGPD, art. 5º, II): origem racial ou étnica, convicção religiosa, opinião
+// política, filiação a sindicato ou a organização religiosa, filosófica ou política, saúde, vida sexual,
+// dado genético ou biométrico. A IA não pode extrair nem repetir estes temas a partir da bio.
+// Critério: o filtro procura termos que revelam algo sobre a pessoa (posição, crença, condição), não
+// termos de setor ou de técnica. "Política de privacidade", "Saúde digital", "Biometria" e "Eleições"
+// como domínio de sistemas passam. Na dúvida, o termo fica de fora para não barrar interesse legítimo.
+// Termos em minúsculas e sem acento, casados como palavra ou expressão inteira.
 // Só a saída da IA passa por este filtro: o que a própria pessoa digita na revisão fica sob o controle dela.
 // prettier-ignore
 const DADOS_SENSIVEIS = [
-  'politica', 'politico', 'politicos', 'partido', 'partidos', 'eleicao', 'eleicoes', 'eleitoral',
-  'religiao', 'religioso', 'religiosa', 'igreja', 'evangelico', 'catolico', 'espirita', 'umbanda', 'candomble',
-  'ateu', 'ateismo', 'budismo', 'islamismo', 'judaismo',
-  'depressao', 'ansiedade', 'doenca', 'cancer', 'hiv', 'diabetes', 'saude mental', 'psiquiatra', 'tratamento medico',
-  'autismo', 'tdah', 'orientacao sexual', 'vida sexual', 'sindicato', 'sindicalizado', 'etnia',
+  // Opinião política e filiação partidária. "politica" e "partido" soltos ficam de fora: aparecem em
+  // "Política de segurança", "Partido alto" e "Coração partido".
+  'opiniao politica', 'opinioes politicas', 'orientacao politica', 'posicao politica', 'ideologia politica',
+  'militancia politica', 'militante politico', 'militante politica', 'ativismo politico', 'ativista politico',
+  'partido politico', 'partidos politicos', 'filiado a partido', 'filiada a partido', 'filiacao partidaria',
+  'comunismo', 'comunista', 'socialismo', 'socialista', 'fascismo', 'fascista', 'anarquismo', 'anarquista',
+  // Convicção religiosa, crenças e quem as pratica.
+  'religiao', 'religioes', 'religioso', 'religiosa', 'religiosidade', 'crenca religiosa', 'igreja', 'igrejas',
+  'cristao', 'crista', 'cristaos', 'cristianismo', 'evangelico', 'evangelica', 'evangelicos', 'protestante',
+  'catolico', 'catolica', 'catolicos', 'catolicismo', 'espirita', 'espiritismo', 'umbanda', 'candomble',
+  'ateu', 'ateia', 'ateus', 'ateismo', 'agnostico', 'agnostica', 'budismo', 'budista', 'islamismo', 'islam',
+  'muculmano', 'muculmana', 'judaismo', 'judeu', 'judia', 'judaico', 'hinduismo', 'hindu', 'biblia',
+  'gospel', 'missa', 'culto religioso', 'maconaria',
+  // Saúde: condições e tratamentos. "saude" solta fica de fora ("Saúde digital"); entram expressões que
+  // falam da condição da pessoa.
+  'saude mental', 'condicao de saude', 'problema de saude', 'problemas de saude', 'estado de saude',
+  'depressao', 'depressivo', 'depressiva', 'ansiedade', 'transtorno', 'transtornos', 'doenca', 'doencas',
+  'cancer', 'hiv', 'aids', 'diabetes', 'diabetico', 'diabetica', 'autismo', 'autista', 'tdah',
+  'psiquiatra', 'psiquiatrico', 'terapia', 'medicamento', 'medicamentos', 'remedio', 'remedios',
+  'cirurgia', 'quimioterapia', 'tratamento medico', 'gravidez', 'gravida', 'gestante',
+  'deficiencia', 'deficiencias', 'deficiente', 'pcd', 'cadeirante',
+  // Orientação sexual, vida sexual e identidade de gênero.
+  'orientacao sexual', 'vida sexual', 'identidade de genero', 'lgbt', 'lgbtq', 'lgbtqi', 'lgbtqia',
+  'gay', 'gays', 'lesbica', 'lesbicas', 'bissexual', 'bissexuais', 'homossexual', 'homossexuais',
+  'heterossexual', 'transexual', 'transgenero', 'travesti', 'queer', 'nao binario', 'nao binaria',
+  // Origem racial ou étnica.
+  'origem racial', 'origem etnica', 'raca', 'racas', 'racial', 'etnia', 'etnias', 'etnico', 'etnica',
+  'cor da pele', 'pessoa negra', 'pessoas negras', 'pessoa parda', 'origem indigena', 'movimento negro',
+  // "negro", "indígena" e "quilombola" soltos ficam de fora: aparecem em "Cerveja negra", "Arte indígena"
+  // e "Comunidades quilombolas" como interesse cultural ou trabalho voluntário.
+  // Filiação a sindicato.
+  'sindicato', 'sindicatos', 'sindical', 'sindicalizado', 'sindicalizada', 'filiacao sindical',
+  // Dado genético ou biométrico da pessoa. "Biometria" como competência técnica passa.
+  'dado genetico', 'dados geneticos', 'teste genetico', 'dado biometrico', 'dados biometricos',
 ];
 const PADRAO_SENSIVEL = new RegExp(`(?:^|[^a-z0-9])(?:${DADOS_SENSIVEIS.join('|')})(?:[^a-z0-9]|$)`);
 
@@ -61,7 +95,8 @@ export function mencionaHierarquia(texto) {
   return palavras.some((p) => HIERARQUIA.has(p) || SIGLAS_HIERARQUIA.has(p) || ['hierarquia', 'chefe', 'subordinado'].includes(p));
 }
 
-// Verdadeiro se o texto toca em dado pessoal sensível (política, religião, saúde, orientação sexual, sindicato, etnia).
+// Verdadeiro se o texto toca em dado pessoal sensível (opinião política, religião, saúde, deficiência, orientação
+// sexual, identidade de gênero, origem racial ou étnica, sindicato, dado genético ou biométrico).
 export function mencionaDadoSensivel(texto) {
   const semAcento = String(texto ?? '')
     .normalize('NFD')
