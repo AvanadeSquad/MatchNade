@@ -149,7 +149,7 @@ describe('serviço de IA', () => {
     const ia = criar(
       JSON.stringify({
         technical_tags: ['Política de privacidade', 'Saúde digital', 'Dado genético', 'Biometria'],
-        hobby_tags: ['LGBT', 'Bíblia', 'Terapia', 'Deficiência', 'Partido alto', 'Yoga'],
+        hobby_tags: ['LGBT', 'Bíblia', 'Faço terapia', 'Pessoa com deficiência', 'Partido alto', 'Yoga'],
       }),
     );
     const resultado = await ia.extrairTags(funcionarioId, 'Bio fictícia de teste.');

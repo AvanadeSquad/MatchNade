@@ -50,9 +50,9 @@ describe('mencionaDadoSensivel', () => {
     const sensiveis = [
       'orientação sexual', 'LGBT', 'LGBTQIA+', 'gay', 'homossexual', 'religião', 'cristão', 'evangélico', 'católico',
       'espírita', 'ateu', 'Bíblia', 'depressão', 'ansiedade', 'câncer', 'HIV', 'diabetes', 'autismo', 'TDAH',
-      'deficiência', 'saúde mental', 'origem racial', 'dado genético', 'filiação a sindicato', 'opinião política',
-      'partido político', 'opinião política forte', 'IGREJA evangélica', 'Saúde Mental', 'Etnia', 'Raça', 'Gospel',
-      'Hinduísmo', 'Terapia', 'Medicamento', 'Cirurgia', 'Gravidez', 'identidade de gênero',
+      'pessoa com deficiência', 'saúde mental', 'origem racial', 'dado genético', 'filiação a sindicato', 'opinião política',
+      'partido político', 'opinião política forte', 'IGREJA evangélica', 'Saúde Mental', 'Etnia', 'Minha raça', 'Gospel',
+      'Hinduísmo', 'Faço terapia', 'Tomo medicamento', 'Em tratamento', 'Gravidez', 'identidade de gênero',
     ];
     for (const texto of sensiveis) {
       expect(mencionaDadoSensivel(texto), texto).toBe(true);

@@ -37,7 +37,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
   - filiação a sindicato;
   - dado genético ou biométrico da pessoa.
 
-  O filtro procura termos sobre a pessoa, não termos de setor ou de técnica: "Política de privacidade", "Políticas públicas", "Saúde digital", "Health tech", "Biometria" e "Eleições" como domínio de sistemas passam. Termos ambíguos ficam de fora para não barrar interesses legítimos; "Política" ou "Saúde" sozinhas, por exemplo, passam. O filtro vale só para a IA: o que a pessoa digita na revisão de tags não é filtrado. A lista está em `backend/src/utils/tags.js` (`DADOS_SENSIVEIS`).
+  O filtro procura termos sobre a pessoa, não termos de setor ou de técnica: "Política de privacidade", "Políticas públicas", "Saúde digital", "Health tech", "Biometria" e "Eleições" como domínio de sistemas passam, assim como "Inclusão de PCD", "Cirurgia robótica", "Doenças tropicais" e "Raças de cães". Termos ambíguos ficam de fora para não barrar interesses legítimos; "Política", "Saúde", "Terapia" ou "Deficiência" sozinhas, por exemplo, passam. Hífen e barra contam como espaço ("Saúde-mental" é barrada). O filtro vale só para a IA: o que a pessoa digita na revisão de tags não é filtrado. A lista está em `backend/src/utils/tags.js` (`DADOS_SENSIVEIS`).
 - **Consentimento mútuo.** Match só existe com interesse dos dois lados. Chat e quebra-gelo exigem conexão aceita e sem bloqueio, e quem não participa da conexão recebe 404.
 - **Cota semanal.** De 1 a 5 solicitações por semana, de segunda a domingo. A checagem roda em transação com trava, então pedidos simultâneos não passam do limite.
 - **Expiração.** Solicitações pendentes há mais de 14 dias expiram.

@@ -41,21 +41,27 @@ const DADOS_SENSIVEIS = [
   'catolico', 'catolica', 'catolicos', 'catolicismo', 'espirita', 'espiritismo', 'umbanda', 'candomble',
   'ateu', 'ateia', 'ateus', 'ateismo', 'agnostico', 'agnostica', 'budismo', 'budista', 'islamismo', 'islam',
   'muculmano', 'muculmana', 'judaismo', 'judeu', 'judia', 'judaico', 'hinduismo', 'hindu', 'biblia',
-  'gospel', 'missa', 'culto religioso', 'maconaria',
-  // Saúde: condições e tratamentos. "saude" solta fica de fora ("Saúde digital"); entram expressões que
-  // falam da condição da pessoa.
+  'gospel', 'missa', 'culto religioso', 'maconaria', 'pastor(?! alem)', 'padre', 'terreiro',
+  // Saúde e deficiência: condições e tratamentos. Palavras como "saude", "doenca", "terapia", "cirurgia",
+  // "medicamento", "deficiencia" e "pcd" soltas ficam de fora, porque aparecem como setor ou técnica
+  // ("Doenças tropicais", "Cirurgia robótica", "Inclusão de PCD"); entram expressões que falam da pessoa.
   'saude mental', 'condicao de saude', 'problema de saude', 'problemas de saude', 'estado de saude',
-  'depressao', 'depressivo', 'depressiva', 'ansiedade', 'transtorno', 'transtornos', 'doenca', 'doencas',
+  'depressao', 'depressivo', 'depressiva', 'ansiedade', 'transtorno', 'transtornos', 'transtorno bipolar',
+  'bipolar', 'toc', 'esquizofrenia', 'epilepsia', 'alcoolismo', 'alzheimer',
   'cancer', 'hiv', 'aids', 'diabetes', 'diabetico', 'diabetica', 'autismo', 'autista', 'tdah',
-  'psiquiatra', 'psiquiatrico', 'terapia', 'medicamento', 'medicamentos', 'remedio', 'remedios',
-  'cirurgia', 'quimioterapia', 'tratamento medico', 'gravidez', 'gravida', 'gestante',
-  'deficiencia', 'deficiencias', 'deficiente', 'pcd', 'cadeirante',
+  'psiquiatra', 'psiquiatrico', 'quimioterapia', 'tratamento medico', 'em tratamento', 'faco terapia',
+  'faco tratamento', 'tenho doenca', 'tenho uma doenca', 'tomo remedio', 'tomo remedios', 'tomo medicamento',
+  'tomo medicamentos', 'gravidez', 'gravida', 'gestante',
+  'pessoa com deficiencia', 'pessoas com deficiencia', 'tenho deficiencia', 'tenho uma deficiencia', 'sou pcd',
+  'cadeirante', 'surdez', 'cegueira', 'sindrome de down',
   // Orientação sexual, vida sexual e identidade de gênero.
   'orientacao sexual', 'vida sexual', 'identidade de genero', 'lgbt', 'lgbtq', 'lgbtqi', 'lgbtqia',
   'gay', 'gays', 'lesbica', 'lesbicas', 'bissexual', 'bissexuais', 'homossexual', 'homossexuais',
   'heterossexual', 'transexual', 'transgenero', 'travesti', 'queer', 'nao binario', 'nao binaria',
+  'pessoa trans', 'pessoas trans', 'mulher trans', 'homem trans',
   // Origem racial ou étnica.
-  'origem racial', 'origem etnica', 'raca', 'racas', 'racial', 'etnia', 'etnias', 'etnico', 'etnica',
+  // "raca" solta fica de fora ("Raças de cães"); entram expressões que falam da pessoa.
+  'origem racial', 'origem etnica', 'minha raca', 'pessoa de raca', 'racial', 'etnia', 'etnias', 'etnico', 'etnica',
   'cor da pele', 'pessoa negra', 'pessoas negras', 'pessoa parda', 'origem indigena', 'movimento negro',
   // "negro", "indígena" e "quilombola" soltos ficam de fora: aparecem em "Cerveja negra", "Arte indígena"
   // e "Comunidades quilombolas" como interesse cultural ou trabalho voluntário.
@@ -101,7 +107,9 @@ export function mencionaDadoSensivel(texto) {
   const semAcento = String(texto ?? '')
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
-    .toLowerCase();
+    .toLowerCase()
+    // Hífen, barra e sublinhado viram espaço: "Saúde-mental" e "Não-binário" casam com as expressões.
+    .replace(/[-/_]/g, ' ');
   return PADRAO_SENSIVEL.test(semAcento);
 }
 
