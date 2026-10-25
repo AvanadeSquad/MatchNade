@@ -87,7 +87,7 @@ Públicas: `/` (redireciona) e `/login`. As demais exigem sessão. Quem ainda n�
 
 A API não tem campos para alguns itens das telas. Eles ficam no `localStorage`, separados por conta:
 
-- telefone, hub e CEP (cadastro), equilíbrio profissional x pessoal, alcance geográfico, polos habilitados e o aviso do sino (`utils/preferencias.js`). O equilíbrio reordena as sugestões usando a afinidade por eixo que a API devolve; o alcance "Local" filtra pela cidade; polos dão um pequeno bônus;
+- hub (cadastro), equilíbrio profissional x pessoal, alcance geográfico, polos habilitados e o aviso do sino (`utils/preferencias.js`). O equilíbrio reordena as sugestões usando a afinidade por eixo que a API devolve; o alcance "Local" filtra pela cidade; polos dão um pequeno bônus;
 - conversas lidas (`utils/lidas.js`) e cafés agendados por conversa (`utils/cafe.js`).
 
 Convites de Coffee Chat são mensagens comuns do chat com o prefixo `[Coffee Chat]`, então as duas pessoas veem o convite e o aceite sem rota nova na API.

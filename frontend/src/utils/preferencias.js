@@ -1,6 +1,6 @@
-// Preferências que a API ainda não guarda (telefone, hub, CEP, equilíbrio do algoritmo, alcance geográfico,
-// polos habilitados e notificações). Ficam no navegador, separadas por conta. O que a API guarda
-// (nome, unidade, cidade, bio, interesses, objetivos, cota semanal e pausa) vai sempre para a API.
+// Preferências que a API não guarda (hub, equilíbrio do algoritmo, alcance geográfico, polos habilitados
+// e notificações). Ficam no navegador, separadas por conta. O que a API guarda (nome, unidade, cidade,
+// bio, interesses, objetivos, cota semanal e pausa) vai sempre para a API.
 
 export const HUBS = [
   'Avanade São Paulo (Chácara Santo Antônio)',
@@ -51,10 +51,7 @@ export const ALCANCES = [
 ];
 
 export const PADRAO = {
-  telefone: '',
-  emailPessoal: '',
   hub: '',
-  cep: '',
   pesoProfissional: 70,
   alcance: 'REGIONAL',
   polos: [],
@@ -64,17 +61,22 @@ export const PADRAO = {
 
 const chave = (usuarioId) => `preferencias:${usuarioId}`;
 
+// Mantém só as chaves de PADRAO. Qualquer outra chave guardada no navegador é descartada ao ler e,
+// como a gravação parte da leitura, deixa de existir na próxima vez que as preferências forem salvas.
+const somenteConhecidas = (objeto) =>
+  Object.fromEntries(Object.entries(objeto && typeof objeto === 'object' ? objeto : {}).filter(([nome]) => Object.hasOwn(PADRAO, nome)));
+
 export function lerPreferencias(usuarioId) {
   try {
     const salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
-    return { ...PADRAO, ...(salvo && typeof salvo === 'object' ? salvo : {}) };
+    return { ...PADRAO, ...somenteConhecidas(salvo) };
   } catch {
     return { ...PADRAO };
   }
 }
 
 export function salvarPreferencias(usuarioId, parcial) {
-  const novas = { ...lerPreferencias(usuarioId), ...parcial };
+  const novas = { ...lerPreferencias(usuarioId), ...somenteConhecidas(parcial) };
   try {
     localStorage.setItem(chave(usuarioId), JSON.stringify(novas));
   } catch {
