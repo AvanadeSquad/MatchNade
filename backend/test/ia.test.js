@@ -169,6 +169,18 @@ describe('serviço de IA', () => {
     expect(resultado.hobby_tags).toEqual(['Raças de cães']);
   });
 
+  it('descarta deficiência dita sobre a pessoa e mantém o tema de acessibilidade', async () => {
+    const ia = criar(
+      JSON.stringify({
+        technical_tags: ['Acessibilidade para deficiência visual', 'Acessibilidade para PcD', 'Deficiência visual'],
+        hobby_tags: ['Terreiro de café', 'PcD', 'Soropositivo'],
+      }),
+    );
+    const resultado = await ia.extrairTags(funcionarioId, 'Bio fictícia de teste.');
+    expect(resultado.technical_tags).toEqual(['Acessibilidade para deficiência visual', 'Acessibilidade para PcD']);
+    expect(resultado.hobby_tags).toEqual(['Terreiro de café']);
+  });
+
   it('resposta fora do schema vira fallback', async () => {
     const ia = criar('Claro! Aqui estão as tags: React');
     expect((await ia.extrairTags(funcionarioId, 'texto')).fallback).toBe(true);

@@ -83,6 +83,47 @@ describe('mencionaDadoSensivel', () => {
     }
   });
 
+  it('volta a bloquear deficiência, PcD e condições ditas sobre a pessoa', () => {
+    // prettier-ignore
+    const bloqueados = [
+      'Deficiente visual', 'Deficiente auditivo', 'Deficiência visual', 'Deficiência auditiva', 'Deficiência intelectual',
+      'Sou deficiente visual', 'Sou surdo', 'Sou surda', 'Sou cego', 'Sou cega', 'Raça negra', 'Doença de Crohn',
+      'Doença celíaca', 'Fiz cirurgia bariátrica', 'Uso medicamento controlado', 'PcD', 'PCD',
+    ];
+    for (const texto of bloqueados) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+    // prettier-ignore
+    const permitidos = [
+      'Inclusão de PCD', 'Acessibilidade para PcD', 'Tecnologia assistiva para deficiência visual',
+      'Acessibilidade para deficiência visual', 'Gestão de medicamento controlado',
+    ];
+    for (const texto of permitidos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(false);
+    }
+  });
+
+  it('bloqueia os termos inequívocos acrescentados de saúde, orientação, religião, origem e política', () => {
+    // prettier-ignore
+    const novos = [
+      'Soropositivo', 'Soropositiva', 'Hipertensão', 'Fibromialgia', 'Dislexia', 'Paraplégico', 'Paraplégica',
+      'Tetraplégico', 'Tetraplégica', 'Anorexia', 'Bulimia', 'Síndrome do pânico', 'Dependência química', 'Alcoólatra',
+      'Assexual', 'Pansexual', 'Intersexo', 'Umbandista', 'Candomblecista', 'Testemunha de Jeová', 'Mórmon',
+      'Afrodescendente', 'Sou negro', 'Sou negra', 'Pessoa indígena', 'Sou indígena', 'Sou quilombola',
+      'Militante do partido', 'Filiado ao partido', 'Filiada ao partido',
+    ];
+    for (const texto of novos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+  });
+
+  it('deixa passar "Terreiro de café" e "Transtorno de compilação" sem liberar os termos sozinhos', () => {
+    expect(mencionaDadoSensivel('Terreiro de café')).toBe(false);
+    expect(mencionaDadoSensivel('Transtorno de compilação')).toBe(false);
+    expect(mencionaDadoSensivel('Terreiro')).toBe(true);
+    expect(mencionaDadoSensivel('Transtorno')).toBe(true);
+  });
+
   it('trata hífen, barra e sublinhado como espaço', () => {
     for (const texto of ['Saúde-mental', 'Não-binário', 'nao_binaria', 'Pessoa/trans', 'Síndrome-de-Down']) {
       expect(mencionaDadoSensivel(texto), texto).toBe(true);
