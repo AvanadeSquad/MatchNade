@@ -53,14 +53,33 @@ describe('detecção de duplicatas', () => {
     expect(encontrarEquivalente(['Node.js'], 'node js')).toEqual({ tipo: 'igual', nome: 'Node.js' });
   });
 
-  it('acha a parecida com uma letra de diferença só em termos de 4 letras ou mais', () => {
+  it('acha a parecida com uma letra de diferença só quando as duas têm 6 letras ou mais', () => {
     expect(distanciaDeEdicao('pyhton', 'python')).toBe(1);
     expect(distanciaDeEdicao('pythn', 'python')).toBe(1);
     expect(distanciaDeEdicao('pithon', 'python')).toBe(1);
     expect(distanciaDeEdicao('pyton3', 'python')).toBe(2);
     expect(encontrarEquivalente(['Python'], 'Pyhton')).toEqual({ tipo: 'parecida', nome: 'Python' });
-    expect(encontrarEquivalente(['Python'], 'Pythn')).toEqual({ tipo: 'parecida', nome: 'Python' });
+    expect(encontrarEquivalente(['Python'], 'Pythn')).toBeNull();
     expect(encontrarEquivalente(['Go'], 'Gi')).toBeNull();
     expect(encontrarEquivalente(['Python'], 'Terraform')).toBeNull();
+  });
+
+  it('não acusa nomes curtos legítimos que diferem por uma letra', () => {
+    const pares = [
+      ['Flex', 'Flux'],
+      ['Jest', 'Test'],
+      ['Scala', 'Scale'],
+      ['Rust', 'Rush'],
+      ['Make', 'Cake'],
+      ['Dart', 'Dark'],
+    ];
+    for (const [existente, digitado] of pares) expect(encontrarEquivalente([existente], digitado), digitado).toBeNull();
+  });
+
+  it('com várias parecidas, escolhe a de menor distância, depois a mais usada e depois a ordem alfabética', () => {
+    expect(encontrarEquivalente(['Pythons', 'Python'], 'Pyhton')).toEqual({ tipo: 'parecida', nome: 'Python' });
+    const uso = new Map([['corridas', 5]]);
+    expect(encontrarEquivalente(['Corrida', 'Corridas'], 'Corridaa', { uso })).toEqual({ tipo: 'parecida', nome: 'Corridas' });
+    expect(encontrarEquivalente(['Corridas', 'Corrida'], 'Corridaa')).toEqual({ tipo: 'parecida', nome: 'Corrida' });
   });
 });

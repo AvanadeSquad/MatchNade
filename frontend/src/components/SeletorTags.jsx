@@ -16,6 +16,7 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
   const [ativa, setAtiva] = useState(-1);
   const [fechada, setFechada] = useState(false);
   const [parecida, setParecida] = useState(null);
+  const [reaproveitada, setReaproveitada] = useState('');
   const raiz = useRef(null);
   const lista = useRef(null);
   const idLista = useId();
@@ -70,6 +71,7 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
     setAtiva(-1);
     setFechada(false);
     setParecida(null);
+    setReaproveitada('');
   }
 
   function aoTeclar(evento) {
@@ -108,9 +110,11 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
     evento.preventDefault();
     const nome = novo.trim();
     if (!nome) return;
-    const equivalente = encontrarEquivalente([...catalogo, ...extras], nome);
+    const equivalente = encontrarEquivalente([...catalogo, ...extras], nome, { uso });
     if (equivalente?.tipo === 'igual') {
+      const jaEstava = selecionadas.has(equivalente.nome.toLowerCase());
       escolher(equivalente.nome);
+      setReaproveitada(jaEstava ? `${equivalente.nome} já está na lista` : `${equivalente.nome} foi selecionada`);
       return;
     }
     if (equivalente?.tipo === 'parecida') {
@@ -196,6 +200,11 @@ export default function SeletorTags({ categoria, catalogo, selecionadas, aoAlter
                 </li>
               ))}
           </ul>
+          {reaproveitada && (
+            <p className="nota" role="status">
+              {reaproveitada}
+            </p>
+          )}
           {parecida && (
             <div className="seletor-tags__aviso" role="status">
               <p>Já existe: {parecida}. Usar essa?</p>

@@ -63,17 +63,24 @@ export function distanciaDeEdicao(a, b) {
 }
 
 // Procura no catálogo a tag equivalente ao texto. Devolve { tipo: 'igual' | 'parecida', nome } ou null.
-// Igual: mesma chave de comparação. Parecida: diferença de uma letra, só em termos de 4 letras ou mais,
-// para não confundir siglas curtas como "Go" e "Git".
-export function encontrarEquivalente(catalogo, texto) {
+// Igual: mesma chave de comparação. Parecida: diferença de uma letra, só quando as duas têm 6 letras ou
+// mais, porque nomes curtos legítimos costumam diferir por uma letra ("Flux" e "Flex", "Scala" e "Scale").
+// Com mais de uma parecida, vence a de menor distância; no empate, a mais usada segundo `uso` e depois a
+// primeira em ordem alfabética.
+export function encontrarEquivalente(catalogo, texto, { uso = new Map() } = {}) {
   const chave = chaveDeComparacao(texto);
   if (!chave) return null;
   const igual = catalogo.find((nome) => chaveDeComparacao(nome) === chave);
   if (igual) return { tipo: 'igual', nome: igual };
-  if (chave.length < 4) return null;
-  const parecida = catalogo.find((nome) => {
+  if (chave.length < 6) return null;
+  const candidatas = [];
+  for (const nome of catalogo) {
     const outra = chaveDeComparacao(nome);
-    return outra.length >= 4 && Math.abs(outra.length - chave.length) <= 1 && distanciaDeEdicao(outra, chave) <= 1;
-  });
-  return parecida ? { tipo: 'parecida', nome: parecida } : null;
+    if (outra.length < 6 || Math.abs(outra.length - chave.length) > 1) continue;
+    const distancia = distanciaDeEdicao(outra, chave);
+    if (distancia <= 1) candidatas.push({ nome, distancia, uso: uso.get(nome.toLowerCase()) ?? 0 });
+  }
+  if (!candidatas.length) return null;
+  candidatas.sort((a, b) => a.distancia - b.distancia || b.uso - a.uso || a.nome.localeCompare(b.nome, 'pt-BR'));
+  return { tipo: 'parecida', nome: candidatas[0].nome };
 }

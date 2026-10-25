@@ -153,6 +153,25 @@ describe('SeletorTags: evitar duplicatas ao adicionar', () => {
     expect(campo()).toHaveValue('');
   });
 
+  it('avisa quando reaproveita a tag existente e o aviso some ao digitar de novo', async () => {
+    const u = userEvent.setup();
+    render(<Seletor />);
+    await u.type(campo(), 'node js');
+    await u.keyboard('{Escape}{Enter}');
+    expect(screen.getByRole('status')).toHaveTextContent('Node.js foi selecionada');
+    await u.type(campo(), 'n');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('avisa quando a tag existente já estava na lista', async () => {
+    const u = userEvent.setup();
+    const aoAlternar = vi.fn();
+    render(<Seletor iniciais={['Python']} aoAlternar={aoAlternar} />);
+    await u.type(campo(), 'python{Enter}');
+    expect(screen.getByRole('status')).toHaveTextContent('Python já está na lista');
+    expect(aoAlternar).not.toHaveBeenCalled();
+  });
+
   it('sem a lista aberta, Enter envia o formulário como antes', async () => {
     const u = userEvent.setup();
     const aoCriar = vi.fn(async () => {});
