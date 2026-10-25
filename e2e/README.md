@@ -63,7 +63,7 @@ As referências valem só para Linux, o sistema do CI. Em outros sistemas esses 
 
 ### Primeira execução no CI
 
-As referências versionadas vêm de uma máquina Linux de desenvolvimento, não do CI. Se o Chromium do CI desenhar alguma tela um pouco diferente, a primeira execução do CI falha nos testes visuais, mesmo sem nenhuma mudança visual, até as referências serem geradas no mesmo ambiente do CI. Para isso, siga o passo a passo abaixo com o relatório dessa execução; depois do commit das imagens, as execuções seguintes comparam com referências do próprio CI.
+As referências versionadas foram geradas no ambiente do CI e correspondem ao Chromium que ele instala: o job "Ponta a ponta (Playwright)" compara com elas a cada execução. Em outra máquina Linux, o Chromium pode desenhar um pouco diferente e os testes visuais falham sem mudança visual. Quando uma tela muda de propósito, gere as referências novas no CI seguindo o passo a passo abaixo.
 
 ### Atualizar as referências com as imagens do CI
 
