@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { lerPreferencias, PADRAO, salvarPreferencias } from './preferencias.js';
 
 describe('preferencias', () => {
@@ -45,6 +45,23 @@ describe('preferencias', () => {
     localStorage.setItem('preferencias:12', '{quebrado');
     expect(lerPreferencias(12)).toEqual(PADRAO);
     expect(localStorage.getItem('preferencias:12')).toBe('{quebrado');
+  });
+
+  it('mantém as preferências lidas quando o navegador recusa a regravação', () => {
+    localStorage.setItem('preferencias:13', JSON.stringify({ hub: 'Avanade Curitiba', telefone: '(41) 90000-0000' }));
+    const gravar = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('armazenamento recusado');
+    });
+    try {
+      let lidas;
+      expect(() => {
+        lidas = lerPreferencias(13);
+      }).not.toThrow();
+      expect(lidas.hub).toBe('Avanade Curitiba');
+      expect(lidas).not.toHaveProperty('telefone');
+    } finally {
+      gravar.mockRestore();
+    }
   });
 
   it('ignora chave desconhecida também no que é salvo', () => {

@@ -67,17 +67,23 @@ const somenteConhecidas = (objeto) =>
 
 // Ao ler, chaves fora de PADRAO (como dados que o cadastro não coleta) são descartadas e o objeto limpo
 // é gravado de volta, para que não fiquem no navegador. Um valor ilegível é ignorado sem ser regravado.
+// A regravação tem tratamento próprio: se o navegador recusar a escrita, o valor lido continua valendo.
 export function lerPreferencias(usuarioId) {
+  let salvo;
   try {
-    const salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
-    const conhecidas = somenteConhecidas(salvo);
-    if (salvo && typeof salvo === 'object' && Object.keys(conhecidas).length !== Object.keys(salvo).length) {
-      localStorage.setItem(chave(usuarioId), JSON.stringify(conhecidas));
-    }
-    return { ...PADRAO, ...conhecidas };
+    salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
   } catch {
     return { ...PADRAO };
   }
+  const conhecidas = somenteConhecidas(salvo);
+  if (salvo && typeof salvo === 'object' && Object.keys(conhecidas).length !== Object.keys(salvo).length) {
+    try {
+      localStorage.setItem(chave(usuarioId), JSON.stringify(conhecidas));
+    } catch {
+      // Sem permissão de escrita, a limpeza fica para a próxima leitura.
+    }
+  }
+  return { ...PADRAO, ...conhecidas };
 }
 
 export function salvarPreferencias(usuarioId, parcial) {
