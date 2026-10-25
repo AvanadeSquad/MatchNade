@@ -31,7 +31,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem Google (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou escolha "Novo cadastro" e informe um e-mail para passar pelo cadastro do início.
+Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem Google (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
 
 ## Testes
 

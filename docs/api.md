@@ -1,6 +1,6 @@
 # API
 
-Prefixo `/api/v1`. Todas as rotas, exceto `/health`, o login e as rotas de desenvolvimento e teste, exigem `Authorization: Bearer <jwt>`. Erros seguem o formato:
+Prefixo `/api/v1`. Todas as rotas, exceto `/health`, `/health/ready`, o login e as rotas de desenvolvimento e teste, exigem `Authorization: Bearer <jwt>`. Erros seguem o formato:
 
 ```json
 { "code": "TEXTO_CURTO", "message": "explicação para a pessoa" }
@@ -8,13 +8,14 @@ Prefixo `/api/v1`. Todas as rotas, exceto `/health`, o login e as rotas de desen
 
 Dados inválidos devolvem `400 DADOS_INVALIDOS` com `details` (campo e problema). Sessão inválida ou expirada devolve `401 NAO_AUTENTICADO`. JSON malformado devolve `400 CORPO_INVALIDO`, rota inexistente `404 NAO_ENCONTRADO` e erro inesperado `500 ERRO_INTERNO`.
 
-Limites de requisição: 600 por 15 minutos por IP em toda a API e 30 por 15 minutos nas rotas de login. Acima do limite a resposta é `429`.
+Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/health/ready`) e 30 por 15 minutos nas rotas de login. Acima do limite a resposta é `429`.
 
 ## Sessão
 
 | Método e rota | Função | Resposta | Erros |
 |---|---|---|---|
 | `GET /health` | Verifica se o serviço está de pé. | `200 { "status": "ok" }` | |
+| `GET /health/ready` | Verifica se o banco atende. O resultado fica guardado por alguns segundos, e a rota não conta no limite de requisições. | `200 { "status": "ok", "banco": "ok" }` | `503 { "status": "indisponivel", "banco": "erro" }` |
 | `POST /auth/google` | Valida o ID token do Google, cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 GOOGLE_NAO_CONFIGURADO` |
 
 Só em desenvolvimento e testes (a API recusa iniciar em produção com estas flags):

@@ -52,9 +52,19 @@ O plano gratuito do Gemini pode usar o conteúdo enviado para melhorar produtos 
 
 ## Dados
 
-Oito tabelas: `employee`, `interest_tag`, `employee_interest`, `connection_match`, `chat_message`, `employee_block`, `employee_report` e `ai_interaction_log`. O esquema está em `backend/src/db/schema.sql` e é aplicado na inicialização de forma idempotente. Há um índice único parcial que impede duas conexões ativas para o mesmo par de pessoas, em qualquer direção.
+Oito tabelas: `employee`, `interest_tag`, `employee_interest`, `connection_match`, `chat_message`, `employee_block`, `employee_report` e `ai_interaction_log`. A fonte do esquema são as migrações em `backend/src/db/migracoes` (`001_esquema_inicial.sql` e `002_ai_log_exclusao_em_cascata.sql`). Na inicialização, `backend/src/db/migrar.js` aplica em ordem as que ainda não constam na tabela `schema_migrations`, cada uma na própria transação. Há um índice único parcial que impede duas conexões ativas para o mesmo par de pessoas, em qualquer direção.
 
 O `ai_interaction_log` registra tipo, versão do prompt, modelo, status e tempo; não guarda a bio.
+
+O arquivo `matchnade_schema.sql`, na raiz, é um dump anterior do banco, mantido só como referência. A API não o lê, e ele difere das migrações:
+
+- `connection_goals` é `text[]`, e não `JSONB`;
+- `connection_match` não tem `responded_at` nem `icebreaker`, e `match_score` é `numeric(3,2)`;
+- não há o índice parcial do par ativo nem os índices únicos sem diferenciar maiúsculas em `employee.email` e `interest_tag.name` (o dump usa `UNIQUE` simples);
+- `department` e `location` são obrigatórios, e os textos são `varchar` com tamanho;
+- as datas são `timestamp` sem fuso;
+- as chaves estrangeiras de `connection_match`, `chat_message.sender_id`, `employee_block`, `employee_report` e `ai_interaction_log` não apagam em cascata;
+- não existe a tabela `schema_migrations`.
 
 ## Testes
 
