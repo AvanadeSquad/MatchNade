@@ -25,6 +25,28 @@ describe('preferencias', () => {
     expect(gravado).toMatchObject({ hub: 'Avanade Curitiba', alcance: 'LOCAL', notificacoes: false });
   });
 
+  it('só de ler, apaga do navegador telefone, CEP e e-mail pessoal', () => {
+    localStorage.setItem(
+      'preferencias:11',
+      JSON.stringify({
+        telefone: '(11) 90000-0000',
+        cep: '00000-000',
+        emailPessoal: 'pessoa@exemplo.test',
+        hub: 'Avanade Recife (Porto Digital)',
+      }),
+    );
+    lerPreferencias(11);
+    const gravado = JSON.parse(localStorage.getItem('preferencias:11'));
+    for (const chave of ['telefone', 'cep', 'emailPessoal']) expect(gravado).not.toHaveProperty(chave);
+    expect(gravado).toEqual({ hub: 'Avanade Recife (Porto Digital)' });
+  });
+
+  it('valor ilegível no navegador fica como está', () => {
+    localStorage.setItem('preferencias:12', '{quebrado');
+    expect(lerPreferencias(12)).toEqual(PADRAO);
+    expect(localStorage.getItem('preferencias:12')).toBe('{quebrado');
+  });
+
   it('ignora chave desconhecida também no que é salvo', () => {
     const novas = salvarPreferencias(8, { hub: 'Avanade Brasília', telefone: '(61) 90000-0000' });
     expect(novas).not.toHaveProperty('telefone');

@@ -61,15 +61,20 @@ export const PADRAO = {
 
 const chave = (usuarioId) => `preferencias:${usuarioId}`;
 
-// Mantém só as chaves de PADRAO. Qualquer outra chave guardada no navegador é descartada ao ler e,
-// como a gravação parte da leitura, deixa de existir na próxima vez que as preferências forem salvas.
+// Mantém só as chaves de PADRAO.
 const somenteConhecidas = (objeto) =>
   Object.fromEntries(Object.entries(objeto && typeof objeto === 'object' ? objeto : {}).filter(([nome]) => Object.hasOwn(PADRAO, nome)));
 
+// Ao ler, chaves fora de PADRAO (como dados que o cadastro não coleta) são descartadas e o objeto limpo
+// é gravado de volta, para que não fiquem no navegador. Um valor ilegível é ignorado sem ser regravado.
 export function lerPreferencias(usuarioId) {
   try {
     const salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
-    return { ...PADRAO, ...somenteConhecidas(salvo) };
+    const conhecidas = somenteConhecidas(salvo);
+    if (salvo && typeof salvo === 'object' && Object.keys(conhecidas).length !== Object.keys(salvo).length) {
+      localStorage.setItem(chave(usuarioId), JSON.stringify(conhecidas));
+    }
+    return { ...PADRAO, ...conhecidas };
   } catch {
     return { ...PADRAO };
   }
