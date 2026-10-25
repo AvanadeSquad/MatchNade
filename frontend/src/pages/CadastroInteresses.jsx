@@ -369,6 +369,7 @@ export default function CadastroInteresses() {
               selecionadas={selecionadas}
               aoAlternar={alternar}
               aoCriar={criarTag}
+              uso={usoPorNome}
             />
 
             <hr className="separador" />
@@ -388,6 +389,7 @@ export default function CadastroInteresses() {
               aoAlternar={alternar}
               aoCriar={criarTag}
               tom="pessego"
+              uso={usoPorNome}
             />
 
             <div className="indice">

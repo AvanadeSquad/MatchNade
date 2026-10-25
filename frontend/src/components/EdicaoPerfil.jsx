@@ -190,6 +190,7 @@ export function EditarInteresses({ categoria, aoFechar }) {
         <SeletorTags
           categoria={categoria}
           catalogo={catalogo.dados.tags.map((t) => t.name)}
+          uso={new Map(catalogo.dados.tags.map((t) => [t.name.toLowerCase(), t.uso ?? 0]))}
           selecionadas={selecionadas}
           aoAlternar={alternar}
           aoCriar={criar}
