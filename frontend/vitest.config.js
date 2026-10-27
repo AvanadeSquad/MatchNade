@@ -5,9 +5,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/teste/preparar.js'],
-    include: ['src/**/*.test.{js,jsx}'],
-    restoreMocks: true,
+  environment: 'jsdom',
+  environmentOptions: {
+    jsdom: {
+      url: 'http://localhost:5173/',
+    },
   },
+  setupFiles: ['./src/teste/preparar.js'],
+  include: ['src/**/*.test.{js,jsx}'],
+  restoreMocks: true,
+},
 });
