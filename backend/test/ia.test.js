@@ -134,7 +134,7 @@ describe('serviço de IA', () => {
     expect(resultado.hobby_tags).toEqual(['Culinária']);
   });
 
-  it('descarta dados sensíveis devolvidos pela IA e mantém o resto (CA-05)', async () => {
+  it('descarta dados sensíveis devolvidos pela IA e mantém o resto', async () => {
     const ia = criar(
       JSON.stringify({ technical_tags: ['React', 'Opinião política'], hobby_tags: ['Xadrez', 'Religião', 'Saúde Mental', 'Corrida'] }),
     );
@@ -143,6 +143,42 @@ describe('serviço de IA', () => {
     expect(resultado.hobby_tags).toEqual(['Xadrez', 'Corrida']);
     const [registro] = await ambiente.banco.query('SELECT response_payload FROM ai_interaction_log');
     expect(JSON.stringify(registro.response_payload)).not.toMatch(/pol[ií]tica|religi|sa[uú]de/i);
+  });
+
+  it('descarta os novos termos sensíveis e mantém termos de setor parecidos', async () => {
+    const ia = criar(
+      JSON.stringify({
+        technical_tags: ['Política de privacidade', 'Saúde digital', 'Dado genético', 'Biometria'],
+        hobby_tags: ['LGBT', 'Bíblia', 'Faço terapia', 'Pessoa com deficiência', 'Partido alto', 'Yoga'],
+      }),
+    );
+    const resultado = await ia.extrairTags(funcionarioId, 'Bio fictícia de teste.');
+    expect(resultado.technical_tags).toEqual(['Política de privacidade', 'Saúde digital', 'Biometria']);
+    expect(resultado.hobby_tags).toEqual(['Partido alto', 'Yoga']);
+  });
+
+  it('mantém temas de setor sobre saúde e deficiência e descarta os que falam da pessoa', async () => {
+    const ia = criar(
+      JSON.stringify({
+        technical_tags: ['Cirurgia robótica', 'Inclusão de PCD', 'Saúde-mental'],
+        hobby_tags: ['Raças de cães', 'Sou PcD', 'Epilepsia'],
+      }),
+    );
+    const resultado = await ia.extrairTags(funcionarioId, 'Bio fictícia de teste.');
+    expect(resultado.technical_tags).toEqual(['Cirurgia robótica', 'Inclusão de PCD']);
+    expect(resultado.hobby_tags).toEqual(['Raças de cães']);
+  });
+
+  it('descarta deficiência dita sobre a pessoa e mantém o tema de acessibilidade', async () => {
+    const ia = criar(
+      JSON.stringify({
+        technical_tags: ['Acessibilidade para deficiência visual', 'Acessibilidade para PcD', 'Deficiência visual'],
+        hobby_tags: ['Terreiro de café', 'PcD', 'Soropositivo'],
+      }),
+    );
+    const resultado = await ia.extrairTags(funcionarioId, 'Bio fictícia de teste.');
+    expect(resultado.technical_tags).toEqual(['Acessibilidade para deficiência visual', 'Acessibilidade para PcD']);
+    expect(resultado.hobby_tags).toEqual(['Terreiro de café']);
   });
 
   it('resposta fora do schema vira fallback', async () => {
@@ -185,6 +221,17 @@ describe('serviço de IA', () => {
     it('rejeita frase que cita dado sensível, mesmo citando interesse em comum', async () => {
       const r = await chamar('Vocês dois curtem Node.js e têm a mesma religião. Que tal conversar?');
       expect(r.fallback).toBe(true);
+    });
+
+    it('rejeita frase que cita um tema sensível novo e usa o texto padrão', async () => {
+      const r = await chamar('Vocês dois curtem Node.js e falam abertamente sobre o TDAH. Que tal conversar?');
+      expect(r.fallback).toBe(true);
+    });
+
+    it('aceita frase com interesse em comum mesmo citando um termo de setor parecido com tema sensível', async () => {
+      const r = await chamar('Vocês dois curtem Node.js e política de segurança. Que tal trocar uma ideia?');
+      expect(r.fallback).toBe(false);
+      expect(r.match_summary).toContain('Node.js');
     });
 
     it('rejeita frase com mais de 250 caracteres', async () => {
