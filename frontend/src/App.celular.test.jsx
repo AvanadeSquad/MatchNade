@@ -112,9 +112,11 @@ describe('telas no celular', () => {
     vi.spyOn(API, 'atualizarPerfil').mockResolvedValue(PERFIL);
     montar('/cadastro/dados', { ...PERFIL, profile_complete: false });
     expect(screen.getByText('Conecte-se à rede Avanade')).toBeInTheDocument();
+    expect(screen.queryByText(/telefone|cep|e-mail pessoal/i)).not.toBeInTheDocument();
     await u.click(screen.getByRole('checkbox'));
     await u.click(screen.getByRole('button', { name: 'Conectar-se' }));
     expect(await screen.findByText('Dados da unidade')).toBeInTheDocument();
+    expect(screen.queryByText(/telefone|cep|e-mail pessoal/i)).not.toBeInTheDocument();
     await u.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(API.atualizarPerfil).toHaveBeenCalledWith({ name: 'Ana Silva', department: 'Experience Design', location: 'São Paulo, SP' });
   });
