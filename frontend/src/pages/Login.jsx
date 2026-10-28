@@ -40,6 +40,9 @@ export default function Login() {
   const botaoGoogle = useRef(null);
   const [email, setEmail] = useState('');
   const [erro, setErro] = useState('');
+  const [emailTocado, setEmailTocado] = useState(false);
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const mostrarErroEmail = emailTocado && email.trim() !== '' && !emailValido;
   const [entrando, setEntrando] = useState(false);
   const [usuariosDev, setUsuariosDev] = useState(null);
   const celular = useCelular();
@@ -166,12 +169,24 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setEmailTocado(true)}
+                aria-invalid={mostrarErroEmail}
+                aria-describedby={mostrarErroEmail ? 'erro-email' : undefined}
                 placeholder={celular ? 'seu@email.com' : 'nome.sobrenome@avanade.com'}
                 autoComplete="username"
                 required
               />
             </label>
-            {acessoPorEmail && (
+            {mostrarErroEmail && (
+              <p
+               id="erro-email"
+              className="erro-campo"
+              role="alert"
+              >
+                 Por favor, informe um endereço de e-mail válido.
+                 </p>
+                )}
+                 {acessoPorEmail && (
               <p className="nota-dev">
                 Ambiente de desenvolvimento: a API libera o acesso pelo e-mail. Contas de demonstração:{' '}
                 {usuariosDev.slice(0, 5).map((u, i) => (
