@@ -185,7 +185,6 @@ export default function CadastroInteressesCelular({
           <input
             ref={arquivo}
             type="file"
-            aria-label="Escolher arquivo de texto com o resumo"
             accept=".txt,.md,text/plain,text/markdown"
             className="so-leitor"
             tabIndex={-1}

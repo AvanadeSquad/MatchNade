@@ -533,8 +533,8 @@ export default function Mensagens() {
     if (!previa?.ultima) return 'Nenhuma mensagem ainda. Diga oi!';
     const cafe = lerMensagemDeCafe(previa.ultima.body);
     const autor = previa.ultima.sender_id === perfil.id ? 'Você: ' : '';
-    if (cafe?.tipo === 'convite') return `${autor}Convite para Coffee Chat`;
-    if (cafe?.tipo === 'aceite') return `Coffee Chat confirmado: ${cafe.quando}`;
+    if (cafe?.tipo === 'convite') return `${autor}☕ Convite para Coffee Chat`;
+    if (cafe?.tipo === 'aceite') return `☕ Coffee Chat confirmado: ${cafe.quando}`;
     return `${autor}${previa.ultima.body}`;
   };
 

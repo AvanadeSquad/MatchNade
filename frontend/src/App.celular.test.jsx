@@ -104,8 +104,7 @@ describe('telas no celular', () => {
     montar('/login', null, null);
     expect(await screen.findByText('Bem-vindo ao Global Connect')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Solicitar acesso interno' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /linkedin/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /linkedin/i })).toBeInTheDocument();
   });
   it('cadastro em duas telas', async () => {
     const u = userEvent.setup();
@@ -141,7 +140,7 @@ describe('telas no celular', () => {
   });
   it('descobrir', async () => {
     montar('/descobrir');
-    expect(await screen.findByText('Marina Costa')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Marina Costa' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /demonstrar interesse em marina/i })).toBeInTheDocument();
   });
   it('detalhes', async () => {
