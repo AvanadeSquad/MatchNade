@@ -7,8 +7,6 @@ import { autenticarPagina, chamar, criarPessoaPronta, entrarPorApi, identificado
 // vão anexados ao relatório do Playwright para revisão manual.
 const IMPACTOS_BLOQUEANTES = ['serious', 'critical'];
 
-const noCelular = () => test.info().project.name === 'celular';
-
 const resumir = (itens) =>
   itens.map((v) => ({ regra: v.id, impacto: v.impact, ajuda: v.help, alvos: v.nodes.map((n) => n.target.join(' ')) }));
 
@@ -27,7 +25,7 @@ async function verificar(page, tela) {
   expect(graves, `violações em ${tela}`).toEqual([]);
 }
 
-const titulo = (page, nome) => expect(page.getByRole('heading', { name: nome }).first()).toBeVisible();
+const titulo = (page, nome) => expect(page.getByRole('heading', { level: 1, name: nome })).toBeVisible();
 
 // Par com match confirmado, para as telas de perfil, conexões e chat terem conteúdo.
 async function parComMatch(request) {
@@ -40,38 +38,19 @@ async function parComMatch(request) {
   return { a, b, matchId };
 }
 
-// No celular o perfil é um menu de seções; no desktop os controles ficam na própria página.
-async function abrirSecao(page, nome) {
-  await page.goto('/eu');
-  if (noCelular()) await page.getByRole('button', { name: nome, exact: true }).click();
-}
-
-// Do começo do cadastro de interesses até o ponto em que o texto para a análise da IA pode ser enviado.
-async function iniciarAnalise(page, texto) {
-  await page.goto('/cadastro/interesses');
-  if (noCelular()) {
-    await page.getByRole('button', { name: 'Continuar' }).click();
-    await page.getByLabel('Resumo para importar').fill(texto);
-    await page.getByRole('button', { name: 'Importar interesses' }).click();
-  } else {
-    await page.getByLabel('Resumo para análise').fill(texto);
-    await page.getByRole('button', { name: 'Analisar com IA' }).click();
-  }
-}
-
 test.describe('acessibilidade (axe)', () => {
   test('login', async ({ page }) => {
     await page.goto('/login');
-    await titulo(page, /Acesse sua conta|Bem-vindo ao Global Connect/);
+    await titulo(page, /Avanade Connect/);
     await verificar(page, 'login');
   });
 
-  test('cadastro: dados, interesses e preferências', async ({ page, request }) => {
+  test('cadastro: boas-vindas, bio, interesses e objetivos', async ({ page, request }) => {
     const token = await entrarPorApi(request, `${identificadorUnico('cad')}@exemplo.test`);
     await autenticarPagina(page, token);
-    for (const caminho of ['/cadastro/dados', '/cadastro/interesses', '/cadastro/preferencias']) {
+    for (const caminho of ['/bem-vindo', '/perfil/bio', '/perfil/interesses', '/perfil/objetivos']) {
       await page.goto(caminho);
-      await expect(page.getByRole('heading').first()).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
       await verificar(page, caminho);
     }
   });
@@ -106,9 +85,9 @@ test.describe('acessibilidade (axe)', () => {
     await verificar(page, 'diálogo de denunciar');
   });
 
-  test('matches, match, lista de conversas e chat', async ({ page, request }) => {
+  test('conexões nas três abas, match, lista de conversas e chat', async ({ page, request }) => {
     const { a, matchId } = await parComMatch(request);
-    // Uma solicitação recebida e uma enviada, para as seções de recebidas e aguardando terem conteúdo.
+    // Uma solicitação recebida e uma enviada, para as abas Recebidas e Aguardando terem conteúdo.
     const tags = interessesExclusivos();
     const quemPede = await criarPessoaPronta(request, { nome: 'Caio Acessível', ...tags });
     const quemRecebe = await criarPessoaPronta(request, { nome: 'Dora Acessível', ...tags });
@@ -116,23 +95,28 @@ test.describe('acessibilidade (axe)', () => {
     await chamar(request, a.token, 'post', '/matches', { receiver_id: quemRecebe.id });
     await autenticarPagina(page, a.token);
 
-    await page.goto('/matches');
-    await titulo(page, /Matches Bilaterais|Conexões Bilaterais/);
-    await expect(page.getByText('Caio Acessível').first()).toBeVisible();
-    await expect(page.getByText('Bento Acessível').first()).toBeVisible();
-    await verificar(page, 'matches: recebidas, ativos e aguardando');
+    await page.goto('/conexoes');
+    await titulo(page, 'Conexões');
+    await expect(page.getByRole('link', { name: /Caio Acessível/ })).toBeVisible();
+    await verificar(page, 'conexões: recebidas');
+    await page.getByRole('tab', { name: /Confirmadas/ }).click();
+    await expect(page.getByRole('link', { name: /Bento Acessível/ })).toBeVisible();
+    await verificar(page, 'conexões: confirmadas');
+    await page.getByRole('tab', { name: /Aguardando/ }).click();
+    await expect(page.getByRole('link', { name: /Dora Acessível/ })).toBeVisible();
+    await verificar(page, 'conexões: aguardando');
 
     await page.goto(`/match/${matchId}`);
-    await titulo(page, /É um Match( Bilateral)?!/);
+    await titulo(page, 'É um match!');
     await verificar(page, 'match');
 
     await page.goto('/chat');
-    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
-    await expect(page.getByText('Bento Acessível').first()).toBeVisible();
+    await titulo(page, 'Conversas');
+    await expect(page.getByRole('link', { name: /Bento Acessível/ })).toBeVisible();
     await verificar(page, 'lista de conversas sem conversa aberta');
 
     await page.goto(`/chat/${matchId}`);
-    await expect(page.getByLabel('Mensagem', { exact: true })).toBeVisible();
+    await expect(page.getByRole('textbox')).toBeVisible();
     await verificar(page, 'chat');
   });
 
@@ -148,7 +132,7 @@ test.describe('acessibilidade (axe)', () => {
     await verificar(page, 'descoberta com a cota esgotada');
   });
 
-  test('cadastro: análise do texto e caminho manual, com a IA desligada', async ({ page, request }) => {
+  test('cadastro: análise da bio e caminho manual, com a IA desligada', async ({ page, request }) => {
     const token = await entrarPorApi(request, `${identificadorUnico('ana')}@exemplo.test`);
     await autenticarPagina(page, token);
     // Segura a resposta da análise para a tela de andamento ficar parada durante a verificação;
@@ -161,26 +145,32 @@ test.describe('acessibilidade (axe)', () => {
       await segurada;
       await rota.continue();
     });
-    await iniciarAnalise(page, 'Curto React e Node, jogo xadrez nos fins de semana.');
-    await expect(page.getByText(/identificando (seu perfil|skills)|Lendo seu perfil/i).first()).toBeVisible();
-    await verificar(page, 'análise em andamento');
+    await page.goto('/perfil/bio');
+    await page.getByRole('textbox').fill('Curto React e Node, jogo xadrez nos fins de semana.');
+    await page.getByRole('button', { name: 'Analisar minha bio' }).click();
+    await expect(page).toHaveURL(/\/perfil\/analisando$/);
+    await titulo(page, 'Identificando seu perfil');
+    await verificar(page, '/perfil/analisando em andamento');
 
     liberar();
-    await expect(page.getByText('Não conseguimos analisar agora')).toBeVisible();
-    await verificar(page, 'análise sem IA');
+    await titulo(page, 'Não conseguimos analisar agora');
+    await verificar(page, '/perfil/analisando sem IA');
   });
 
-  test('cadastro: interesses sugeridos pela análise', async ({ page, request }) => {
+  test('cadastro: revisão das tags sugeridas', async ({ page, request }) => {
     const token = await entrarPorApi(request, `${identificadorUnico('rev')}@exemplo.test`);
     await autenticarPagina(page, token);
-    // Os testes rodam com a IA desligada e as tags sugeridas só aparecem com a análise. A resposta
-    // é simulada no navegador, no formato da API, só para chegar à tela.
+    // Os testes rodam com a IA desligada, e a revisão só abre com tags sugeridas. A resposta da
+    // análise é simulada no navegador, no formato da API, só para chegar à tela.
     await page.route('**/profile/enrich-bio', (rota) =>
-      rota.fulfill({ json: { technical_tags: ['React', 'Node.js'], hobby_tags: ['Dança'] } }),
+      rota.fulfill({ json: { technical_tags: ['React', 'Node.js'], hobby_tags: ['Xadrez'] } }),
     );
-    await iniciarAnalise(page, 'Curto React e Node, danço nos fins de semana.');
-    await expect(page.getByRole('button', { name: 'React', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await verificar(page, 'interesses sugeridos');
+    await page.goto('/perfil/bio');
+    await page.getByRole('textbox').fill('Curto React e Node, jogo xadrez nos fins de semana.');
+    await page.getByRole('button', { name: 'Analisar minha bio' }).click();
+    await expect(page).toHaveURL(/\/perfil\/revisao$/);
+    await expect(page.getByRole('button', { name: 'Remover React' })).toBeVisible();
+    await verificar(page, '/perfil/revisao');
   });
 
   test('perfil próprio e seus diálogos', async ({ page, request }) => {
@@ -190,13 +180,7 @@ test.describe('acessibilidade (axe)', () => {
     await expect(page.getByRole('heading', { name: 'Eva Acessível' })).toBeVisible();
     await verificar(page, 'perfil próprio');
 
-    const dialogos = [
-      { botao: 'Pessoas bloqueadas', secao: 'Privacidade' },
-      { botao: 'Ler diretrizes', secao: 'Privacidade' },
-      { botao: 'Excluir meus dados', secao: 'Conta' },
-    ];
-    for (const { botao, secao } of dialogos) {
-      await abrirSecao(page, secao);
+    for (const botao of ['Pessoas bloqueadas', 'Sobre o Avanade Connect', 'Excluir meus dados']) {
       await page.getByRole('button', { name: botao }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
       await verificar(page, `diálogo ${botao}`);

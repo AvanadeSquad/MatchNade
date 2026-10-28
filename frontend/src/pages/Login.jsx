@@ -1,6 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { IconeCheckCirculo, IconeGoogle, IconeMicrosoft, IconeSeta } from '../components/Icones.jsx';
+import {
+  IconeCheckCirculo,
+  IconeGoogle,
+  IconeLinkedin,
+  IconeMicrosoft,
+  IconeOlho,
+  IconeOlhoFechado,
+  IconeSeta,
+} from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCelular } from '../hooks/useCelular.js';
@@ -39,6 +47,8 @@ export default function Login() {
   const navegar = useNavigate();
   const botaoGoogle = useRef(null);
   const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [verSenha, setVerSenha] = useState(false);
   const [erro, setErro] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [usuariosDev, setUsuariosDev] = useState(null);
@@ -119,6 +129,7 @@ export default function Login() {
       'info',
     );
 
+  const esqueciSenha = () => avisar('A senha é a mesma da sua conta corporativa. Para trocar, use o portal de TI.', 'info');
   const solicitarAcesso = () =>
     avisar(
       acessoPorEmail
@@ -155,7 +166,7 @@ export default function Login() {
           <p className="subtitulo">
             {celular
               ? 'Acesse sua rede interna e conecte-se com colaboradores da Avanade.'
-              : 'Informe seu e-mail corporativo ou autentique via SSO corporativo.'}
+              : 'Informe suas credenciais ou autentique via SSO corporativo.'}
           </p>
 
           <form onSubmit={enviar}>
@@ -171,9 +182,44 @@ export default function Login() {
                 required
               />
             </label>
+            <div className="campo">
+              <span className="campo__linha">
+                <label htmlFor="senha">Senha</label>
+                {!celular && (
+                  <button type="button" className="link-acao" onClick={esqueciSenha}>
+                    Esqueceu sua senha corporativa?
+                  </button>
+                )}
+              </span>
+              <span className="campo__com-icone">
+                <input
+                  id="senha"
+                  className="campo__controle"
+                  type={verSenha ? 'text' : 'password'}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder="Digite sua senha"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="campo__acao"
+                  aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  onClick={() => setVerSenha(!verSenha)}
+                >
+                  {verSenha ? <IconeOlhoFechado /> : <IconeOlho />}
+                </button>
+              </span>
+              {celular && (
+                <button type="button" className="link-acao login__esqueci" onClick={esqueciSenha}>
+                  Esqueceu sua senha corporativa?
+                </button>
+              )}
+            </div>
+
             {acessoPorEmail && (
               <p className="nota-dev">
-                Ambiente de desenvolvimento: a API libera o acesso pelo e-mail. Contas de demonstração:{' '}
+                Ambiente de desenvolvimento: a API libera o acesso pelo e-mail e não confere a senha. Contas de demonstração:{' '}
                 {usuariosDev.slice(0, 5).map((u, i) => (
                   <span key={u.email}>
                     {i > 0 && ', '}
@@ -214,6 +260,9 @@ export default function Login() {
                 <IconeMicrosoft /> Entrar com Microsoft 365 (Entra ID)
               </button>
             )}
+            <button type="button" className="botao botao--contorno login__linkedin" onClick={ssoIndisponivel('LinkedIn')}>
+              <IconeLinkedin /> {celular ? 'LinkedIn' : 'Avanade LinkedIn Corporativo'}
+            </button>
             {celular && !CLIENT_ID && (
               <button type="button" className="botao botao--contorno" onClick={ssoIndisponivel('Google')}>
                 <IconeGoogle /> Google
