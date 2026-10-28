@@ -111,13 +111,19 @@ export function montarPessoas() {
   return [...PESSOAS_FIXAS, ...geradas].map((p) => ({ ...p, email: emailDe(p.nome) }));
 }
 
+// Chave da trava consultiva do seed, diferente da trava das migrações.
+const TRAVA_SEED = 724002;
+
 // Popula o banco se estiver vazio. Com `demonstracao`, cria também conexões e mensagens
 // de exemplo para a usuária Ana Silva. Devolve true se inseriu dados.
+// A contagem e as inserções rodam na mesma transação, sob trava: duas instâncias iniciando juntas
+// num banco vazio não inserem as mesmas tags duas vezes.
 export async function semear(banco, { demonstracao = true } = {}) {
-  const [{ total }] = await banco.query('SELECT COUNT(*)::int AS total FROM employee');
-  if (total > 0) return false;
+  return banco.tx(async ({ query }) => {
+    await query('SELECT pg_advisory_xact_lock($1)', [TRAVA_SEED]);
+    const [{ total }] = await query('SELECT COUNT(*)::int AS total FROM employee');
+    if (total > 0) return false;
 
-  await banco.tx(async ({ query }) => {
     const idsTag = new Map();
     const inserirTags = async (nomes, categoria) => {
       for (const nome of nomes) {
@@ -154,7 +160,7 @@ export async function semear(banco, { demonstracao = true } = {}) {
       }
     }
 
-    if (!demonstracao) return;
+    if (!demonstracao) return true;
     const ana = idsPessoa.get('Ana Silva');
 
     // Solicitação recebida por Ana (aparece em "Recebidas").
@@ -176,7 +182,6 @@ export async function semear(banco, { demonstracao = true } = {}) {
     for (const [remetente, corpo] of mensagens) {
       await query('INSERT INTO chat_message (match_id, sender_id, body) VALUES ($1, $2, $3)', [match.id, remetente, corpo]);
     }
+    return true;
   });
-
-  return true;
 }

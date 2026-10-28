@@ -45,26 +45,108 @@ describe('mencionaHierarquia', () => {
 });
 
 describe('mencionaDadoSensivel', () => {
-  it('detecta política, religião, saúde, orientação sexual, sindicato e etnia, com ou sem acento', () => {
-    for (const texto of [
-      'Política',
-      'opinião política forte',
-      'Religião',
-      'IGREJA evangélica',
-      'Saúde Mental',
-      'depressão',
-      'orientação sexual',
-      'sindicato',
-      'Etnia',
-    ]) {
+  it('detecta os temas sensíveis da LGPD, com ou sem acento e sem diferenciar maiúscula', () => {
+    // prettier-ignore
+    const sensiveis = [
+      'orientação sexual', 'LGBT', 'LGBTQIA+', 'gay', 'homossexual', 'religião', 'cristão', 'evangélico', 'católico',
+      'espírita', 'ateu', 'Bíblia', 'depressão', 'ansiedade', 'câncer', 'HIV', 'diabetes', 'autismo', 'TDAH',
+      'pessoa com deficiência', 'saúde mental', 'origem racial', 'dado genético', 'filiação a sindicato', 'opinião política',
+      'partido político', 'opinião política forte', 'IGREJA evangélica', 'Saúde Mental', 'Etnia', 'Minha raça', 'Gospel',
+      'Hinduísmo', 'Faço terapia', 'Tomo medicamento', 'Em tratamento', 'Gravidez', 'identidade de gênero',
+    ];
+    for (const texto of sensiveis) {
       expect(mencionaDadoSensivel(texto), texto).toBe(true);
     }
   });
 
-  it('não barra interesses comuns nem palavras que só contêm o termo', () => {
-    for (const texto of ['React', 'Xadrez', 'Cafés Especiais', 'Políticas Públicas', 'Archive', 'Cancerologia de dados']) {
+  it('deixa passar temas de setor e de técnica sobre saúde, deficiência e raça', () => {
+    // prettier-ignore
+    const setores = [
+      'Inclusão de PCD', 'Acessibilidade para PcD', 'Tecnologia assistiva para deficiência visual', 'Cirurgia robótica',
+      'Medicamentos genéricos', 'Doenças tropicais', 'Raças de cães', 'Terapia de casal', 'Pastor alemão',
+    ];
+    for (const texto of setores) {
       expect(mencionaDadoSensivel(texto), texto).toBe(false);
     }
+  });
+
+  it('detecta as expressões e os termos novos sobre a pessoa', () => {
+    // prettier-ignore
+    const novos = [
+      'Sou PcD', 'Pessoa com deficiência', 'Tenho uma doença', 'Em tratamento', 'Faço terapia', 'Minha raça',
+      'Epilepsia', 'Bipolar', 'Transtorno bipolar', 'TOC', 'Esquizofrenia', 'Alcoolismo', 'Alzheimer', 'Surdez',
+      'Cegueira', 'Síndrome de Down', 'Pessoa trans', 'Mulher trans', 'Homem trans', 'Pastor da igreja', 'Padre',
+      'Terreiro', 'Cadeirante',
+    ];
+    for (const texto of novos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+  });
+
+  it('volta a bloquear deficiência, PcD e condições ditas sobre a pessoa', () => {
+    // prettier-ignore
+    const bloqueados = [
+      'Deficiente visual', 'Deficiente auditivo', 'Deficiência visual', 'Deficiência auditiva', 'Deficiência intelectual',
+      'Sou deficiente visual', 'Sou surdo', 'Sou surda', 'Sou cego', 'Sou cega', 'Raça negra', 'Doença de Crohn',
+      'Doença celíaca', 'Fiz cirurgia bariátrica', 'Uso medicamento controlado', 'PcD', 'PCD',
+    ];
+    for (const texto of bloqueados) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+    // prettier-ignore
+    const permitidos = [
+      'Inclusão de PCD', 'Acessibilidade para PcD', 'Tecnologia assistiva para deficiência visual',
+      'Acessibilidade para deficiência visual', 'Gestão de medicamento controlado',
+    ];
+    for (const texto of permitidos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(false);
+    }
+  });
+
+  it('bloqueia os termos inequívocos acrescentados de saúde, orientação, religião, origem e política', () => {
+    // prettier-ignore
+    const novos = [
+      'Soropositivo', 'Soropositiva', 'Hipertensão', 'Fibromialgia', 'Dislexia', 'Paraplégico', 'Paraplégica',
+      'Tetraplégico', 'Tetraplégica', 'Anorexia', 'Bulimia', 'Síndrome do pânico', 'Dependência química', 'Alcoólatra',
+      'Assexual', 'Pansexual', 'Intersexo', 'Umbandista', 'Candomblecista', 'Testemunha de Jeová', 'Mórmon',
+      'Afrodescendente', 'Sou negro', 'Sou negra', 'Pessoa indígena', 'Sou indígena', 'Sou quilombola',
+      'Militante do partido', 'Filiado ao partido', 'Filiada ao partido',
+    ];
+    for (const texto of novos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+  });
+
+  it('deixa passar "Terreiro de café" e "Transtorno de compilação" sem liberar os termos sozinhos', () => {
+    expect(mencionaDadoSensivel('Terreiro de café')).toBe(false);
+    expect(mencionaDadoSensivel('Transtorno de compilação')).toBe(false);
+    expect(mencionaDadoSensivel('Terreiro')).toBe(true);
+    expect(mencionaDadoSensivel('Transtorno')).toBe(true);
+  });
+
+  it('trata hífen, barra e sublinhado como espaço', () => {
+    for (const texto of ['Saúde-mental', 'Não-binário', 'nao_binaria', 'Pessoa/trans', 'Síndrome-de-Down']) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(true);
+    }
+    expect(mencionaDadoSensivel('Health-tech')).toBe(false);
+  });
+
+  it('deixa passar termos de setor, de técnica e expressões comuns com palavras parecidas', () => {
+    // prettier-ignore
+    const legitimos = [
+      'Política de segurança', 'Política de privacidade', 'Políticas públicas', 'Partido alto', 'Coração partido',
+      'Saúde digital', 'Health tech', 'Acessibilidade', 'Yoga', 'Meditação', 'Futebol', 'Cibersegurança',
+      'Engenharia de dados', 'Biometria', 'Eleições', 'React', 'Xadrez', 'Cafés Especiais', 'Archive',
+      'Cancerologia de dados', 'Cerveja negra', 'Arte indígena',
+    ];
+    for (const texto of legitimos) {
+      expect(mencionaDadoSensivel(texto), texto).toBe(false);
+    }
+  });
+
+  it('"Política" e "Saúde" sozinhas são ambíguas e passam', () => {
+    expect(mencionaDadoSensivel('Política')).toBe(false);
+    expect(mencionaDadoSensivel('Saúde')).toBe(false);
   });
 
   it('aceita texto vazio ou ausente', () => {

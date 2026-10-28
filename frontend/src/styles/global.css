@@ -346,6 +346,15 @@ select.campo__controle { appearance: none; padding-right: 36px; background-image
 .seletor-tags { display: flex; flex-direction: column; gap: 12px; }
 .seletor-tags__novo { display: flex; gap: 8px; }
 .seletor-tags__novo .campo__controle { flex: 1; }
+.seletor-tags__busca { display: flex; flex-direction: column; gap: 8px; }
+.seletor-tags__sugestoes { margin: 0; padding: 4px; list-style: none; border: 1px solid var(--borda); border-radius: 12px; background: var(--superficie); box-shadow: var(--sombra); }
+.seletor-tags__sugestao { display: flex; align-items: center; min-height: 40px; padding: 8px 12px; border-radius: 8px; color: var(--texto); font-size: 14px; cursor: pointer; }
+.seletor-tags__sugestao:hover { background: var(--superficie-2); }
+.seletor-tags__sugestao--ativa { background: var(--laranja-suave); color: var(--laranja-texto); outline: 2px solid var(--laranja-texto); outline-offset: -2px; }
+.seletor-tags__sugestao mark { background: none; color: inherit; font-weight: 700; text-decoration: underline; }
+.seletor-tags__aviso { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--laranja-suave); color: var(--texto); font-size: 14px; }
+.seletor-tags__aviso p { margin: 0; }
+.seletor-tags__aviso-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Passos do cadastro */
 .passos { width: 100%; max-width: 860px; margin: 0 auto; }
@@ -863,6 +872,7 @@ h1.perfil__nome { font-size: 28px; }
   textarea.campo__controle { border-radius: 18px; }
   .botao { min-height: 52px; border-radius: 999px; }
   .botao--pequeno { min-height: 40px; }
+  .seletor-tags__sugestao { min-height: 44px; }
   .chip { border-radius: 999px; padding: 8px 15px; font-size: 14px; }
   .chip--escolha:not(.chip--ativo) { background: var(--superficie-2); color: var(--texto); border-color: var(--borda); }
   .bloco { padding: 18px; }

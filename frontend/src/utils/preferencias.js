@@ -1,6 +1,6 @@
-// Preferências que a API ainda não guarda (telefone, hub, CEP, equilíbrio do algoritmo, alcance geográfico,
-// polos habilitados e notificações). Ficam no navegador, separadas por conta. O que a API guarda
-// (nome, unidade, cidade, bio, interesses, objetivos, cota semanal e pausa) vai sempre para a API.
+// Preferências que a API não guarda (hub, equilíbrio do algoritmo, alcance geográfico, polos habilitados
+// e notificações). Ficam no navegador, separadas por conta. O que a API guarda (nome, unidade, cidade,
+// bio, interesses, objetivos, cota semanal e pausa) vai sempre para a API.
 
 export const HUBS = [
   'Avanade São Paulo (Chácara Santo Antônio)',
@@ -51,10 +51,7 @@ export const ALCANCES = [
 ];
 
 export const PADRAO = {
-  telefone: '',
-  emailPessoal: '',
   hub: '',
-  cep: '',
   pesoProfissional: 70,
   alcance: 'REGIONAL',
   polos: [],
@@ -64,17 +61,33 @@ export const PADRAO = {
 
 const chave = (usuarioId) => `preferencias:${usuarioId}`;
 
+// Mantém só as chaves de PADRAO.
+const somenteConhecidas = (objeto) =>
+  Object.fromEntries(Object.entries(objeto && typeof objeto === 'object' ? objeto : {}).filter(([nome]) => Object.hasOwn(PADRAO, nome)));
+
+// Ao ler, chaves fora de PADRAO (como dados que o cadastro não coleta) são descartadas e o objeto limpo
+// é gravado de volta, para que não fiquem no navegador. Um valor ilegível é ignorado sem ser regravado.
+// A regravação tem tratamento próprio: se o navegador recusar a escrita, o valor lido continua valendo.
 export function lerPreferencias(usuarioId) {
+  let salvo;
   try {
-    const salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
-    return { ...PADRAO, ...(salvo && typeof salvo === 'object' ? salvo : {}) };
+    salvo = JSON.parse(localStorage.getItem(chave(usuarioId)) ?? '{}');
   } catch {
     return { ...PADRAO };
   }
+  const conhecidas = somenteConhecidas(salvo);
+  if (salvo && typeof salvo === 'object' && Object.keys(conhecidas).length !== Object.keys(salvo).length) {
+    try {
+      localStorage.setItem(chave(usuarioId), JSON.stringify(conhecidas));
+    } catch {
+      // Sem permissão de escrita, a limpeza fica para a próxima leitura.
+    }
+  }
+  return { ...PADRAO, ...conhecidas };
 }
 
 export function salvarPreferencias(usuarioId, parcial) {
-  const novas = { ...lerPreferencias(usuarioId), ...parcial };
+  const novas = { ...lerPreferencias(usuarioId), ...somenteConhecidas(parcial) };
   try {
     localStorage.setItem(chave(usuarioId), JSON.stringify(novas));
   } catch {

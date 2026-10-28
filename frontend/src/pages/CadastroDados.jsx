@@ -10,7 +10,6 @@ import {
   IconePino,
   IconePredio,
   IconeSeta,
-  IconeTelefone,
 } from '../components/Icones.jsx';
 import { Cabecalho } from '../components/Basicos.jsx';
 import Passos from '../components/Passos.jsx';
@@ -19,19 +18,6 @@ import { useCelular } from '../hooks/useCelular.js';
 import { usePreferencias } from '../hooks/usePreferencias.js';
 import { API } from '../services/api.js';
 import { AREAS, CIDADE_DO_HUB, HUBS } from '../utils/preferencias.js';
-
-function mascaraTelefone(valor) {
-  const d = valor.replace(/\D/g, '').slice(0, 11);
-  if (d.length <= 2) return d.length ? `(${d}` : '';
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
-
-function mascaraCep(valor) {
-  const d = valor.replace(/\D/g, '').slice(0, 8);
-  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
-}
 
 // "São Paulo, SP" <-> ["São Paulo", "SP"]. A API guarda cidade e estado num campo só.
 const separarCidade = (texto = '') => {
@@ -56,7 +42,7 @@ function Campo({ rotulo, extra, Icone, children }) {
   );
 }
 
-// Etapa 1 do cadastro: nome, unidade e cidade vão para a API; telefone, hub e CEP ficam nas preferências locais.
+// Etapa 1 do cadastro: nome, unidade e cidade vão para a API; o hub fica nas preferências locais.
 export default function CadastroDados() {
   const { perfil, definirPerfil, sair } = useAuth();
   const [preferencias, atualizarPreferencias] = usePreferencias();
@@ -65,10 +51,7 @@ export default function CadastroDados() {
     nome: perfil.name ?? '',
     unidade: perfil.department ?? '',
     cidade: perfil.location ?? '',
-    telefone: preferencias.telefone,
     hub: preferencias.hub,
-    cep: preferencias.cep,
-    emailPessoal: preferencias.emailPessoal,
   });
   const celular = useCelular();
   const [parte, setParte] = useState(1);
@@ -93,7 +76,7 @@ export default function CadastroDados() {
       setSalvando(false);
       return;
     }
-    atualizarPreferencias({ telefone: dados.telefone, hub: dados.hub, cep: dados.cep, emailPessoal: dados.emailPessoal });
+    atualizarPreferencias({ hub: dados.hub });
     navegar('/cadastro/interesses');
   }
 
@@ -106,8 +89,6 @@ export default function CadastroDados() {
   if (celular) {
     const [nomeCidade, uf] = separarCidade(dados.cidade);
     const mudarCidade = (nova, novoUf) => setDados({ ...dados, cidade: juntarCidade(nova, novoUf) });
-    const telefone = (e) => setDados({ ...dados, telefone: mascaraTelefone(e.target.value) });
-    const cep = (e) => setDados({ ...dados, cep: mascaraCep(e.target.value) });
 
     if (parte === 1) {
       return (
@@ -144,39 +125,6 @@ export default function CadastroDados() {
                 </span>
               </span>
               <input className="campo__controle" value={perfil.email} readOnly aria-readonly="true" />
-            </label>
-            <label className="campo">
-              <span>E-mail pessoal (opcional)</span>
-              <input
-                className="campo__controle"
-                type="email"
-                value={dados.emailPessoal}
-                onChange={mudar('emailPessoal')}
-                placeholder="seu@email.com"
-                autoComplete="email"
-              />
-            </label>
-            <label className="campo">
-              <span>Telefone (para conexões internas)</span>
-              <input
-                className="campo__controle"
-                value={dados.telefone}
-                onChange={telefone}
-                placeholder="(11) 99999-9999"
-                inputMode="tel"
-                autoComplete="tel"
-              />
-            </label>
-            <label className="campo">
-              <span>CEP (para localização da unidade)</span>
-              <input
-                className="campo__controle"
-                value={dados.cep}
-                onChange={cep}
-                placeholder="00000-000"
-                inputMode="numeric"
-                autoComplete="postal-code"
-              />
             </label>
             <div className="campo-duplo">
               <label className="campo">
@@ -268,11 +216,7 @@ export default function CadastroDados() {
               maxLength={80}
             />
           </label>
-          <label className="campo">
-            <span>CEP corporativo</span>
-            <input className="campo__controle" value={dados.cep} onChange={cep} placeholder="00000-000" inputMode="numeric" />
-          </label>
-          <p className="nota">A unidade e a cidade aparecem no seu cartão. Telefone, e-mail pessoal, hub e CEP ficam só neste aparelho.</p>
+          <p className="nota">A área e a localidade aparecem no seu cartão. A unidade escolhida acima fica só neste aparelho.</p>
           {erro && (
             <p className="erro-campo" role="alert">
               {erro}
@@ -329,16 +273,6 @@ export default function CadastroDados() {
             >
               <input className="campo__controle" value={perfil.email} readOnly aria-readonly="true" />
             </Campo>
-            <Campo rotulo="Telefone interno / Teams" extra={<span className="campo__dica">Opcional</span>} Icone={IconeTelefone}>
-              <input
-                className="campo__controle"
-                value={dados.telefone}
-                onChange={(e) => setDados({ ...dados, telefone: mascaraTelefone(e.target.value) })}
-                placeholder="(11) 98765-4321"
-                inputMode="tel"
-                autoComplete="tel"
-              />
-            </Campo>
             <Campo rotulo="Unidade de negócio / prática" extra={<span className="campo__dica">Obrigatório</span>} Icone={IconeMaleta}>
               <input
                 className="campo__controle"
@@ -383,19 +317,7 @@ export default function CadastroDados() {
                 autoComplete="address-level2"
               />
             </Campo>
-            <Campo rotulo="Localidade / CEP corporativo" extra={<span className="campo__dica">Opcional</span>} Icone={IconePredio}>
-              <input
-                className="campo__controle"
-                value={dados.cep}
-                onChange={(e) => setDados({ ...dados, cep: mascaraCep(e.target.value) })}
-                placeholder="04711-130"
-                inputMode="numeric"
-                autoComplete="postal-code"
-              />
-            </Campo>
-            <p className="nota">
-              A cidade aparece no seu cartão de descoberta. Telefone, hub e CEP ficam só neste navegador e não são compartilhados.
-            </p>
+            <p className="nota">A cidade aparece no seu cartão de descoberta. O hub fica só neste navegador e não é compartilhado.</p>
           </fieldset>
         </div>
 

@@ -120,6 +120,7 @@ export default function CadastroInteressesCelular({
   const qtd = selecionadas.size;
   const faltam = Math.max(0, minimo - qtd);
   const doTipo = (categoria) => catalogo.filter((t) => t.category === categoria).map((t) => t.name);
+  const usoPorNome = new Map(catalogo.map((t) => [t.name.toLowerCase(), t.uso ?? 0]));
 
   if (tela === 'objetivo') {
     return (
@@ -276,6 +277,7 @@ export default function CadastroInteressesCelular({
             selecionadas={selecionadas}
             aoAlternar={aoAlternar}
             aoCriar={aoCriarTag}
+            uso={usoPorNome}
           />
         </section>
         <section className="cartao bloco eixo">
@@ -287,6 +289,7 @@ export default function CadastroInteressesCelular({
             selecionadas={selecionadas}
             aoAlternar={aoAlternar}
             aoCriar={aoCriarTag}
+            uso={usoPorNome}
           />
         </section>
         {erro && (

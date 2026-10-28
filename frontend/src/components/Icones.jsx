@@ -64,9 +64,6 @@ export const IconeCalendario = icone('M4 6h16v15H4z', 'M4 10h16', 'M8 3v4M16 3v4
 export const IconeRelogio = icone('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M12 7v5l3 2');
 export const IconeGlobo = icone('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M3 12h18', 'M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18');
 export const IconePredio = icone('M4 21V5l8-2v18', 'M12 8h8v13', 'M2 21h20', 'M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2');
-export const IconeTelefone = icone(
-  'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z',
-);
 export const IconeEmail = icone('M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1');
 export const IconeCracha = icone('M3 6h18v13H3z', 'M8 12.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 16.5a3 3 0 0 1 6 0', 'M14 10h4M14 14h3');
 export const IconeUpload = icone('M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9', 'M12 12v8', 'M9 15l3-3 3 3');

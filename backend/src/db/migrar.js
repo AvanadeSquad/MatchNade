@@ -15,14 +15,19 @@ export async function listarMigracoes(pasta = pastaMigracoes) {
 
 // Aplica, em ordem, as migrações ainda não registradas em schema_migrations. Cada migração roda
 // na própria transação junto com o seu registro: se falhar, nada dela fica aplicado.
+// A criação de schema_migrations também fica sob a trava: no PostgreSQL, dois CREATE TABLE IF NOT EXISTS
+// simultâneos podem colidir no catálogo e um deles falha com chave duplicada.
 // Devolve os nomes das migrações aplicadas nesta chamada.
 export async function migrar(banco, migracoes) {
   const lista = migracoes ?? (await listarMigracoes());
-  await banco.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
-    version INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )`);
+  await banco.tx(async ({ query, exec }) => {
+    await query('SELECT pg_advisory_xact_lock($1)', [TRAVA_MIGRACOES]);
+    await exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
+      version INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+  });
 
   const aplicadas = [];
   for (const migracao of lista) {

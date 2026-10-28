@@ -372,7 +372,7 @@ export default function MeuPerfil() {
           <ul className="lista-pontos">
             <li>A API guarda nome, e-mail corporativo, unidade, cidade, interesses, objetivos, resumo e cargo (opcional).</li>
             <li>Cargo e resumo só aparecem para outra pessoa depois do match.</li>
-            <li>Telefone, e-mail pessoal, hub, CEP e os parâmetros do algoritmo ficam só neste navegador.</li>
+            <li>O hub e os parâmetros do algoritmo ficam só neste navegador.</li>
             <li>Você pode pausar sua exposição, bloquear, denunciar e excluir seus dados a qualquer momento. A exclusão é definitiva.</li>
           </ul>
           <button type="button" className="botao botao--contorno" onClick={fechar}>
