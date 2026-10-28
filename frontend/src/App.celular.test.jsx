@@ -105,7 +105,7 @@ describe('telas no celular', () => {
     expect(await screen.findByText('Bem-vindo ao Global Connect')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Solicitar acesso interno' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /linkedin/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Senha')).toBeInTheDocument();
   });
   it('cadastro em duas telas', async () => {
     const u = userEvent.setup();

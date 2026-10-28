@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, Cabecalho, Carregando, Modal } from '../components/Basicos.jsx';
 import { Equilibrio, Interruptor, Polos, Segmentado } from '../components/Controles.jsx';
+import DefinirSenha from '../components/DefinirSenha.jsx';
 import { EditarBio, EditarDados, EditarInteresses, PreviewPublico } from '../components/EdicaoPerfil.jsx';
 import {
   IconeAjustes,
   IconeBloquear,
+  IconeCadeado,
   IconeBrilho,
   IconeCheck,
   IconeChevron,
@@ -330,6 +332,18 @@ export default function MeuPerfil() {
     </div>
   );
 
+  const botaoSenha = (
+    <button type="button" className="interruptor interruptor--botao" onClick={() => setDialogo('senha')}>
+      <span>
+        <strong>{perfil.has_password ? 'Alterar senha' : 'Definir senha'}</strong>
+        <span className="pequeno">
+          {perfil.has_password ? 'Você entra com e-mail e senha ou pelo SSO.' : 'Entre com e-mail e senha, sem depender do SSO.'}
+        </span>
+      </span>
+      <IconeCadeado />
+    </button>
+  );
+
   const botaoBloqueados = (
     <button type="button" className="interruptor interruptor--botao" onClick={() => setDialogo('bloqueados')}>
       <span>
@@ -367,6 +381,7 @@ export default function MeuPerfil() {
       {dialogo === 'hobbies' && <EditarInteresses categoria="HOBBY" aoFechar={fechar} />}
       {dialogo === 'preview' && <PreviewPublico aoFechar={fechar} />}
       {dialogo === 'bloqueados' && <Bloqueados aoFechar={fechar} />}
+      {dialogo === 'senha' && <DefinirSenha aoFechar={fechar} />}
       {dialogo === 'diretrizes' && (
         <Modal titulo="Diretrizes de privacidade" aoFechar={fechar}>
           <ul className="lista-pontos">
@@ -458,6 +473,7 @@ export default function MeuPerfil() {
         conteudo: (
           <section className="cartao bloco">
             {interruptorVisivel}
+            {botaoSenha}
             {botaoBloqueados}
             {avisoPrivacidade}
           </section>
@@ -641,6 +657,7 @@ export default function MeuPerfil() {
             {interruptorVisivel}
             {interruptorAvisos}
             {controleCota}
+            {botaoSenha}
             {botaoBloqueados}
             {avisoPrivacidade}
             <div className="sessao">

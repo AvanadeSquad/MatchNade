@@ -7,7 +7,7 @@ export const OBJETIVOS = ['NETWORKING', 'TROCA_DE_CONHECIMENTO', 'HOBBY', 'MENTO
 export async function buscarFuncionario(consulta, id) {
   const [linha] = await consulta(
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
-            is_active, is_paused, last_seen_at, created_at
+            is_active, is_paused, last_seen_at, created_at, (password_hash IS NOT NULL) AS has_password
        FROM employee WHERE id = $1 AND is_active`,
     [id],
   );
@@ -67,6 +67,7 @@ export async function montarPerfil({ banco, config }, id) {
     connection_goals: funcionario.connection_goals,
     max_weekly_matches: funcionario.max_weekly_matches,
     is_paused: funcionario.is_paused,
+    has_password: funcionario.has_password,
     tags,
     profile_complete: perfilCompleto(funcionario, tags.technical.length + tags.hobby.length, config.regras.minTags),
     quota: { used: usadas, max: funcionario.max_weekly_matches },
