@@ -137,6 +137,17 @@ describe('telas no celular', () => {
     await u.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(await screen.findByText('Perfil de Colaborador')).toBeInTheDocument();
   }, 10000);
+  it('interesses: sugestão do catálogo ao digitar, escolhida com toque', async () => {
+    const u = userEvent.setup();
+    montar('/cadastro/interesses', { ...PERFIL, profile_complete: false, tags: { technical: [], hobby: [] } });
+    await u.click(await screen.findByRole('button', { name: 'Continuar' }));
+    await u.click(screen.getByRole('button', { name: 'Preencher interesses manualmente' }));
+    const campo = await screen.findByRole('combobox', { name: 'Adicionar outro hobby' });
+    await u.type(campo, 'foto');
+    await u.click(screen.getByRole('option', { name: 'Fotografia' }));
+    expect(screen.getByRole('button', { name: 'Fotografia' })).toHaveAttribute('aria-pressed', 'true');
+    expect(campo).toHaveValue('');
+  });
   it('preferências', async () => {
     montar('/cadastro/preferencias');
     expect(await screen.findByText('O que você quer priorizar nas suas conexões?')).toBeInTheDocument();
