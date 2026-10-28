@@ -178,15 +178,11 @@ export default function Login() {
               />
             </label>
             {mostrarErroEmail && (
-              <p
-               id="erro-email"
-              className="erro-campo"
-              role="alert"
-              >
-                 Por favor, informe um endereço de e-mail válido.
-                 </p>
-                )}
-                 {acessoPorEmail && (
+              <p id="erro-email" className="erro-campo" role="alert">
+                Por favor, informe um endereço de e-mail válido.
+              </p>
+            )}
+            {acessoPorEmail && (
               <p className="nota-dev">
                 Ambiente de desenvolvimento: a API libera o acesso pelo e-mail. Contas de demonstração:{' '}
                 {usuariosDev.slice(0, 5).map((u, i) => (
