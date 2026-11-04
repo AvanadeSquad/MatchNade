@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { autenticarPagina, chamar, criarPessoaPronta, entrarPorApi, identificadorUnico, interessesExclusivos } from './helpers/api.js';
+import {
+  API_URL,
+  autenticarPagina,
+  chamar,
+  criarPessoaPronta,
+  entrarPorApi,
+  identificadorUnico,
+  interessesExclusivos,
+} from './helpers/api.js';
 
 // No celular o perfil é um menu de seções; no desktop os controles ficam na própria página.
 async function abrirSecao(page, nome) {
@@ -170,11 +178,86 @@ test.describe('conta e sessão', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('sem login por e-mail habilitado a tela de entrada avisa', async ({ page }) => {
+  test('senha incorreta mostra o erro e não entra', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel(/E-mail/).fill('alguem@exemplo.test');
-    await page.getByRole('button', { name: /Acessar o Global Connect/ }).click();
-    await expect(page.getByRole('alert')).toContainText('O acesso por e-mail ainda não está habilitado neste ambiente.');
+    await page.getByLabel('E-mail corporativo').fill('ana.silva@exemplo.test');
+    await page.getByLabel('Senha', { exact: true }).fill('senha-incorreta-123');
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('E-mail ou senha incorretos.');
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('conta com senha entra e chega à descoberta', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByLabel('E-mail corporativo').fill('ana.silva@exemplo.test');
+    await page.getByLabel('Senha', { exact: true }).fill('1234567890');
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+    await expect(page).toHaveURL(/\/descobrir$/);
+  });
+
+  test('criar conta leva ao cadastro de dados', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
+    await page.getByLabel('Nome completo').fill('Pessoa Nova de Teste');
+    await page.getByLabel('E-mail corporativo').fill(`${identificadorUnico('conta')}@exemplo.test`);
+    await page.getByLabel('Senha', { exact: true }).fill('senha-de-teste-123');
+    await page.getByLabel('Confirmar senha').fill('senha-de-teste-123');
+    await page.getByLabel('Pergunta de segurança').selectOption({ label: 'Qual era o nome do seu primeiro animal de estimação?' });
+    await page.getByLabel('Resposta de segurança').fill('Rex');
+    await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
+    await expect(page).toHaveURL(/\/cadastro\/dados$/);
+  });
+
+  test('criar conta recusa senhas diferentes', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
+    await page.getByLabel('Nome completo').fill('Pessoa Nova de Teste');
+    await page.getByLabel('E-mail corporativo').fill(`${identificadorUnico('conta')}@exemplo.test`);
+    await page.getByLabel('Senha', { exact: true }).fill('senha-de-teste-123');
+    await page.getByLabel('Confirmar senha').fill('senha-diferente-123');
+    await page.getByLabel('Pergunta de segurança').selectOption({ label: 'Qual era o nome do seu primeiro animal de estimação?' });
+    await page.getByLabel('Resposta de segurança').fill('Rex');
+    await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('As senhas não coincidem.');
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('recuperar a senha pela pergunta de segurança e entrar com a nova', async ({ page, request }) => {
+    const email = `${identificadorUnico('recuperar')}@exemplo.test`;
+    const cadastro = await request.post(`${API_URL}/auth/register`, {
+      data: {
+        name: 'Pessoa Recupera',
+        email,
+        password: 'senha-antiga-123',
+        security_question_id: 'cidade_nascimento',
+        security_answer: 'Recife',
+      },
+    });
+    expect(cadastro.status()).toBe(201);
+
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
+    await page.getByLabel('E-mail corporativo').fill(email);
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page.getByText('Em qual cidade você nasceu?')).toBeVisible();
+    await page.getByLabel('Resposta de segurança').fill('recife');
+    await page.getByLabel('Nova senha').fill('senha-nova-456');
+    await page.getByLabel('Confirmar senha').fill('senha-nova-456');
+    await page.getByRole('button', { name: 'Redefinir senha', exact: true }).click();
+    await expect(page.getByText('Senha redefinida. Entre com sua nova senha.')).toBeVisible();
+
+    await page.getByLabel('E-mail corporativo').fill(email);
+    await page.getByLabel('Senha', { exact: true }).fill('senha-nova-456');
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+    await expect(page).toHaveURL(/\/cadastro\/dados$/);
+  });
+
+  test('recuperação de e-mail sem pergunta cadastrada não avança', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
+    await page.getByLabel('E-mail corporativo').fill('ninguem@exemplo.test');
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page.getByRole('alert')).toContainText('Não foi possível iniciar a recuperação.');
   });
 });
 
