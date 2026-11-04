@@ -187,6 +187,17 @@ test.describe('conta e sessão', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
+  test('e-mail com formato inválido mostra o aviso ao sair do campo', async ({ page }) => {
+    await page.goto('/login');
+    const campo = page.getByLabel('E-mail corporativo');
+    await campo.fill('sem-arroba');
+    await campo.blur();
+    await expect(page.getByRole('alert')).toContainText('Por favor, informe um endereço de e-mail válido.');
+    await expect(campo).toHaveAttribute('aria-invalid', 'true');
+    await campo.fill('ana.silva@exemplo.test');
+    await expect(page.getByText('Por favor, informe um endereço de e-mail válido.')).toHaveCount(0);
+  });
+
   test('conta com senha entra e chega à descoberta', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('E-mail corporativo').fill('ana.silva@exemplo.test');

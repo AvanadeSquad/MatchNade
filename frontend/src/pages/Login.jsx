@@ -49,6 +49,9 @@ export default function Login() {
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  const [emailTocado, setEmailTocado] = useState(false);
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const mostrarErroEmail = emailTocado && email.trim() !== '' && !emailValido;
   const celular = useCelular();
 
   function concluir(resposta) {
@@ -143,6 +146,7 @@ export default function Login() {
 
   function trocarModo(novoModo) {
     setModo(novoModo);
+    setEmailTocado(false);
     setErro('');
     setSucesso('');
     setSenha('');
@@ -213,11 +217,19 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setEmailTocado(true)}
+                aria-invalid={mostrarErroEmail}
+                aria-describedby={mostrarErroEmail ? 'erro-email' : undefined}
                 placeholder="nome.sobrenome@avanade.com"
                 autoComplete="username"
                 required
               />
             </label>
+            {mostrarErroEmail && (
+              <p id="erro-email" className="erro-campo" role="alert">
+                Por favor, informe um endereço de e-mail válido.
+              </p>
+            )}
             {(modo === 'login' || modo === 'cadastro' || modo === 'redefinir') && (
               <label className="campo">
                 <span>{modo === 'redefinir' ? 'Nova senha' : 'Senha'}</span>
