@@ -3,13 +3,13 @@ import { z } from 'zod';
 import { montarPerfil, obterOuCriarPorGoogle } from '../services/perfil.js';
 import { conflito, naoAutenticado, proibido } from '../utils/erros.js';
 import {
-  BLOQUEIO_RECUPERACAO_MINUTOS,
   PERGUNTAS_SEGURANCA,
-  TENTATIVAS_RECUPERACAO_MAX,
   emitirToken,
+  estaBloqueada,
   gerarHashSenha,
   normalizarRespostaSeguranca,
   perguntaFicticia,
+  registrarTentativaFalha,
   verificarContraFicticio,
   verificarHash,
 } from '../services/autenticacao.js';
@@ -66,15 +66,24 @@ export function rotasAuth(ctx) {
 
   router.post('/auth/login', async (req, res) => {
     const { email, password } = corpoLoginLocal.parse(req.body);
-    const [funcionario] = await ctx.banco.query('SELECT id, password_hash, is_active FROM employee WHERE LOWER(email) = LOWER($1)', [
-      email,
-    ]);
+    const [funcionario] = await ctx.banco.query(
+      'SELECT id, password_hash, is_active, login_locked_until FROM employee WHERE LOWER(email) = LOWER($1)',
+      [email],
+    );
     // Conta inexistente ou sem senha local passa pela mesma verificação custosa: o tempo não revela o cadastro.
-    const valido = funcionario?.password_hash
+    const senhaCerta = funcionario?.password_hash
       ? await verificarHash(password, funcionario.password_hash)
       : (await verificarContraFicticio(password), false);
-    if (!valido || !funcionario?.is_active) throw naoAutenticado('E-mail ou senha incorretos.');
-    await ctx.banco.query('UPDATE employee SET last_seen_at = NOW() WHERE id = $1', [funcionario.id]);
+    const controlada = Boolean(funcionario?.password_hash && funcionario.is_active);
+    // Durante o bloqueio nem a senha certa entra, e a resposta é a mesma de senha errada.
+    const bloqueada = controlada && estaBloqueada(funcionario.login_locked_until);
+    if (!senhaCerta || !controlada || bloqueada) {
+      if (controlada && !bloqueada) await registrarTentativaFalha(ctx.banco, funcionario.id, 'login');
+      throw naoAutenticado('E-mail ou senha incorretos.');
+    }
+    await ctx.banco.query('UPDATE employee SET last_seen_at = NOW(), login_failed_attempts = 0, login_locked_until = NULL WHERE id = $1', [
+      funcionario.id,
+    ]);
     res.json({ token: await emitirToken(ctx, funcionario.id), employee: await montarPerfil(ctx, funcionario.id), is_new: false });
   });
 
@@ -101,28 +110,21 @@ export function rotasAuth(ctx) {
     const respostaNormalizada = normalizarRespostaSeguranca(security_answer);
     const recuperavel = Boolean(funcionario?.is_active && funcionario.security_question_id && funcionario.security_answer_hash);
     // Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica.
-    const bloqueada = recuperavel && funcionario.recovery_locked_until && new Date(funcionario.recovery_locked_until) > new Date();
+    const bloqueada = recuperavel && estaBloqueada(funcionario.recovery_locked_until);
     const correta = recuperavel
       ? !bloqueada && (await verificarHash(respostaNormalizada, funcionario.security_answer_hash))
       : (await verificarContraFicticio(respostaNormalizada), false);
     if (!correta) {
-      if (recuperavel && !bloqueada) {
-        // Contagem atômica: ao chegar no limite zera o contador e bloqueia por alguns minutos.
-        await ctx.banco.query(
-          `UPDATE employee
-              SET recovery_failed_attempts = CASE WHEN recovery_failed_attempts + 1 >= $2 THEN 0 ELSE recovery_failed_attempts + 1 END,
-                  recovery_locked_until = CASE WHEN recovery_failed_attempts + 1 >= $2 THEN NOW() + make_interval(mins => $3) ELSE recovery_locked_until END
-            WHERE id = $1`,
-          [funcionario.id, TENTATIVAS_RECUPERACAO_MAX, BLOQUEIO_RECUPERACAO_MINUTOS],
-        );
-      }
+      if (recuperavel && !bloqueada) await registrarTentativaFalha(ctx.banco, funcionario.id, 'recuperacao');
       throw falha();
     }
     const passwordHash = await gerarHashSenha(new_password);
-    // Aumentar a versão de sessão invalida os tokens emitidos antes da redefinição.
+    // Aumentar a versão de sessão invalida os tokens emitidos antes da redefinição. A nova senha
+    // também libera um login bloqueado.
     await ctx.banco.query(
       `UPDATE employee
-          SET password_hash = $1, recovery_failed_attempts = 0, recovery_locked_until = NULL, token_version = token_version + 1
+          SET password_hash = $1, recovery_failed_attempts = 0, recovery_locked_until = NULL, token_version = token_version + 1,
+              login_failed_attempts = 0, login_locked_until = NULL
         WHERE id = $2`,
       [passwordHash, funcionario.id],
     );
