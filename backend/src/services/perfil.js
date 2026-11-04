@@ -7,7 +7,7 @@ export const OBJETIVOS = ['NETWORKING', 'TROCA_DE_CONHECIMENTO', 'HOBBY', 'MENTO
 export async function buscarFuncionario(consulta, id) {
   const [linha] = await consulta(
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
-            is_active, is_paused, last_seen_at, created_at
+            is_active, is_paused, last_seen_at, created_at, token_version
        FROM employee WHERE id = $1 AND is_active`,
     [id],
   );
