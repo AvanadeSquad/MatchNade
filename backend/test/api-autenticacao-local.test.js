@@ -1,6 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { gerarHashSenha, normalizarRespostaSeguranca, verificarHash } from '../src/services/autenticacao.js';
-import { criarAmbiente } from './ajudante.js';
+import jwt from 'jsonwebtoken';
+import {
+  PERGUNTAS_SEGURANCA,
+  TENTATIVAS_RECUPERACAO_MAX,
+  gerarHashSenha,
+  normalizarRespostaSeguranca,
+  verificarHash,
+} from '../src/services/autenticacao.js';
+import { SEGREDO, criarAmbiente } from './ajudante.js';
 
 const SENHA = 'senha-de-teste-123';
 const dadosCadastro = (extra = {}) => ({
@@ -151,13 +158,25 @@ describe('autenticação local', () => {
       expect(r.body.question).toMatch(/animal/i);
     });
 
-    it('para e-mail inexistente e conta sem pergunta responde sem pergunta', async () => {
+    it('para e-mail inexistente e conta sem pergunta devolve uma pergunta fictícia, a mesma a cada consulta', async () => {
       await a.criarPessoa({ nome: 'Sem Pergunta' });
+      const perguntas = new Set(PERGUNTAS_SEGURANCA.map((p) => p.pergunta));
       for (const email of ['ninguem@exemplo.test', 'sem.pergunta@exemplo.test']) {
-        const r = await a.http.post('/api/v1/auth/recovery-question').send({ email });
-        expect(r.status).toBe(200);
-        expect(r.body).toEqual({ question: null, available: false });
+        const primeira = await a.http.post('/api/v1/auth/recovery-question').send({ email });
+        const segunda = await a.http.post('/api/v1/auth/recovery-question').send({ email });
+        expect(primeira.status).toBe(200);
+        expect(primeira.body.available).toBe(true);
+        expect(perguntas.has(primeira.body.question)).toBe(true);
+        expect(segunda.body).toEqual(primeira.body);
       }
+    });
+
+    it('a resposta de e-mail sem cadastro tem o mesmo formato da de conta com recuperação', async () => {
+      await cadastrar();
+      const real = await a.http.post('/api/v1/auth/recovery-question').send({ email: 'pessoa.local@exemplo.test' });
+      const falso = await a.http.post('/api/v1/auth/recovery-question').send({ email: 'ninguem@exemplo.test' });
+      expect(Object.keys(falso.body).sort()).toEqual(Object.keys(real.body).sort());
+      expect(falso.body.available).toBe(real.body.available);
     });
 
     it('redefine a senha com a resposta certa, mesmo com acento e caixa diferentes', async () => {
@@ -197,7 +216,82 @@ describe('autenticação local', () => {
       expect(r.status).toBe(400);
     });
 
-    it.todo('bloqueia a redefinição por conta depois de erros repetidos na resposta de segurança');
-    it.todo('invalida os tokens emitidos antes da redefinição de senha');
+    const redefinir = (resposta, nova = 'nova-senha-456') =>
+      a.http
+        .post('/api/v1/auth/reset-password')
+        .send({ email: 'pessoa.local@exemplo.test', security_answer: resposta, new_password: nova });
+
+    it('bloqueia a redefinição depois de erros seguidos, mesmo com a resposta certa', async () => {
+      await cadastrar();
+      for (let i = 0; i < TENTATIVAS_RECUPERACAO_MAX; i += 1) expect((await redefinir(`errada ${i}`)).status).toBe(401);
+      const durante = await redefinir('Rex');
+      expect(durante.status).toBe(401);
+      expect((await entrar('pessoa.local@exemplo.test', SENHA)).status).toBe(200);
+      const [linha] = await a.banco.query('SELECT recovery_locked_until FROM employee');
+      expect(new Date(linha.recovery_locked_until) > new Date()).toBe(true);
+    });
+
+    it('a mensagem durante o bloqueio é a mesma de uma resposta errada', async () => {
+      await cadastrar();
+      const errada = await redefinir('errada');
+      for (let i = 1; i < TENTATIVAS_RECUPERACAO_MAX; i += 1) await redefinir(`errada ${i}`);
+      const bloqueada = await redefinir('Rex');
+      expect(bloqueada.status).toBe(errada.status);
+      expect(bloqueada.body.message).toBe(errada.body.message);
+    });
+
+    it('libera a redefinição quando o bloqueio expira', async () => {
+      await cadastrar();
+      for (let i = 0; i < TENTATIVAS_RECUPERACAO_MAX; i += 1) await redefinir(`errada ${i}`);
+      await a.banco.query("UPDATE employee SET recovery_locked_until = NOW() - INTERVAL '1 minute'");
+      expect((await redefinir('Rex')).status).toBe(200);
+      expect((await entrar('pessoa.local@exemplo.test', 'nova-senha-456')).status).toBe(200);
+    });
+
+    it('um acerto zera a contagem de erros', async () => {
+      await cadastrar();
+      for (let i = 0; i < TENTATIVAS_RECUPERACAO_MAX - 1; i += 1) await redefinir(`errada ${i}`);
+      expect((await redefinir('Rex')).status).toBe(200);
+      const [linha] = await a.banco.query('SELECT recovery_failed_attempts, recovery_locked_until FROM employee');
+      expect(linha.recovery_failed_attempts).toBe(0);
+      expect(linha.recovery_locked_until).toBeNull();
+    });
+
+    it('o bloqueio vale por conta: outra conta continua podendo redefinir', async () => {
+      await cadastrar();
+      await cadastrar({ email: 'outra.pessoa@exemplo.test', name: 'Outra Pessoa' });
+      for (let i = 0; i < TENTATIVAS_RECUPERACAO_MAX; i += 1) await redefinir(`errada ${i}`);
+      const outra = await a.http
+        .post('/api/v1/auth/reset-password')
+        .send({ email: 'outra.pessoa@exemplo.test', security_answer: 'Rex', new_password: 'nova-senha-456' });
+      expect(outra.status).toBe(200);
+    });
+
+    it('redefinir a senha invalida os tokens emitidos antes e aceita os novos', async () => {
+      const cadastro = await cadastrar();
+      const antigo = `Bearer ${cadastro.body.token}`;
+      expect((await a.http.get('/api/v1/profile').set('Authorization', antigo)).status).toBe(200);
+      expect((await redefinir('Rex')).status).toBe(200);
+      const depois = await a.http.get('/api/v1/profile').set('Authorization', antigo);
+      expect(depois.status).toBe(401);
+      const novo = await entrar('pessoa.local@exemplo.test', 'nova-senha-456');
+      expect((await a.http.get('/api/v1/profile').set('Authorization', `Bearer ${novo.body.token}`)).status).toBe(200);
+    });
+
+    it('token sem versão (emitido antes da migração) continua valendo enquanto a versão da conta é 0', async () => {
+      const { id } = await a.criarPessoa({ nome: 'Token Antigo' });
+      const semVersao = jwt.sign({ sub: String(id) }, SEGREDO, { algorithm: 'HS256', expiresIn: '1h' });
+      expect((await a.http.get('/api/v1/profile').set('Authorization', `Bearer ${semVersao}`)).status).toBe(200);
+    });
+  });
+
+  describe('cadastros simultâneos', () => {
+    it('com o mesmo e-mail, um cria e o outro recebe conflito (sem erro 500)', async () => {
+      const respostas = await Promise.all([cadastrar(), cadastrar(), cadastrar()]);
+      const status = respostas.map((r) => r.status).sort();
+      expect(status.filter((s) => s === 201)).toHaveLength(1);
+      expect(status.every((s) => s === 201 || s === 409)).toBe(true);
+      expect(await a.banco.query('SELECT id FROM employee')).toHaveLength(1);
+    });
   });
 });

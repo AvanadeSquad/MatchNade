@@ -252,12 +252,17 @@ test.describe('conta e sessão', () => {
     await expect(page).toHaveURL(/\/cadastro\/dados$/);
   });
 
-  test('recuperação de e-mail sem pergunta cadastrada não avança', async ({ page }) => {
+  test('e-mail sem cadastro vê uma pergunta e a redefinição falha com a mensagem genérica', async ({ page }) => {
     await page.goto('/login');
     await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
     await page.getByLabel('E-mail corporativo').fill('ninguem@exemplo.test');
     await page.getByRole('button', { name: 'Continuar' }).click();
-    await expect(page.getByRole('alert')).toContainText('Não foi possível iniciar a recuperação.');
+    await expect(page.getByLabel('Resposta de segurança')).toBeVisible();
+    await page.getByLabel('Resposta de segurança').fill('qualquer');
+    await page.getByLabel('Nova senha').fill('senha-nova-456');
+    await page.getByLabel('Confirmar senha').fill('senha-nova-456');
+    await page.getByRole('button', { name: 'Redefinir senha', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('Não foi possível validar a recuperação.');
   });
 });
 
