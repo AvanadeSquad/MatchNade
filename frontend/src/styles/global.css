@@ -910,7 +910,7 @@ h1.perfil__nome { font-size: 28px; }
   .login__form h2 { font-size: 30px; line-height: 1.15; }
   .login__form form { gap: 16px; margin-top: 24px; }
   .login__esqueci { align-self: flex-end; margin-top: 6px; }
-  .login__sso { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .login__sso { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .login__sso .google-botao { min-width: 0; overflow: hidden; }
 
   /* Cadastro */
