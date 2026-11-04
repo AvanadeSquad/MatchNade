@@ -1,9 +1,39 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+import { promisify } from 'node:util';
+import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { ErroApi, naoAutenticado, proibido } from '../utils/erros.js';
 
 // Único algoritmo aceito: impede que um token com outro algoritmo (none, HS512, RS256) seja validado.
 const ALGORITMO = 'HS256';
+const scrypt = promisify(scryptCallback);
+
+export async function gerarHashSenha(senha) {
+  const salt = randomBytes(16);
+  const derivada = await scrypt(senha, salt, 64);
+  return `scrypt$${salt.toString('hex')}$${Buffer.from(derivada).toString('hex')}`;
+}
+
+export async function verificarHash(valor, hash) {
+  if (!hash || typeof hash !== 'string') return false;
+  const [algoritmo, saltHex, derivadaHex] = hash.split('$');
+  if (algoritmo !== 'scrypt' || !saltHex || !derivadaHex) return false;
+  try {
+    const derivada = Buffer.from(await scrypt(valor, Buffer.from(saltHex, 'hex'), 64));
+    const esperada = Buffer.from(derivadaHex, 'hex');
+    return derivada.length === esperada.length && timingSafeEqual(derivada, esperada);
+  } catch { return false; }
+}
+
+export const PERGUNTAS_SEGURANCA = Object.freeze([
+  { id: 'primeiro_pet', pergunta: 'Qual era o nome do seu primeiro animal de estimação?' },
+  { id: 'cidade_nascimento', pergunta: 'Em qual cidade você nasceu?' },
+  { id: 'primeira_escola', pergunta: 'Qual era o nome da sua primeira escola?' },
+  { id: 'apelido_infancia', pergunta: 'Qual era seu apelido na infância?' },
+  { id: 'professor', pergunta: 'Qual era o sobrenome de um professor marcante?' },
+]);
+
+export const normalizarRespostaSeguranca = (resposta) => String(resposta ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 
 // Tokens de sessão (JWT) e verificação do login com Google.
 export function criarAutenticacao(config, verificadorGoogle) {
