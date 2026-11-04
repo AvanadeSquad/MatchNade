@@ -33,6 +33,8 @@ npm run dev
 
 Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem Google (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
 
+Além do Google, a tela de login aceita conta com e-mail e senha, criada no próprio app, com recuperação de senha por pergunta de segurança. As rotas, as respostas e o bloqueio por tentativas estão em [`docs/api.md`](docs/api.md), e há um exemplo de cada requisição em [`docs/exemplos-api.http`](docs/exemplos-api.http).
+
 ### Contas de demonstração (apenas desenvolvimento local)
 
 Ao iniciar o backend com um banco **vazio**, o seed cria 30 contas fictícias com senha:
