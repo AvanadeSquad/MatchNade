@@ -112,6 +112,7 @@ export default function MeuPerfil() {
     setSalvandoObjetivos(true);
     try {
       definirPerfil(await API.atualizarPerfil({ connection_goals: novos }));
+      avisar('Objetivos de contato salvos.');
     } catch (e) {
       avisar(e.message, 'erro');
     } finally {
@@ -125,6 +126,7 @@ export default function MeuPerfil() {
     setSalvandoCota(true);
     try {
       definirPerfil(await API.atualizarPerfil({ max_weekly_matches: nova }));
+      avisar(`Limite semanal: ${nova} ${nova === 1 ? 'solicitação' : 'solicitações'}.`);
     } catch (e) {
       avisar(e.message, 'erro');
     } finally {
