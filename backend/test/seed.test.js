@@ -22,10 +22,7 @@ describe('seed do banco', () => {
   });
 
   it('pessoas ficticias conseguem fazer login com a senha de demonstracao, armazenada como hash', async () => {
-    const [ana] = await a.banco.query(
-      'SELECT password_hash FROM employee WHERE email = $1',
-      ['ana.silva@exemplo.test'],
-    );
+    const [ana] = await a.banco.query('SELECT password_hash FROM employee WHERE email = $1', ['ana.silva@exemplo.test']);
     expect(ana.password_hash).toMatch(/^scrypt\$/);
     expect(ana.password_hash).not.toContain(SENHA_DEMONSTRACAO);
     expect(await verificarHash(SENHA_DEMONSTRACAO, ana.password_hash)).toBe(true);

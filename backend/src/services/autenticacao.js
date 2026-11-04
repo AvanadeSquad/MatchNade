@@ -22,7 +22,9 @@ export async function verificarHash(valor, hash) {
     const derivada = Buffer.from(await scrypt(valor, Buffer.from(saltHex, 'hex'), 64));
     const esperada = Buffer.from(derivadaHex, 'hex');
     return derivada.length === esperada.length && timingSafeEqual(derivada, esperada);
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 export const PERGUNTAS_SEGURANCA = Object.freeze([
@@ -33,7 +35,12 @@ export const PERGUNTAS_SEGURANCA = Object.freeze([
   { id: 'professor', pergunta: 'Qual era o sobrenome de um professor marcante?' },
 ]);
 
-export const normalizarRespostaSeguranca = (resposta) => String(resposta ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+export const normalizarRespostaSeguranca = (resposta) =>
+  String(resposta ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 
 // Tokens de sessão (JWT) e verificação do login com Google.
 export function criarAutenticacao(config, verificadorGoogle) {
