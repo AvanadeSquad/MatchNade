@@ -1,5 +1,10 @@
 // Dados fictícios para desenvolvimento, demonstração e testes. Todas as pessoas, e-mails
 // e interesses são inventados; nenhum dado real entra no banco por aqui.
+import { gerarHashSenha } from '../services/autenticacao.js';
+
+// Credencial PUBLICA e deliberadamente fraca para contas FICTICIAS de desenvolvimento.
+// Nunca reuse esta senha em contas reais ou em ambientes de producao.
+export const SENHA_DEMONSTRACAO = '1234567890';
 
 // prettier-ignore
 export const TAGS_TECNICAS = [
@@ -119,6 +124,9 @@ const TRAVA_SEED = 724002;
 // A contagem e as inserções rodam na mesma transação, sob trava: duas instâncias iniciando juntas
 // num banco vazio não inserem as mesmas tags duas vezes.
 export async function semear(banco, { demonstracao = true } = {}) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('O seed de usuarios ficticios com senha publica e proibido em producao.');
+  }
   return banco.tx(async ({ query }) => {
     await query('SELECT pg_advisory_xact_lock($1)', [TRAVA_SEED]);
     const [{ total }] = await query('SELECT COUNT(*)::int AS total FROM employee');
@@ -136,9 +144,12 @@ export async function semear(banco, { demonstracao = true } = {}) {
 
     const idsPessoa = new Map();
     for (const pessoa of montarPessoas()) {
+      // Cada usuario recebe um hash com salt proprio: nunca gravamos senha em texto
+      // puro no banco, embora a credencial de demonstracao seja publica.
+      const senhaHash = await gerarHashSenha(SENHA_DEMONSTRACAO);
       const [criada] = await query(
-        `INSERT INTO employee (auth_provider_id, name, email, bio, position, department, location, connection_goals)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb) RETURNING id`,
+        `INSERT INTO employee (auth_provider_id, name, email, bio, position, department, location, connection_goals, password_hash)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9) RETURNING id`,
         [
           `seed-${pessoa.email}`,
           pessoa.nome,
@@ -148,6 +159,7 @@ export async function semear(banco, { demonstracao = true } = {}) {
           pessoa.unidade,
           pessoa.cidade,
           JSON.stringify(pessoa.objetivos),
+          senhaHash,
         ],
       );
       idsPessoa.set(pessoa.nome, criada.id);

@@ -51,6 +51,12 @@ const id = (valor) => encodeURIComponent(valor);
 
 export const API = {
   loginGoogle: (credential) => api('/auth/google', { metodo: 'POST', corpo: { credential } }),
+  perguntasSeguranca: () => api('/auth/security-questions'),
+  cadastrar: (dados) => api('/auth/register', { metodo: 'POST', corpo: dados }),
+  loginSenha: (email, password) => api('/auth/login', { metodo: 'POST', corpo: { email, password } }),
+  perguntaRecuperacao: (email) => api('/auth/recovery-question', { metodo: 'POST', corpo: { email } }),
+  redefinirSenha: (email, security_answer, new_password) =>
+    api('/auth/reset-password', { metodo: 'POST', corpo: { email, security_answer, new_password } }),
   usuariosDeDesenvolvimento: () => api('/auth/dev-users'),
   loginDesenvolvimento: (email) => api('/auth/dev-login', { metodo: 'POST', corpo: { email } }),
 

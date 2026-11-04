@@ -33,6 +33,18 @@ npm run dev
 
 Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem Google (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
 
+### Contas de demonstração (apenas desenvolvimento local)
+
+Ao iniciar o backend com um banco **vazio**, o seed cria 30 contas fictícias com senha:
+
+- **E-mail:** `ana.silva@exemplo.test` (ou qualquer outra conta fictícia `@exemplo.test` criada pelo seed)
+- **Senha:** `1234567890`
+
+A senha é **pública de propósito**, válida somente para essas contas de demonstração. Os hashes são criados no banco local com scrypt e salt individual; não são senhas reais nem devem ser usadas em produção. **Não publique bancos de dados, `.env` ou contas pessoais no GitHub.**
+
+Cada pessoa que clonar o repositório terá seu próprio PGlite local. O GitHub compartilha o código que cria os usuários fictícios, não os registros reais do seu computador. Se o banco já tiver dados, o seed não os altera; para receber os usuários fictícios, use um **banco de desenvolvimento vazio separado**, sem apagar o banco existente.
+
+
 ## Testes
 
 ```powershell

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { corpoGoogle } from '../routes/auth.js';
+import { corpoGoogle, corpoCadastroLocal, corpoLoginLocal, corpoPerguntaRecuperacao, corpoRedefinirSenha } from '../routes/auth.js';
 import {
   consultaLista,
   consultaMensagens,
@@ -95,6 +95,46 @@ export function gerarEspecificacao() {
     paths: {
       '/health': {
         get: operacao('Saúde', 'Verifica se o serviço está de pé.', { login: false, respostas: { 200: json('{ "status": "ok" }') } }),
+      },
+      '/auth/security-questions': {
+        get: operacao('Sessão', 'Lista as perguntas de segurança disponíveis.', {
+          login: false,
+          respostas: { 200: json('{ questions: [{ id, pergunta }] }'), 429: limiteExcedido },
+        }),
+      },
+      '/auth/register': {
+        post: operacao('Sessão', 'Cria uma conta com e-mail, senha e pergunta de segurança.', {
+          login: false,
+          requisicao: corpo(corpoCadastroLocal),
+          respostas: {
+            201: json('{ token, employee, is_new }'),
+            400: invalidos,
+            403: erro('EMAIL_NAO_LIBERADO'),
+            409: erro('EMAIL_JA_CADASTRADO'),
+            429: limiteExcedido,
+          },
+        }),
+      },
+      '/auth/login': {
+        post: operacao('Sessão', 'Autentica com e-mail e senha.', {
+          login: false,
+          requisicao: corpo(corpoLoginLocal),
+          respostas: { 200: json('{ token, employee, is_new }'), 400: invalidos, 401: erro('NAO_AUTENTICADO'), 429: limiteExcedido },
+        }),
+      },
+      '/auth/recovery-question': {
+        post: operacao('Sessão', 'Consulta a pergunta de recuperação de senha.', {
+          login: false,
+          requisicao: corpo(corpoPerguntaRecuperacao),
+          respostas: { 200: json('{ question, available }'), 400: invalidos, 429: limiteExcedido },
+        }),
+      },
+      '/auth/reset-password': {
+        post: operacao('Sessão', 'Redefine a senha após validar a resposta de segurança.', {
+          login: false,
+          requisicao: corpo(corpoRedefinirSenha),
+          respostas: { 200: json('{ message }'), 400: invalidos, 401: erro('NAO_AUTENTICADO'), 429: limiteExcedido },
+        }),
       },
       '/auth/google': {
         post: operacao('Sessão', 'Valida o ID token do Google e devolve o JWT.', {
