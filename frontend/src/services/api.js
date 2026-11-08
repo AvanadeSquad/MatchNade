@@ -51,6 +51,7 @@ const id = (valor) => encodeURIComponent(valor);
 
 export const API = {
   loginGoogle: (credential) => api('/auth/google', { metodo: 'POST', corpo: { credential } }),
+  loginMicrosoft: (credential) => api('/auth/microsoft', { metodo: 'POST', corpo: { credential } }),
   perguntasSeguranca: () => api('/auth/security-questions'),
   cadastrar: (dados) => api('/auth/register', { metodo: 'POST', corpo: dados }),
   loginSenha: (email, password) => api('/auth/login', { metodo: 'POST', corpo: { email, password } }),

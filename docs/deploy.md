@@ -23,6 +23,13 @@ Três serviços gratuitos: banco (Neon), API (Render) e frontend (Vercel ou Netl
 
 O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Blueprint" apontando para o repositório e preencha as variáveis marcadas como secretas:
 
+### Login com Microsoft (opcional)
+
+1. No Microsoft Entra ID, registre um aplicativo do tipo "Aplicativo de página única (SPA)" com o endereço do frontend como URI de redirecionamento (e `http://localhost:5173` para testar). Tipo de conta aceito: "Contas em qualquer diretório organizacional", sem contas pessoais.
+2. Guarde o ID do aplicativo como `MICROSOFT_CLIENT_ID` na API e `VITE_MICROSOFT_CLIENT_ID` no frontend.
+3. Liste em `MICROSOFT_ALLOWED_TENANTS` o ID do locatário (tenant) de cada organização aceita, separados por vírgula. É obrigatório: o e-mail de um token de aplicativo multitenant não prova a posse da caixa, então a API só aceita tokens dos locatários listados. Sem a lista, a rota responde 503.
+4. `ALLOWED_EMAIL_DOMAINS` e `ALLOWED_EMAILS` valem também para este login. Quem já tem conta com o mesmo e-mail entra nela.
+
 | Variável | Valor |
 |---|---|
 | `DATABASE_URL` | string do Neon |

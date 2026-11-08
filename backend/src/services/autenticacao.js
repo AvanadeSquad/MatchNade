@@ -1,4 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 import jwt from 'jsonwebtoken';
 import { promisify } from 'node:util';
 import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
@@ -99,8 +100,34 @@ export async function emitirToken({ banco, autenticacao }, funcionarioId) {
   return autenticacao.assinar(funcionarioId, linha?.token_version ?? 0);
 }
 
-// Tokens de sessão (JWT) e verificação do login com Google.
-export function criarAutenticacao(config, verificadorGoogle) {
+const CHAVES_MICROSOFT = 'https://login.microsoftonline.com/common/discovery/v2.0/keys';
+
+export const microsoftConfigurada = (config) => Boolean(config.microsoft.clientId && config.microsoft.tenantIds.length);
+
+// Valida o ID token do Microsoft Entra ID: assinatura (RS256, chaves públicas da Microsoft),
+// público (o aplicativo), validade, locatário permitido e emissor igual ao do locatário do token.
+// `chaves` existe para os testes trocarem a busca das chaves públicas.
+export function criarVerificadorMicrosoft(config, { chaves = createRemoteJWKSet(new URL(CHAVES_MICROSOFT)) } = {}) {
+  return async (idToken) => {
+    if (!microsoftConfigurada(config)) {
+      throw new ErroApi(503, 'MICROSOFT_NAO_CONFIGURADA', 'O login com Microsoft não está configurado.');
+    }
+    try {
+      const { payload } = await jwtVerify(idToken, chaves, { algorithms: ['RS256'], audience: config.microsoft.clientId });
+      const locatario = payload.tid;
+      if (typeof locatario !== 'string' || !config.microsoft.tenantIds.includes(locatario)) throw new Error('locatário não liberado');
+      if (payload.iss !== `https://login.microsoftonline.com/${locatario}/v2.0`) throw new Error('emissor inesperado');
+      return payload;
+    } catch {
+      throw naoAutenticado('Não foi possível validar o login com Microsoft.');
+    }
+  };
+}
+
+// Tokens de sessão (JWT) e verificação do login com Google e com Microsoft.
+export function criarAutenticacao(config, verificadorGoogle, verificadorMicrosoft) {
+  const verificarMicrosoft = verificadorMicrosoft ?? criarVerificadorMicrosoft(config);
+
   const cliente = config.google.clientId ? new OAuth2Client(config.google.clientId) : null;
 
   const verificarCredencial =
@@ -152,6 +179,26 @@ export function criarAutenticacao(config, verificadorGoogle) {
         throw proibido('EMAIL_NAO_LIBERADO', 'Seu e-mail ainda não está liberado.');
       }
       return { sub: dados.sub, email, nome: dados.name };
+    },
+
+    // Valida o ID token da Microsoft. A identidade é o par locatário e objeto (oid), que não muda
+    // com o e-mail; o e-mail só serve para a lista de liberados e para achar a conta existente.
+    async identificarPorMicrosoft(idToken) {
+      let dados;
+      try {
+        dados = await verificarMicrosoft(idToken);
+      } catch (erro) {
+        if (erro instanceof ErroApi) throw erro;
+        throw naoAutenticado('Não foi possível validar o login com Microsoft.');
+      }
+      const email = String(dados?.email ?? dados?.preferred_username ?? '').toLowerCase();
+      if (!dados?.tid || !dados?.oid || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw naoAutenticado('Não foi possível identificar sua conta Microsoft.');
+      }
+      if (!this.emailPermitido(email)) {
+        throw proibido('EMAIL_NAO_LIBERADO', 'Seu e-mail ainda não está liberado.');
+      }
+      return { sub: `microsoft:${dados.tid}:${dados.oid}`, email, nome: dados.name };
     },
 
     emailPermitido(email) {

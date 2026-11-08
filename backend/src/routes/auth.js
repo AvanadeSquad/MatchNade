@@ -19,6 +19,7 @@ const EMAIL_JA_CADASTRADO = 'Este e-mail já possui cadastro. Entre ou use a rec
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 const senhaSchema = z.string().min(10, 'A senha deve ter pelo menos 10 caracteres.').max(128);
 export const corpoGoogle = z.object({ credential: z.string().min(10) });
+export const corpoMicrosoft = z.object({ credential: z.string().min(10) });
 export const corpoCadastroLocal = z.object({
   name: z.string().trim().min(2).max(100),
   email: emailSchema,
@@ -134,6 +135,14 @@ export function rotasAuth(ctx) {
   router.post('/auth/google', async (req, res) => {
     const { credential } = corpoGoogle.parse(req.body);
     const identidade = await ctx.autenticacao.identificarPorGoogle(credential);
+    const { id, novo } = await obterOuCriarPorGoogle(ctx.banco, identidade);
+    await ctx.banco.query('UPDATE employee SET last_seen_at = COALESCE(last_seen_at, NOW()) WHERE id = $1', [id]);
+    res.json({ token: await emitirToken(ctx, id), employee: await montarPerfil(ctx, id), is_new: novo });
+  });
+
+  router.post('/auth/microsoft', async (req, res) => {
+    const { credential } = corpoMicrosoft.parse(req.body);
+    const identidade = await ctx.autenticacao.identificarPorMicrosoft(credential);
     const { id, novo } = await obterOuCriarPorGoogle(ctx.banco, identidade);
     await ctx.banco.query('UPDATE employee SET last_seen_at = COALESCE(last_seen_at, NOW()) WHERE id = $1', [id]);
     res.json({ token: await emitirToken(ctx, id), employee: await montarPerfil(ctx, id), is_new: novo });

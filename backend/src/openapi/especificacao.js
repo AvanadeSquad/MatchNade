@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { corpoGoogle, corpoCadastroLocal, corpoLoginLocal, corpoPerguntaRecuperacao, corpoRedefinirSenha } from '../routes/auth.js';
+import {
+  corpoGoogle,
+  corpoMicrosoft,
+  corpoCadastroLocal,
+  corpoLoginLocal,
+  corpoPerguntaRecuperacao,
+  corpoRedefinirSenha,
+} from '../routes/auth.js';
 import {
   consultaLista,
   consultaMensagens,
@@ -134,6 +141,21 @@ export function gerarEspecificacao() {
           login: false,
           requisicao: corpo(corpoRedefinirSenha),
           respostas: { 200: json('{ message }'), 400: invalidos, 401: erro('NAO_AUTENTICADO'), 429: limiteExcedido },
+        }),
+      },
+      '/auth/microsoft': {
+        post: operacao('Sessão', 'Valida o ID token do Microsoft Entra ID e devolve o JWT. Só aceita locatários liberados.', {
+          login: false,
+          requisicao: corpo(corpoMicrosoft),
+          respostas: {
+            200: json('{ token, employee, is_new }'),
+            400: invalidos,
+            401: erro('NAO_AUTENTICADO: token inválido, de outro locatário ou sem e-mail.'),
+            403: erro('EMAIL_NAO_LIBERADO'),
+            409: erro('CONTA_INATIVA'),
+            429: limiteExcedido,
+            503: erro('MICROSOFT_NAO_CONFIGURADA'),
+          },
         }),
       },
       '/auth/google': {

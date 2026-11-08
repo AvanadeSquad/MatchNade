@@ -33,6 +33,9 @@ export function carregarConfig(origem = process.env) {
     jwtExpiresIn: origem.JWT_EXPIRES_IN || '8h',
     frontendUrl: origem.FRONTEND_URL || 'http://localhost:5173',
     google: { clientId: origem.GOOGLE_CLIENT_ID || '' },
+    // O e-mail de um token da Microsoft não é prova de posse em aplicativos multitenant: só entram
+    // tokens de locatários (tenants) listados em tenantIds.
+    microsoft: { clientId: origem.MICROSOFT_CLIENT_ID || '', tenantIds: lista(origem.MICROSOFT_ALLOWED_TENANTS) },
     emailsPermitidos: lista(origem.ALLOWED_EMAILS),
     dominiosPermitidos: lista(origem.ALLOWED_EMAIL_DOMAINS),
     authDevLogin: booleano(origem.AUTH_DEV_LOGIN),

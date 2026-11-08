@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCelular } from '../hooks/useCelular.js';
 import { API } from '../services/api.js';
+import { MICROSOFT_CLIENT_ID, obterIdTokenMicrosoft } from '../services/microsoft.js';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const SCRIPT_GOOGLE = 'https://accounts.google.com/gsi/client';
@@ -50,6 +51,7 @@ export default function Login() {
   const [sucesso, setSucesso] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [emailTocado, setEmailTocado] = useState(false);
+  const [microsoftOcupado, setMicrosoftOcupado] = useState(false);
   const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const mostrarErroEmail = emailTocado && email.trim() !== '' && !emailValido;
   const celular = useCelular();
@@ -152,6 +154,19 @@ export default function Login() {
     setSenha('');
     setConfirmarSenha('');
     setRespostaSeguranca('');
+  }
+
+  async function entrarComMicrosoft() {
+    setErro('');
+    setMicrosoftOcupado(true);
+    try {
+      const idToken = await obterIdTokenMicrosoft();
+      if (idToken) concluir(await API.loginMicrosoft(idToken));
+    } catch (e) {
+      setErro(mensagemDeErro(e));
+    } finally {
+      setMicrosoftOcupado(false);
+    }
   }
 
   const ssoIndisponivel = (provedor) => () => avisar(`O SSO ${provedor} ainda precisa ser configurado na API e no ambiente.`, 'info');
@@ -351,7 +366,12 @@ export default function Login() {
               </p>
               <div className="login__sso">
                 {CLIENT_ID && <div ref={botaoGoogle} className="google-botao" />}
-                <button type="button" className="botao botao--contorno" onClick={ssoIndisponivel('Microsoft Entra ID')}>
+                <button
+                  type="button"
+                  className="botao botao--contorno"
+                  disabled={microsoftOcupado}
+                  onClick={MICROSOFT_CLIENT_ID ? entrarComMicrosoft : ssoIndisponivel('Microsoft Entra ID')}
+                >
                   <IconeMicrosoft /> Entrar com Microsoft corporativo
                 </button>
                 {!CLIENT_ID && (
