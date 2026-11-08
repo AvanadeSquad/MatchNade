@@ -13,6 +13,7 @@
     "seed": "node src/db/seed-cli.js",
     "test": "vitest run",
     "medir": "node scripts/medir.js",
+    "carga": "node carga/executar.js",
     "avaliar-ia": "node avaliacao/avaliar-ia.js",
     "openapi": "node src/openapi/gerar-cli.js",
     "lint": "eslint .",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@stryker-mutator/core": "10.0.0",
+    "autocannon": "8.0.0",
     "eslint": "9.39.5",
     "globals": "16.5.0",
     "prettier": "3.9.9",
