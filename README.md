@@ -31,9 +31,9 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem Google (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
+Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem senha (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
 
-Além do Google, a tela de login aceita conta com e-mail e senha, criada no próprio app, com recuperação de senha por pergunta de segurança. As rotas, as respostas e o bloqueio por tentativas estão em [`docs/api.md`](docs/api.md), e há um exemplo de cada requisição em [`docs/exemplos-api.http`](docs/exemplos-api.http).
+A tela de login aceita conta com e-mail e senha, criada no próprio app, e o login corporativo com a Microsoft (Entra ID, ativo quando o aplicativo é registrado). A conta com senha tem recuperação por pergunta de segurança. As rotas, as respostas e o bloqueio por tentativas estão em [`docs/api.md`](docs/api.md), e há um exemplo de cada requisição em [`docs/exemplos-api.http`](docs/exemplos-api.http).
 
 ### Contas de demonstração (apenas desenvolvimento local)
 

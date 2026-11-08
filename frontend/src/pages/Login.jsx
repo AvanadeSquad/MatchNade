@@ -1,32 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { IconeCheckCirculo, IconeGoogle, IconeMicrosoft, IconeSeta } from '../components/Icones.jsx';
+import { IconeCheckCirculo, IconeMicrosoft, IconeSeta } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCelular } from '../hooks/useCelular.js';
 import { API } from '../services/api.js';
 import { MICROSOFT_CLIENT_ID, obterIdTokenMicrosoft } from '../services/microsoft.js';
-
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const SCRIPT_GOOGLE = 'https://accounts.google.com/gsi/client';
-
-function carregarScriptGoogle() {
-  if (window.google?.accounts?.id) return Promise.resolve();
-  return new Promise((resolver, rejeitar) => {
-    const existente = document.querySelector(`script[src="${SCRIPT_GOOGLE}"]`);
-    const script = existente ?? Object.assign(document.createElement('script'), { src: SCRIPT_GOOGLE, async: true });
-    script.addEventListener('load', resolver, { once: true });
-    script.addEventListener(
-      'error',
-      () => {
-        script.remove();
-        rejeitar(new Error('Não foi possível carregar o login do Google.'));
-      },
-      { once: true },
-    );
-    if (!existente) document.head.appendChild(script);
-  });
-}
 
 const destinoDepoisDoLogin = (perfil) => (perfil.profile_complete ? '/descobrir' : '/cadastro/dados');
 const mensagemDeErro = (erro) =>
@@ -36,8 +15,6 @@ export default function Login() {
   const { token, perfil, entrar } = useAuth();
   const avisar = useAviso();
   const navegar = useNavigate();
-  const botaoGoogle = useRef(null);
-  const concluirAtual = useRef(null);
   const [modo, setModo] = useState('login'); // login | cadastro | recuperar | redefinir
   const [email, setEmail] = useState('');
   const [nome, setNome] = useState('');
@@ -60,47 +37,10 @@ export default function Login() {
     entrar(resposta.token, resposta.employee);
     navegar(destinoDepoisDoLogin(resposta.employee), { replace: true });
   }
-  useLayoutEffect(() => {
-    concluirAtual.current = concluir;
-  });
-
   useEffect(() => {
     API.perguntasSeguranca()
       .then(({ questions }) => setPerguntas(questions))
       .catch(() => setPerguntas([]));
-  }, []);
-
-  useEffect(() => {
-    if (!CLIENT_ID) return undefined;
-    let ativo = true;
-    carregarScriptGoogle()
-      .then(() => {
-        if (!ativo) return;
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: async ({ credential }) => {
-            setErro('');
-            try {
-              concluirAtual.current(await API.loginGoogle(credential));
-            } catch (e) {
-              setErro(mensagemDeErro(e));
-            }
-          },
-        });
-        if (botaoGoogle.current)
-          window.google.accounts.id.renderButton(botaoGoogle.current, {
-            theme: 'outline',
-            size: 'large',
-            shape: 'rectangular',
-            text: 'continue_with',
-            width: 346,
-            locale: 'pt-BR',
-          });
-      })
-      .catch((e) => ativo && setErro(e.message));
-    return () => {
-      ativo = false;
-    };
   }, []);
 
   async function enviar(evento) {
@@ -365,7 +305,6 @@ export default function Login() {
                 <span>ou autenticar com SSO corporativo</span>
               </p>
               <div className="login__sso">
-                {CLIENT_ID && <div ref={botaoGoogle} className="google-botao" />}
                 <button
                   type="button"
                   className="botao botao--contorno"
@@ -374,11 +313,6 @@ export default function Login() {
                 >
                   <IconeMicrosoft /> Entrar com Microsoft corporativo
                 </button>
-                {!CLIENT_ID && (
-                  <button type="button" className="botao botao--contorno" onClick={ssoIndisponivel('Google')}>
-                    <IconeGoogle /> Google corporativo
-                  </button>
-                )}
               </div>
             </>
           )}

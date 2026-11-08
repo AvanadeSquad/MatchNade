@@ -32,7 +32,6 @@ export function carregarConfig(origem = process.env) {
     logLevel: NIVEIS.includes(origem.LOG_LEVEL) ? origem.LOG_LEVEL : origem.NODE_ENV === 'test' ? 'silent' : 'info',
     jwtExpiresIn: origem.JWT_EXPIRES_IN || '8h',
     frontendUrl: origem.FRONTEND_URL || 'http://localhost:5173',
-    google: { clientId: origem.GOOGLE_CLIENT_ID || '' },
     // O e-mail de um token da Microsoft não é prova de posse em aplicativos multitenant: só entram
     // tokens de locatários (tenants) listados em tenantIds.
     microsoft: { clientId: origem.MICROSOFT_CLIENT_ID || '', tenantIds: lista(origem.MICROSOFT_ALLOWED_TENANTS) },
@@ -74,7 +73,6 @@ export function carregarConfig(origem = process.env) {
       throw new Error('JWT_SECRET precisa ter ao menos 32 caracteres em produção');
     }
     if (!config.databaseUrl) throw new Error('DATABASE_URL é obrigatória em produção');
-    if (!config.google.clientId) throw new Error('GOOGLE_CLIENT_ID é obrigatório em produção');
     if (!config.emailsPermitidos.length && !config.dominiosPermitidos.length) {
       throw new Error('Defina ALLOWED_EMAILS ou ALLOWED_EMAIL_DOMAINS em produção');
     }

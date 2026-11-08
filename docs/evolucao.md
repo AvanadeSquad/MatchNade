@@ -4,7 +4,7 @@ Lista de pontos conhecidos, por área. Não é uma promessa de escopo: serve par
 
 ## Validação em ambiente real
 
-- **Login com Google.** Os testes usam um verificador simulado. Validar com um ID de cliente real e uma conta liberada.
+- **Login com Microsoft.** Os testes usam um verificador simulado e chaves geradas na hora. Validar com o aplicativo registrado no Entra ID, um locatário liberado e uma conta liberada.
 - **PostgreSQL.** Os testes rodam em PGlite. Validar o esquema, as consultas e as travas de pedidos simultâneos no Neon.
 - **IA.** Os testes usam respostas simuladas de Gemini e Groq. Medir precisão e cobertura da extração de tags com bios fictícias e ajustar prompts, modelo e limites.
 - **Publicação.** Conferir `render.yaml`, o workflow de CI e os passos de `deploy.md` num deploy completo.

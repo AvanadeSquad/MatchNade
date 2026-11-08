@@ -31,9 +31,11 @@ test('vercel.json e public/_headers enviam os mesmos cabeçalhos com os mesmos v
   assert.deepEqual(doNetlify(), doVercel());
 });
 
-test('a política de conteúdo não usa unsafe-eval e libera a API e o login do Google', () => {
+test('a política de conteúdo não usa unsafe-eval e libera a API e o login da Microsoft', () => {
   const csp = doVercel()['Content-Security-Policy'];
   assert.doesNotMatch(csp, /unsafe-eval/);
   assert.match(csp, /connect-src [^;]*https:\/\/\*\.onrender\.com/);
-  assert.match(csp, /script-src 'self' https:\/\/accounts\.google\.com\/gsi\/client;/);
+  assert.match(csp, /script-src 'self';/);
+  assert.match(csp, /connect-src [^;]*https:\/\/login\.microsoftonline\.com/);
+  assert.doesNotMatch(csp, /google/);
 });

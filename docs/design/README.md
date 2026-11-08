@@ -32,7 +32,7 @@ O app segue as telas, com estas diferenças deliberadas:
 
 - Desktop primeiro: menu lateral, conteúdo em colunas (descoberta com painel da semana, perfil em duas colunas, chat com lista e conversa lado a lado). Abaixo de 900 px vira coluna única com barra de navegação inferior, como nas telas de celular.
 - Nome do produto: Avanade Connect.
-- Login só com Google. Sem senha, LinkedIn nem pedido de acesso por formulário.
+- Login com e-mail e senha e com a conta Microsoft corporativa. Sem Google, LinkedIn nem pedido de acesso por formulário.
 - Avatar com as iniciais no lugar de foto. Sem busca e sem filtros na descoberta.
 - Cadastro só com nome, unidade e cidade. A bio é texto livre, analisado por IA com revisão das tags.
 - Objetivos de conexão de seleção múltipla: networking, troca de conhecimento, hobby, mentoria e só conhecer gente.

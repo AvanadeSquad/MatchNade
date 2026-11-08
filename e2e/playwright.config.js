@@ -49,7 +49,7 @@ export default defineConfig({
       url: urlWeb,
       reuseExistingServer: false,
       timeout: 60_000,
-      env: { VITE_API_URL: urlApi, VITE_GOOGLE_CLIENT_ID: '' },
+      env: { VITE_API_URL: urlApi, VITE_MICROSOFT_CLIENT_ID: '' },
     },
   ],
   projects: [

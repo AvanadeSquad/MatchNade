@@ -15,19 +15,18 @@ import { criarAutenticacao } from './services/autenticacao.js';
 import { criarProntidao } from './services/prontidao.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
-// Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorGoogle`, `verificadorMicrosoft` e `log`
+// Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorMicrosoft` e `log`
 // podem ser injetados (testes) e `limitarRequisicoes: false` desliga o limite.
 export function criarApp({
   banco,
   config,
   ia,
-  verificadorGoogle,
   verificadorMicrosoft,
   limitarRequisicoes = true,
   registrarErro,
   log = criarLog({ nivel: config.logLevel }),
 }) {
-  const autenticacao = criarAutenticacao(config, verificadorGoogle, verificadorMicrosoft);
+  const autenticacao = criarAutenticacao(config, verificadorMicrosoft);
   const ctx = { banco, config, autenticacao, ia: ia ?? criarServicoIa({ config, banco }) };
   // Limites por pessoa nas rotas que gastam a cota gratuita de IA.
   ctx.limitarPorPessoa = (max, janelaMs) =>

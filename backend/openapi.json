@@ -538,112 +538,12 @@
         }
       }
     },
-    "/auth/google": {
-      "post": {
-        "tags": [
-          "Sessão"
-        ],
-        "summary": "Valida o ID token do Google e devolve o JWT.",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "credential": {
-                    "type": "string",
-                    "minLength": 10
-                  }
-                },
-                "required": [
-                  "credential"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "{ token, employee, is_new }",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "DADOS_INVALIDOS (com details) ou CORPO_INVALIDO.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "NAO_AUTENTICADO: credencial inválida ou e-mail não verificado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "EMAIL_NAO_LIBERADO",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "CONTA_INATIVA",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "GOOGLE_NAO_CONFIGURADO",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/dev-users": {
       "get": {
         "tags": [
           "Desenvolvimento"
         ],
-        "summary": "Lista pessoas para entrar sem Google. Só existe com AUTH_DEV_LOGIN=true.",
+        "summary": "Lista pessoas para entrar sem senha. Só existe com AUTH_DEV_LOGIN=true.",
         "security": [],
         "responses": {
           "200": {
@@ -674,7 +574,7 @@
         "tags": [
           "Desenvolvimento"
         ],
-        "summary": "Entra sem Google. Só existe com AUTH_DEV_LOGIN=true.",
+        "summary": "Entra sem senha. Só existe com AUTH_DEV_LOGIN=true.",
         "security": [],
         "requestBody": {
           "required": true,
