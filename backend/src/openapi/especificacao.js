@@ -1,12 +1,5 @@
 import { z } from 'zod';
-import {
-  corpoGoogle,
-  corpoMicrosoft,
-  corpoCadastroLocal,
-  corpoLoginLocal,
-  corpoPerguntaRecuperacao,
-  corpoRedefinirSenha,
-} from '../routes/auth.js';
+import { corpoMicrosoft, corpoCadastroLocal, corpoLoginLocal, corpoPerguntaRecuperacao, corpoRedefinirSenha } from '../routes/auth.js';
 import {
   consultaConvite,
   consultaLista,
@@ -159,29 +152,14 @@ export function gerarEspecificacao() {
           },
         }),
       },
-      '/auth/google': {
-        post: operacao('Sessão', 'Valida o ID token do Google e devolve o JWT.', {
-          login: false,
-          requisicao: corpo(corpoGoogle),
-          respostas: {
-            200: json('{ token, employee, is_new }'),
-            400: invalidos,
-            401: erro('NAO_AUTENTICADO: credencial inválida ou e-mail não verificado.'),
-            403: erro('EMAIL_NAO_LIBERADO'),
-            409: erro('CONTA_INATIVA'),
-            429: limiteExcedido,
-            503: erro('GOOGLE_NAO_CONFIGURADO'),
-          },
-        }),
-      },
       '/auth/dev-users': {
-        get: operacao('Desenvolvimento', 'Lista pessoas para entrar sem Google. Só existe com AUTH_DEV_LOGIN=true.', {
+        get: operacao('Desenvolvimento', 'Lista pessoas para entrar sem senha. Só existe com AUTH_DEV_LOGIN=true.', {
           login: false,
           respostas: { 200: json('{ users: [{ name, email }] }'), 429: limiteExcedido },
         }),
       },
       '/auth/dev-login': {
-        post: operacao('Desenvolvimento', 'Entra sem Google. Só existe com AUTH_DEV_LOGIN=true.', {
+        post: operacao('Desenvolvimento', 'Entra sem senha. Só existe com AUTH_DEV_LOGIN=true.', {
           login: false,
           requisicao: corpo(corpoEmail),
           respostas: { 200: json('{ token, employee }'), 400: invalidos, 403: erro('EMAIL_NAO_LIBERADO'), 429: limiteExcedido },

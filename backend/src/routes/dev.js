@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { ErroApi } from '../utils/erros.js';
-import { montarPerfil, obterOuCriarPorGoogle } from '../services/perfil.js';
+import { montarPerfil, obterOuCriarPorProvedor } from '../services/perfil.js';
 import { emitirToken } from '../services/autenticacao.js';
 
 export const corpoEmail = z.object({ email: z.string().trim().toLowerCase().email() });
@@ -13,7 +13,7 @@ export function rotasDev(ctx) {
 
   async function entrar(email) {
     const [existente] = await ctx.banco.query('SELECT id FROM employee WHERE email = $1 AND is_active', [email]);
-    const id = existente?.id ?? (await obterOuCriarPorGoogle(ctx.banco, { sub: `dev-${email}`, email, nome: null })).id;
+    const id = existente?.id ?? (await obterOuCriarPorProvedor(ctx.banco, { sub: `dev-${email}`, email, nome: null })).id;
     return { token: await emitirToken(ctx, id), employee: await montarPerfil(ctx, id) };
   }
 

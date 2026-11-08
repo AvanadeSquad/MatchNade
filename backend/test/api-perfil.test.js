@@ -8,15 +8,6 @@ describe('autenticação e perfil', () => {
   beforeAll(async () => {
     a = await criarAmbiente({
       ambiente: { ALLOWED_EMAIL_DOMAINS: 'exemplo.test' },
-      verificadorGoogle: async (credencial) => {
-        if (credencial === 'credencial-ok-123')
-          return { sub: 'g-1', email: 'Nova.Pessoa@exemplo.test', name: 'Nova Pessoa', email_verified: true };
-        if (credencial === 'credencial-externa') return { sub: 'g-2', email: 'alguem@outro.com', name: 'Alguém', email_verified: true };
-        if (credencial === 'credencial-sem-verificacao') return { sub: 'g-3', email: 'sem.campo@exemplo.test', name: 'Sem Campo' };
-        if (credencial === 'credencial-nao-verificada')
-          return { sub: 'g-4', email: 'nao.verificada@exemplo.test', name: 'Nao Verificada', email_verified: false };
-        throw new Error('inválida');
-      },
     });
   });
   afterAll(() => a.fechar());
@@ -33,41 +24,6 @@ describe('autenticação e perfil', () => {
     const r = await a.http.get('/api/v1/profile').set('Authorization', 'Bearer lixo');
     expect(r.status).toBe(401);
     expect(r.body.code).toBe('NAO_AUTENTICADO');
-  });
-
-  it('login com Google exige email_verified exatamente true', async () => {
-    for (const credential of ['credencial-sem-verificacao', 'credencial-nao-verificada']) {
-      const r = await a.http.post('/api/v1/auth/google').send({ credential });
-      expect(r.status, credential).toBe(401);
-      expect(r.body.code).toBe('NAO_AUTENTICADO');
-    }
-    expect((await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-ok-123' })).status).toBe(200);
-  });
-
-  it('login com Google cria a pessoa no primeiro acesso e reaproveita nos próximos', async () => {
-    const primeiro = await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-ok-123' });
-    expect(primeiro.status).toBe(200);
-    expect(primeiro.body.is_new).toBe(true);
-    expect(primeiro.body.employee.email).toBe('nova.pessoa@exemplo.test');
-    expect(primeiro.body.employee.profile_complete).toBe(false);
-
-    const segundo = await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-ok-123' });
-    expect(segundo.body.is_new).toBe(false);
-    expect(segundo.body.employee.id).toBe(primeiro.body.employee.id);
-
-    const perfil = await a.http.get('/api/v1/profile').set('Authorization', `Bearer ${segundo.body.token}`);
-    expect(perfil.status).toBe(200);
-  });
-
-  it('e-mail fora da lista recebe 403 EMAIL_NAO_LIBERADO', async () => {
-    const r = await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-externa' });
-    expect(r.status).toBe(403);
-    expect(r.body.code).toBe('EMAIL_NAO_LIBERADO');
-  });
-
-  it('credencial inválida e corpo inválido são recusados', async () => {
-    expect((await a.http.post('/api/v1/auth/google').send({ credential: 'credencial-quebrada' })).status).toBe(401);
-    expect((await a.http.post('/api/v1/auth/google').send({})).status).toBe(400);
   });
 
   it('PUT /profile atualiza campos e valida os limites', async () => {

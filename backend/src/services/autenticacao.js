@@ -1,4 +1,3 @@
-import { OAuth2Client } from 'google-auth-library';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import jwt from 'jsonwebtoken';
 import { promisify } from 'node:util';
@@ -124,23 +123,9 @@ export function criarVerificadorMicrosoft(config, { chaves = createRemoteJWKSet(
   };
 }
 
-// Tokens de sessão (JWT) e verificação do login com Google e com Microsoft.
-export function criarAutenticacao(config, verificadorGoogle, verificadorMicrosoft) {
+// Tokens de sessão (JWT) e verificação do login com Microsoft.
+export function criarAutenticacao(config, verificadorMicrosoft) {
   const verificarMicrosoft = verificadorMicrosoft ?? criarVerificadorMicrosoft(config);
-
-  const cliente = config.google.clientId ? new OAuth2Client(config.google.clientId) : null;
-
-  const verificarCredencial =
-    verificadorGoogle ??
-    (async (credencial) => {
-      if (!cliente) throw new ErroApi(503, 'GOOGLE_NAO_CONFIGURADO', 'O login com Google não está configurado.');
-      try {
-        const ticket = await cliente.verifyIdToken({ idToken: credencial, audience: config.google.clientId });
-        return ticket.getPayload();
-      } catch {
-        throw naoAutenticado('Não foi possível validar o login com Google.');
-      }
-    });
 
   return {
     assinar: (funcionarioId, versao = 0) =>
@@ -161,24 +146,6 @@ export function criarAutenticacao(config, verificadorGoogle, verificadorMicrosof
     // Devolve o id do funcionário ou lança 401.
     verificar(token) {
       return this.verificarComVersao(token).id;
-    },
-
-    // Valida o token do Google e confere se o e-mail está liberado.
-    async identificarPorGoogle(credencial) {
-      let dados;
-      try {
-        dados = await verificarCredencial(credencial);
-      } catch (erro) {
-        if (erro instanceof ErroApi) throw erro;
-        throw naoAutenticado('Não foi possível validar o login com Google.');
-      }
-      // Só aceita e-mail que o Google confirma como verificado; campo ausente também é recusado.
-      if (!dados?.email || dados.email_verified !== true) throw naoAutenticado('E-mail do Google não verificado.');
-      const email = dados.email.toLowerCase();
-      if (!this.emailPermitido(email)) {
-        throw proibido('EMAIL_NAO_LIBERADO', 'Seu e-mail ainda não está liberado.');
-      }
-      return { sub: dados.sub, email, nome: dados.name };
     },
 
     // Valida o ID token da Microsoft. A identidade é o par locatário e objeto (oid), que não muda

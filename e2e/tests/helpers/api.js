@@ -1,4 +1,4 @@
-// Apoio aos testes: login sem Google e preparação de pessoas pela API.
+// Apoio aos testes: login de teste e preparação de pessoas pela API.
 // O login usa POST {API}/test/login, rota que a API só registra com E2E_TEST_MODE=true.
 
 export const API_URL = process.env.E2E_API_URL || 'http://localhost:3100/api/v1';

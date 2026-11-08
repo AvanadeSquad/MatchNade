@@ -55,12 +55,12 @@ Content-Type: application/json
   "new_password": "nova-senha-ficticia-456"
 }
 
-### Login com Google (credential é o ID token devolvido pelo botão do Google)
-POST {{baseUrl}}/auth/google
+### Login com Microsoft (credential é o ID token do Entra ID devolvido pela janela de login)
+POST {{baseUrl}}/auth/microsoft
 Content-Type: application/json
 
 {
-  "credential": "id-token-do-google"
+  "credential": "id-token-da-microsoft"
 }
 
 ########## Só em desenvolvimento e testes

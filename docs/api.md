@@ -17,7 +17,6 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/healt
 | `GET /health` | Verifica se o serviço está de pé. | `200 { "status": "ok" }` | |
 | `GET /health/ready` | Verifica se o banco atende. O resultado fica guardado por alguns segundos, e a rota não conta no limite de requisições. | `200 { "status": "ok", "banco": "ok" }` | `503 { "status": "indisponivel", "banco": "erro" }` |
 | `POST /auth/microsoft` | Valida o ID token do Microsoft Entra ID (assinatura, aplicativo, validade, locatário liberado e emissor), cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. A identidade é o par locatário e `oid`; o e-mail (`email` ou `preferred_username`) só passa pela lista de liberados e localiza a conta existente. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, de outro locatário ou sem e-mail, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 MICROSOFT_NAO_CONFIGURADA` |
-| `POST /auth/google` | Valida o ID token do Google, cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 GOOGLE_NAO_CONFIGURADO` |
 
 ### Autenticação local (e-mail e senha)
 
@@ -31,7 +30,7 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/healt
 
 Regras que valem para essas rotas:
 
-- **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo Google) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
+- **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo login da Microsoft) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
 - **Recuperação uniforme:** `POST /auth/recovery-question` sempre devolve uma pergunta e `available: true`. Para e-mail sem cadastro ou conta sem pergunta, a pergunta é fictícia (a mesma a cada consulta do mesmo e-mail), e a redefinição falha com a mesma mensagem genérica de uma resposta errada.
 - **Bloqueio da recuperação por conta:** 5 respostas erradas seguidas bloqueiam a redefinição daquela conta por 15 minutos. Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica. Uma redefinição com sucesso zera a contagem. Isso se soma ao limite por IP das rotas de login.
 - **Bloqueio do login por conta:** 5 senhas erradas seguidas bloqueiam o login daquela conta por 15 minutos. Durante o bloqueio nem a senha certa entra, e a resposta é a mesma de senha errada (`401`). Um acerto zera a contagem, e redefinir a senha libera o login. Conta inexistente, sem senha local ou inativa não conta erros.
@@ -41,7 +40,7 @@ Só em desenvolvimento e testes (a API recusa iniciar em produção com estas fl
 
 | Rota | Flag | Função |
 |---|---|---|
-| `GET /auth/dev-users`, `POST /auth/dev-login` | `AUTH_DEV_LOGIN=true` | Lista pessoas e entra sem senha nem Google. Corpo do login: `{ email }`, que precisa estar liberado. |
+| `GET /auth/dev-users`, `POST /auth/dev-login` | `AUTH_DEV_LOGIN=true` | Lista pessoas e entra sem senha. Corpo do login: `{ email }`, que precisa estar liberado. |
 | `POST /test/login` | `E2E_TEST_MODE=true` | Entra com qualquer e-mail (cria a pessoa se não existir). Usada pelos testes de ponta a ponta. |
 
 ## Perfil

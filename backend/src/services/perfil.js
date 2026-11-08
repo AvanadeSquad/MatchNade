@@ -163,7 +163,8 @@ export async function listarTags(banco, categoria) {
   );
 }
 
-export async function obterOuCriarPorGoogle(banco, { sub, email, nome }) {
+// Acha a pessoa pelo identificador do provedor de login ou pelo e-mail, ou cria a conta no primeiro acesso.
+export async function obterOuCriarPorProvedor(banco, { sub, email, nome }) {
   const [existente] = await banco.query('SELECT id, is_active FROM employee WHERE auth_provider_id = $1 OR email = $2', [sub, email]);
   if (existente) {
     if (!existente.is_active) throw conflito('CONTA_INATIVA', 'Esta conta está inativa.');

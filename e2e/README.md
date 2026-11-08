@@ -32,11 +32,11 @@ Os testes rodam em dois tamanhos de tela: `desktop` (1280x800, o layout principa
 
 - `tests/acessibilidade.spec.js`: varre com o axe (`@axe-core/playwright`) as telas de login, cadastro (dados, interesses e preferências, análise do texto em andamento e sem IA, interesses sugeridos), descoberta (com pessoas e com a cota da semana esgotada), perfil de outra pessoa com o menu e os diálogos de bloquear e denunciar abertos, matches com solicitações recebidas, ativas e aguardando, match, lista de conversas sem conversa aberta, chat e perfil próprio com seus diálogos. Usa as regras WCAG 2.1 A e AA e falha em violações sérias ou críticas. As violações moderadas e menores e os itens que o axe não decide sozinho (`incomplete`, como contraste sobre o fundo escurecido de um diálogo) não bloqueiam e vão anexados ao relatório (`npm run report`), um anexo `axe: <tela>` por tela. Para chegar à revisão de tags, a resposta da análise da bio é simulada no navegador, porque os testes rodam com a IA desligada.
 
-Não cobertos ainda: o fluxo da revisão de tags com a IA real respondendo (os testes rodam com a IA desligada; a acessibilidade da tela é verificada com a resposta simulada) e o login real do Google.
+Não cobertos ainda: o fluxo da revisão de tags com a IA real respondendo (os testes rodam com a IA desligada; a acessibilidade da tela é verificada com a resposta simulada) e o login real da Microsoft.
 
 ## Como funciona o login nos testes
 
-O Google bloqueia login automatizado. A API só registra `POST /api/v1/test/login` quando roda com `E2E_TEST_MODE=true`, e recusa iniciar em produção com essa flag. O helper `tests/helpers/api.js` usa essa rota, grava o token no `localStorage` antes de a página carregar e cria pessoas prontas pela API, com interesses exclusivos de cada teste para que as duas pessoas de um fluxo fiquem com afinidade máxima entre si.
+Provedores de login externos bloqueiam login automatizado. A API só registra `POST /api/v1/test/login` quando roda com `E2E_TEST_MODE=true`, e recusa iniciar em produção com essa flag. O helper `tests/helpers/api.js` usa essa rota, grava o token no `localStorage` antes de a página carregar e cria pessoas prontas pela API, com interesses exclusivos de cada teste para que as duas pessoas de um fluxo fiquem com afinidade máxima entre si.
 
 ## Escrever um teste
 

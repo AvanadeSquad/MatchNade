@@ -7,12 +7,9 @@ Três serviços gratuitos: banco (Neon), API (Render) e frontend (Vercel ou Netl
 1. Crie um projeto no Neon e copie a string de conexão (já inclui `sslmode=require`).
 2. Guarde como `DATABASE_URL`. As tabelas são criadas na primeira inicialização da API.
 
-## 2. Login com Google
+## 2. Quem pode entrar
 
-1. No Google Cloud Console, crie um ID de cliente OAuth do tipo "Aplicativo da Web".
-2. Em "Origens JavaScript autorizadas", adicione a URL do frontend (e `http://localhost:5173` para testar).
-3. Guarde o ID como `GOOGLE_CLIENT_ID` na API e `VITE_GOOGLE_CLIENT_ID` no frontend.
-4. Defina quem pode entrar: `ALLOWED_EMAIL_DOMAINS` (por exemplo `suaempresa.com`) e/ou `ALLOWED_EMAILS`. Em produção a API não inicia sem uma das duas.
+Defina `ALLOWED_EMAIL_DOMAINS` (por exemplo `suaempresa.com`) e/ou `ALLOWED_EMAILS`. Em produção a API não inicia sem uma das duas. O login com a Microsoft (Entra ID) é opcional e fica descrito mais abaixo; sem ele, entra-se com e-mail e senha.
 
 ## 3. IA (opcional)
 
@@ -34,20 +31,19 @@ O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Bluepri
 |---|---|
 | `DATABASE_URL` | string do Neon |
 | `JWT_SECRET` | texto aleatório com 32 ou mais caracteres |
-| `GOOGLE_CLIENT_ID` | ID do cliente OAuth |
 | `ALLOWED_EMAIL_DOMAINS` | domínio da empresa |
 | `FRONTEND_URL` | URL do frontend (aceita várias separadas por vírgula) |
 | `GEMINI_API_KEY`, `GROQ_API_KEY` | opcionais |
 | `ALLOWED_EMAILS`, `JWT_EXPIRES_IN`, `TRUST_PROXY` | opcionais: e-mails liberados fora do domínio, validade do JWT (padrão 8h) e número de proxies confiáveis (padrão 1 em produção) |
 
-`NODE_ENV=production` já vem no `render.yaml`. Em produção a API recusa iniciar com `AUTH_DEV_LOGIN`, `E2E_TEST_MODE` ou `RATE_LIMIT_DISABLED` ativos, sem segredo forte, sem `GOOGLE_CLIENT_ID` ou sem banco. O serviço gratuito do Render hiberna sem uso, então o primeiro acesso depois de um tempo parado demora.
+`NODE_ENV=production` já vem no `render.yaml`. Em produção a API recusa iniciar com `AUTH_DEV_LOGIN`, `E2E_TEST_MODE` ou `RATE_LIMIT_DISABLED` ativos, sem segredo forte ou sem banco. O serviço gratuito do Render hiberna sem uso, então o primeiro acesso depois de um tempo parado demora.
 
 ## 5. Frontend (Vercel ou Netlify)
 
 - Diretório raiz: `frontend`. Comando de build: `npm run build`. Saída: `dist`.
-- Variáveis: `VITE_API_URL` (URL da API com `/api/v1`) e `VITE_GOOGLE_CLIENT_ID`.
+- Variáveis: `VITE_API_URL` (URL da API com `/api/v1`) e, para o login com a Microsoft, `VITE_MICROSOFT_CLIENT_ID`.
 - As rotas do app são do navegador; `frontend/vercel.json` e `frontend/public/_redirects` já redirecionam qualquer caminho para o `index.html`.
-- Os cabeçalhos de segurança, com a política de conteúdo (CSP), ficam em `frontend/vercel.json` (Vercel) e `frontend/public/_headers` (Netlify), com a mesma política nos dois. A CSP só deixa o app chamar o próprio site, o login do Google e `https://*.onrender.com`. Se a API for publicada em outro domínio, acrescente-o a `connect-src` **nos dois arquivos**; sem isso, o navegador bloqueia as chamadas à API. `npm run test:cabecalhos` confere que os dois continuam iguais.
+- Os cabeçalhos de segurança, com a política de conteúdo (CSP), ficam em `frontend/vercel.json` (Vercel) e `frontend/public/_headers` (Netlify), com a mesma política nos dois. A CSP só deixa o app chamar o próprio site, o login da Microsoft (`https://login.microsoftonline.com`) e `https://*.onrender.com`. Se a API for publicada em outro domínio, acrescente-o a `connect-src` **nos dois arquivos**; sem isso, o navegador bloqueia as chamadas à API. `npm run test:cabecalhos` confere que os dois continuam iguais.
 
 ## Conferência
 

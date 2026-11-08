@@ -185,7 +185,6 @@ describe('carregarConfig', () => {
     NODE_ENV: 'production',
     JWT_SECRET: 'x'.repeat(40),
     DATABASE_URL: 'postgresql://u:s@host/db',
-    GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com',
     ALLOWED_EMAIL_DOMAINS: 'exemplo.test',
   };
 

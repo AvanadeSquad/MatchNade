@@ -9,7 +9,7 @@ Navegador (React + Vite)
 API (Node.js + Express)
    |-- PostgreSQL (pg em produção, PGlite em desenvolvimento e testes)
    |-- Gemini (principal) e Groq (reserva), só para extrair tags e sugerir a abertura da conversa
-   '-- Google Sign-In (valida o ID token do login)
+   '-- Microsoft Entra ID (o frontend obtém o ID token; a API valida a assinatura)
 ```
 
 Tudo roda em planos gratuitos. Não usa Docker.
@@ -20,7 +20,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
 |---|---|---|
 | Banco | PostgreSQL. Em desenvolvimento e testes, PGlite (PostgreSQL em processo, em memória ou em disco). | O mesmo SQL roda nos dois. Quem clona o projeto roda a API sem instalar banco nem criar conta. |
 | Acesso a dados | SQL parametrizado direto com `pg`, sem ORM. | O modelo tem 8 tabelas e poucas consultas; menos camadas para manter. |
-| Login | ID token do Google validado no servidor, depois JWT de 8 h. | O front não guarda segredo e a API decide quem entra pela lista de e-mails liberados. |
+| Login | E-mail e senha, ou ID token da Microsoft validado no servidor, depois JWT de 8 h. | O front não guarda segredo e a API decide quem entra pela lista de e-mails liberados. |
 | Chat | Polling a cada 5 s, só com a aba visível. | Funciona na hospedagem gratuita; WebSocket exigiria outro tipo de serviço. |
 | Afinidade | Jaccard ponderado pela raridade da tag (IDF), por eixo (profissional e pessoal), mais 0,05 para unidade diferente quando já há afinidade. | Matemática simples e explicável, sem IA. Evita recomendar a todos quem só tem tags populares. |
 | IA | Provedor principal e reserva, timeout, nova tentativa, disjuntor, prazo total e validação da saída. | A IA nunca bloqueia o fluxo: se falhar, a pessoa escolhe as tags manualmente e o chat usa um texto padrão. |

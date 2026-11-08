@@ -13,7 +13,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Abre em http://localhost:5173. Sem `VITE_GOOGLE_CLIENT_ID`, a tela de login mostra o seletor de pessoas do ambiente de desenvolvimento da API (`AUTH_DEV_LOGIN=true`). Com o ID configurado, mostra o botão do Google.
+Abre em http://localhost:5173. Com `AUTH_DEV_LOGIN=true` na API, a tela de login mostra o seletor de pessoas do ambiente de desenvolvimento. O botão "Entrar com Microsoft corporativo" só abre a janela da Microsoft com `VITE_MICROSOFT_CLIENT_ID` configurado; sem ele, mostra um aviso.
 
 ## Testes
 
@@ -92,7 +92,7 @@ A API não tem campos para alguns itens das telas. Eles ficam no `localStorage`,
 
 Convites de Coffee Chat são mensagens comuns do chat com o prefixo `[Coffee Chat]`, então as duas pessoas veem o convite e o aceite sem rota nova na API.
 
-Login: a API valida só o Google (`/auth/google`) e, em desenvolvimento, o e-mail (`/auth/dev-login`, sem conferir senha). Os botões Microsoft 365 e LinkedIn avisam que o SSO ainda não está habilitado.
+Login: a API valida e-mail e senha (`/auth/login`), o ID token da Microsoft (`/auth/microsoft`) e, em desenvolvimento, só o e-mail (`/auth/dev-login`, sem conferir senha).
 
 ## Regras do produto que a interface respeita
 
@@ -104,9 +104,9 @@ Login: a API valida só o Google (`/auth/google`) e, em desenvolvimento, o e-mai
 
 O `vercel.json` (Vercel) e o `public/_headers` (Netlify) enviam, em todas as rotas, uma política de conteúdo (CSP) e os cabeçalhos `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `Strict-Transport-Security`. A CSP:
 
-- só executa scripts do próprio site e o do login do Google (`https://accounts.google.com/gsi/client`), sem `unsafe-eval` nem script inline;
-- aceita estilo inline (`'unsafe-inline'` em `style-src`) porque o script do Google injeta estilos no botão de login;
-- só permite chamadas ao próprio site, ao Google e a `https://*.onrender.com`, onde a API é publicada. Se a API for publicada em outro domínio, troque esse endereço em `connect-src`, ou o app não consegue falar com ela;
+- só executa scripts do próprio site, sem `unsafe-eval` nem script inline;
+- aceita estilo inline (`'unsafe-inline'` em `style-src`);
+- só permite chamadas ao próprio site, ao login da Microsoft (`https://login.microsoftonline.com`) e a `https://*.onrender.com`, onde a API é publicada. Se a API for publicada em outro domínio, troque esse endereço em `connect-src`, ou o app não consegue falar com ela;
 - impede que o app seja aberto dentro de um iframe de outro site.
 
 No Netlify, os mesmos cabeçalhos ficam em `public/_headers`, que o build copia para `dist/`. Os dois arquivos precisam ter a mesma política; `npm run test:cabecalhos` confere. Se a API for publicada fora de `*.onrender.com`, acrescente o domínio a `connect-src` nos dois.

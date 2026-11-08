@@ -403,7 +403,6 @@ select.campo__controle { appearance: none; padding-right: 36px; background-image
 .login__sso { display: flex; flex-direction: column; gap: 10px; }
 .login__sso svg { width: 18px; height: 18px; }
 .login__novo { margin-top: 24px; text-align: center; font-size: 13px; color: var(--texto-2); }
-.google-botao { display: flex; justify-content: center; min-height: 44px; }
 
 /* Cadastro */
 .cadastro { display: flex; flex-direction: column; gap: 28px; width: min(980px, 100%); margin: 0 auto; padding: 40px 24px 56px; }
@@ -912,7 +911,6 @@ h1.perfil__nome { font-size: 28px; }
   .login__form form { gap: 16px; margin-top: 24px; }
   .login__esqueci { align-self: flex-end; margin-top: 6px; }
   .login__sso { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .login__sso .google-botao { min-width: 0; overflow: hidden; }
 
   /* Cadastro */
   .cadastro { padding: 16px 20px 32px; gap: 18px; }
