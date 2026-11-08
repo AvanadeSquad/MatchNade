@@ -16,6 +16,7 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/healt
 |---|---|---|---|
 | `GET /health` | Verifica se o serviço está de pé. | `200 { "status": "ok" }` | |
 | `GET /health/ready` | Verifica se o banco atende. O resultado fica guardado por alguns segundos, e a rota não conta no limite de requisições. | `200 { "status": "ok", "banco": "ok" }` | `503 { "status": "indisponivel", "banco": "erro" }` |
+| `POST /auth/microsoft` | Valida o ID token do Microsoft Entra ID (assinatura, aplicativo, validade, locatário liberado e emissor), cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. A identidade é o par locatário e `oid`; o e-mail (`email` ou `preferred_username`) só passa pela lista de liberados e localiza a conta existente. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, de outro locatário ou sem e-mail, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 MICROSOFT_NAO_CONFIGURADA` |
 | `POST /auth/google` | Valida o ID token do Google, cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 GOOGLE_NAO_CONFIGURADO` |
 
 ### Autenticação local (e-mail e senha)

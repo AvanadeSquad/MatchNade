@@ -20,6 +20,10 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_ALLOWED_TENANTS
+        sync: false
       - key: ALLOWED_EMAIL_DOMAINS
         sync: false
       - key: ALLOWED_EMAILS
