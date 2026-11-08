@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import jwt from 'jsonwebtoken';
 import {
   PERGUNTAS_SEGURANCA,
+  TENTATIVAS_LOGIN_MAX,
   TENTATIVAS_RECUPERACAO_MAX,
   gerarHashSenha,
   normalizarRespostaSeguranca,
@@ -146,6 +147,73 @@ describe('autenticação local', () => {
     it('recusa corpo sem senha', async () => {
       const r = await a.http.post('/api/v1/auth/login').send({ email: 'pessoa.local@exemplo.test' });
       expect(r.status).toBe(400);
+    });
+  });
+
+  describe('bloqueio do login por conta', () => {
+    const EMAIL = 'pessoa.local@exemplo.test';
+    const errarSenha = async (email = EMAIL, vezes = TENTATIVAS_LOGIN_MAX) => {
+      for (let i = 0; i < vezes; i += 1) expect((await entrar(email, `senha-errada-${i}`)).status).toBe(401);
+    };
+
+    it('bloqueia depois de erros seguidos, mesmo com a senha certa', async () => {
+      await cadastrar();
+      await errarSenha();
+      expect((await entrar(EMAIL, SENHA)).status).toBe(401);
+      const [linha] = await a.banco.query('SELECT login_locked_until FROM employee');
+      expect(new Date(linha.login_locked_until) > new Date()).toBe(true);
+    });
+
+    it('durante o bloqueio a resposta é idêntica à de senha errada', async () => {
+      await cadastrar();
+      const errada = await entrar(EMAIL, 'senha-errada-x');
+      await errarSenha(EMAIL, TENTATIVAS_LOGIN_MAX - 1);
+      const bloqueada = await entrar(EMAIL, SENHA);
+      expect(bloqueada.status).toBe(errada.status);
+      expect(bloqueada.body).toEqual(errada.body);
+    });
+
+    it('libera o login quando o bloqueio expira', async () => {
+      await cadastrar();
+      await errarSenha();
+      await a.banco.query("UPDATE employee SET login_locked_until = NOW() - INTERVAL '1 minute'");
+      expect((await entrar(EMAIL, SENHA)).status).toBe(200);
+    });
+
+    it('um acerto zera a contagem de erros', async () => {
+      await cadastrar();
+      await errarSenha(EMAIL, TENTATIVAS_LOGIN_MAX - 1);
+      expect((await entrar(EMAIL, SENHA)).status).toBe(200);
+      const [linha] = await a.banco.query('SELECT login_failed_attempts, login_locked_until FROM employee');
+      expect(linha.login_failed_attempts).toBe(0);
+      expect(linha.login_locked_until).toBeNull();
+      await errarSenha(EMAIL, TENTATIVAS_LOGIN_MAX - 1);
+      expect((await entrar(EMAIL, SENHA)).status).toBe(200);
+    });
+
+    it('o bloqueio vale por conta: outra conta continua entrando', async () => {
+      await cadastrar();
+      await cadastrar({ email: 'outra.pessoa@exemplo.test', name: 'Outra Pessoa' });
+      await errarSenha();
+      expect((await entrar('outra.pessoa@exemplo.test', SENHA)).status).toBe(200);
+    });
+
+    it('e-mail sem cadastro nunca bloqueia nem muda de resposta', async () => {
+      const primeira = await entrar('ninguem@exemplo.test', 'senha-errada-0');
+      await errarSenha('ninguem@exemplo.test', TENTATIVAS_LOGIN_MAX * 2);
+      const depois = await entrar('ninguem@exemplo.test', SENHA);
+      expect(depois.status).toBe(401);
+      expect(depois.body).toEqual(primeira.body);
+    });
+
+    it('redefinir a senha libera o login bloqueado', async () => {
+      await cadastrar();
+      await errarSenha();
+      const r = await a.http
+        .post('/api/v1/auth/reset-password')
+        .send({ email: EMAIL, security_answer: 'Rex', new_password: 'nova-senha-456' });
+      expect(r.status).toBe(200);
+      expect((await entrar(EMAIL, 'nova-senha-456')).status).toBe(200);
     });
   });
 

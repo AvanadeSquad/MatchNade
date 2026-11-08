@@ -12,6 +12,40 @@ const scrypt = promisify(scryptCallback);
 export const TENTATIVAS_RECUPERACAO_MAX = 5;
 export const BLOQUEIO_RECUPERACAO_MINUTOS = 15;
 
+// Erros seguidos de senha antes de bloquear o login da conta, e por quanto tempo.
+export const TENTATIVAS_LOGIN_MAX = 5;
+export const BLOQUEIO_LOGIN_MINUTOS = 15;
+
+// Colunas de contagem e bloqueio de cada fluxo. Os nomes vêm só desta tabela, nunca da requisição.
+const CONTROLES_DE_TENTATIVA = Object.freeze({
+  login: {
+    contador: 'login_failed_attempts',
+    bloqueio: 'login_locked_until',
+    maximo: TENTATIVAS_LOGIN_MAX,
+    minutos: BLOQUEIO_LOGIN_MINUTOS,
+  },
+  recuperacao: {
+    contador: 'recovery_failed_attempts',
+    bloqueio: 'recovery_locked_until',
+    maximo: TENTATIVAS_RECUPERACAO_MAX,
+    minutos: BLOQUEIO_RECUPERACAO_MINUTOS,
+  },
+});
+
+export const estaBloqueada = (bloqueadaAte) => Boolean(bloqueadaAte) && new Date(bloqueadaAte) > new Date();
+
+// Conta um erro de forma atômica: ao chegar no limite, zera o contador e bloqueia por alguns minutos.
+export async function registrarTentativaFalha(banco, funcionarioId, fluxo) {
+  const { contador, bloqueio, maximo, minutos } = CONTROLES_DE_TENTATIVA[fluxo];
+  await banco.query(
+    `UPDATE employee
+        SET ${contador} = CASE WHEN ${contador} + 1 >= $2 THEN 0 ELSE ${contador} + 1 END,
+            ${bloqueio} = CASE WHEN ${contador} + 1 >= $2 THEN NOW() + make_interval(mins => $3) ELSE ${bloqueio} END
+      WHERE id = $1`,
+    [funcionarioId, maximo, minutos],
+  );
+}
+
 export async function gerarHashSenha(senha) {
   const salt = randomBytes(16);
   const derivada = await scrypt(senha, salt, 64);
