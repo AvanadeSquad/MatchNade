@@ -63,5 +63,6 @@ Os testes de ponta a ponta sobem a API e o app sozinhos em portas próprias (310
 - [`docs/arquitetura.md`](docs/arquitetura.md): decisões, regras que o código garante, IA e dados.
 - [`docs/deploy.md`](docs/deploy.md): publicação gratuita (Neon, Render, Vercel ou Netlify).
 - [`docs/design/`](docs/design/README.md): telas e tokens de referência.
+- [`docs/desenho-exclusao-e-personalizacao.md`](docs/desenho-exclusao-e-personalizacao.md): desenho da exclusão de conta e da personalização de perfil (ainda não implementado).
 - [`docs/evolucao.md`](docs/evolucao.md): o que ainda não foi exercitado e o que pode evoluir.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): fluxo de branches, commits e convenções.
