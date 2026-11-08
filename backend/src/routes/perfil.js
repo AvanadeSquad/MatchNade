@@ -12,6 +12,7 @@ import {
   montarPerfil,
   salvarInteresses,
 } from '../services/perfil.js';
+import { cancelarExclusao, solicitarExclusao } from '../services/exclusao.js';
 
 const texto = (max) => z.string().trim().max(max);
 
@@ -42,6 +43,7 @@ export const corpoInteresses = z.object({
 
 export const corpoTag = z.object({ name: texto(60), category: z.enum(['TECHNICAL', 'HOBBY']) });
 export const corpoPausa = z.object({ is_paused: z.boolean() });
+export const corpoExclusao = z.object({ confirm_email: z.string().trim().min(1).max(254) });
 export const consultaTags = z.object({ category: z.enum(['TECHNICAL', 'HOBBY']).optional() });
 
 export function rotasPerfil(ctx, autenticar) {
@@ -74,6 +76,16 @@ export function rotasPerfil(ctx, autenticar) {
     const { is_paused: pausado } = corpoPausa.parse(req.body);
     await definirPausa(banco, req.usuario.id, pausado);
     res.json({ is_paused: pausado });
+  });
+
+  router.post('/profile/deletion', autenticar, async (req, res) => {
+    const { confirm_email: email } = corpoExclusao.parse(req.body);
+    res.json(await solicitarExclusao(banco, req.usuario.id, email));
+  });
+
+  router.post('/profile/deletion/cancel', autenticar, async (req, res) => {
+    await cancelarExclusao(banco, req.usuario.id);
+    res.json(await montarPerfil(ctx, req.usuario.id));
   });
 
   router.delete('/profile', autenticar, async (req, res) => {

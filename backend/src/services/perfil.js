@@ -1,5 +1,6 @@
 import { conflito, invalido, naoEncontrado } from '../utils/erros.js';
 import { limparTexto, normalizarTag, unicas } from '../utils/tags.js';
+import { excluirDefinitivamente, previstoPara } from './exclusao.js';
 import { inicioDaSemana } from './semana.js';
 
 export const OBJETIVOS = ['NETWORKING', 'TROCA_DE_CONHECIMENTO', 'HOBBY', 'MENTORIA', 'CONHECER_GENTE'];
@@ -9,6 +10,18 @@ export async function buscarFuncionario(consulta, id) {
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
             is_active, is_paused, last_seen_at, created_at, token_version
        FROM employee WHERE id = $1 AND is_active`,
+    [id],
+  );
+  return linha ?? null;
+}
+
+// A pessoa vista por ela mesma: inclui a conta marcada para exclusão, que fica oculta para as outras pessoas
+// mas precisa entrar para cancelar. Não serve para mostrar alguém a outra pessoa (use buscarFuncionario).
+export async function buscarFuncionarioDaSessao(consulta, id) {
+  const [linha] = await consulta(
+    `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
+            is_active, is_paused, last_seen_at, created_at, token_version, deletion_requested_at
+       FROM employee WHERE id = $1 AND (is_active OR deletion_requested_at IS NOT NULL)`,
     [id],
   );
   return linha ?? null;
@@ -48,7 +61,7 @@ export function perfilCompleto(funcionario, totalTags, minTags) {
 }
 
 export async function montarPerfil({ banco, config }, id) {
-  const funcionario = await buscarFuncionario(banco.query, id);
+  const funcionario = await buscarFuncionarioDaSessao(banco.query, id);
   if (!funcionario) throw naoEncontrado('Perfil não encontrado.');
   const tags = await buscarTagsDoFuncionario(banco.query, id);
   const usadas = await usoDaCota(banco.query, id);
@@ -71,6 +84,9 @@ export async function montarPerfil({ banco, config }, id) {
     profile_complete: perfilCompleto(funcionario, tags.technical.length + tags.hobby.length, config.regras.minTags),
     quota: { used: usadas, max: funcionario.max_weekly_matches },
     connections_count: total,
+    deletion: funcionario.deletion_requested_at
+      ? { requested_at: funcionario.deletion_requested_at, scheduled_for: previstoPara(funcionario.deletion_requested_at) }
+      : null,
   };
 }
 
@@ -143,13 +159,9 @@ export async function definirPausa(banco, id, pausado) {
   await banco.query('UPDATE employee SET is_paused = $1 WHERE id = $2', [pausado, id]);
 }
 
-// Exclusão definitiva dos dados da pessoa. Os registros de IA guardam tags derivadas da bio,
-// por isso são apagados junto; as demais tabelas caem em cascata.
+// Exclusão definitiva e imediata dos dados da pessoa (as denúncias recebidas vão para o arquivo anônimo).
 export async function excluirPerfil(banco, id) {
-  await banco.tx(async ({ query }) => {
-    await query('DELETE FROM ai_interaction_log WHERE employee_id = $1', [id]);
-    await query('DELETE FROM employee WHERE id = $1', [id]);
-  });
+  await banco.tx(({ query }) => excluirDefinitivamente(query, id));
 }
 
 export async function listarTags(banco, categoria) {
@@ -165,9 +177,13 @@ export async function listarTags(banco, categoria) {
 
 // Acha a pessoa pelo identificador do provedor de login ou pelo e-mail, ou cria a conta no primeiro acesso.
 export async function obterOuCriarPorProvedor(banco, { sub, email, nome }) {
-  const [existente] = await banco.query('SELECT id, is_active FROM employee WHERE auth_provider_id = $1 OR email = $2', [sub, email]);
+  const [existente] = await banco.query(
+    'SELECT id, is_active, deletion_requested_at FROM employee WHERE auth_provider_id = $1 OR email = $2',
+    [sub, email],
+  );
   if (existente) {
-    if (!existente.is_active) throw conflito('CONTA_INATIVA', 'Esta conta está inativa.');
+    // Conta marcada para exclusão entra, para poder cancelar. Inativa por outro motivo continua recusada.
+    if (!existente.is_active && !existente.deletion_requested_at) throw conflito('CONTA_INATIVA', 'Esta conta está inativa.');
     await banco.query('UPDATE employee SET auth_provider_id = $1 WHERE id = $2', [sub, existente.id]);
     return { id: existente.id, novo: false };
   }

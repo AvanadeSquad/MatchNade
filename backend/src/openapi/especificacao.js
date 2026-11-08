@@ -10,7 +10,7 @@ import {
   corpoResposta,
 } from '../routes/conexoes.js';
 import { corpoEmail } from '../routes/dev.js';
-import { consultaTags, corpoBio, corpoInteresses, corpoPausa, corpoPerfil, corpoTag } from '../routes/perfil.js';
+import { consultaTags, corpoBio, corpoExclusao, corpoInteresses, corpoPausa, corpoPerfil, corpoTag } from '../routes/perfil.js';
 import { corpoDenuncia } from '../routes/pessoas.js';
 import { idSchema } from '../utils/validacao.js';
 import { respostaPerfilPublico, respostaRecomendacoes } from './respostas.js';
@@ -180,7 +180,32 @@ export function gerarEspecificacao() {
           requisicao: corpo(corpoPerfil),
           respostas: { 200: json('Perfil'), 400: invalidos },
         }),
-        delete: operacao('Perfil', 'Exclui a pessoa e todos os dados ligados a ela.', { respostas: { 204: semCorpo('Excluído.') } }),
+        delete: operacao(
+          'Perfil',
+          'Exclui a pessoa e todos os dados ligados a ela, na hora. As denúncias recebidas vão para o arquivo anônimo. Vale também para conta marcada para exclusão.',
+          {
+            respostas: { 204: semCorpo('Excluído.') },
+          },
+        ),
+      },
+      '/profile/deletion': {
+        post: operacao(
+          'Perfil',
+          'Marca a conta para exclusão em 30 dias: oculta a pessoa, derruba todas as sessões e exige o e-mail da própria conta. Entrar de novo permite cancelar.',
+          {
+            requisicao: corpo(corpoExclusao),
+            respostas: {
+              200: json('{ requested_at, scheduled_for }'),
+              400: erro('CONFIRMACAO_INVALIDA, DADOS_INVALIDOS ou CORPO_INVALIDO.'),
+              403: erro('CONTA_EM_EXCLUSAO: a conta já está marcada.'),
+            },
+          },
+        ),
+      },
+      '/profile/deletion/cancel': {
+        post: operacao('Perfil', 'Cancela a exclusão dentro do prazo. As conexões e as mensagens voltam. Devolve o perfil.', {
+          respostas: { 200: json('Perfil'), 409: erro('SEM_EXCLUSAO_PENDENTE') },
+        }),
       },
       '/profile/enrich-bio': {
         post: operacao('Perfil', 'Extrai tags da bio com IA. Até 15 chamadas por hora por pessoa.', {

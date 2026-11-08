@@ -50,7 +50,7 @@ export async function criarAmbiente({ ambiente = {}, ia, verificadorMicrosoft } 
 
     async limpar() {
       await banco.exec(
-        `TRUNCATE ai_interaction_log, employee_report, employee_block, chat_message, connection_match,
+        `TRUNCATE ai_interaction_log, moderation_report_archive, employee_report, employee_block, chat_message, connection_match,
                   employee_interest, interest_tag, employee RESTART IDENTITY CASCADE`,
       );
       tokens.clear();

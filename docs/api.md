@@ -30,6 +30,7 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/healt
 
 Regras que valem para essas rotas:
 
+- **Conta marcada para exclusão:** entra normalmente (login por senha, Microsoft e recuperação de senha), mas só `GET /profile`, `POST /profile/deletion/cancel` e `DELETE /profile` respondem; qualquer outra rota devolve `403 CONTA_EM_EXCLUSAO`. `GET /profile` traz `deletion: { requested_at, scheduled_for }`, e `deletion` é `null` nas demais contas. Uma conta inativa por outro motivo continua recusada com a resposta genérica de senha errada.
 - **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo login da Microsoft) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
 - **Recuperação uniforme:** `POST /auth/recovery-question` sempre devolve uma pergunta e `available: true`. Para e-mail sem cadastro ou conta sem pergunta, a pergunta é fictícia (a mesma a cada consulta do mesmo e-mail), e a redefinição falha com a mesma mensagem genérica de uma resposta errada.
 - **Bloqueio da recuperação por conta:** 5 respostas erradas seguidas bloqueiam a redefinição daquela conta por 15 minutos. Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica. Uma redefinição com sucesso zera a contagem. Isso se soma ao limite por IP das rotas de login.
@@ -52,7 +53,9 @@ Só em desenvolvimento e testes (a API recusa iniciar em produção com estas fl
 | `POST /profile/enrich-bio` | Extrai tags da bio com IA. Corpo: `{ "raw_bio" }`. Até 15 chamadas por hora por pessoa. | `200 { technical_tags, hobby_tags }`, ou com `fallback: true` e listas vazias se a IA falhar | `400 BIO_VAZIA` |
 | `PUT /profile/interests` | Substitui os interesses. Corpo: `{ "interests": [{ name, category, source?, confidence? }] }`. | `200` perfil | `400 MENOS_DE_3_TAGS`, `400 TAG_INVALIDA` |
 | `PATCH /profile/pause` | Pausa ou retoma a exposição. Corpo: `{ "is_paused" }`. | `200 { is_paused }` | |
-| `DELETE /profile` | Exclui o perfil e tudo ligado a ele. | `204` | |
+| `POST /profile/deletion` | Marca a conta para exclusão em 30 dias: oculta a pessoa, derruba todas as sessões e exige o e-mail da própria conta. Corpo: `{ "confirm_email" }` (sem diferenciar maiúsculas). | `200 { requested_at, scheduled_for }` | `400 CONFIRMACAO_INVALIDA`, `403 CONTA_EM_EXCLUSAO` se já estiver marcada |
+| `POST /profile/deletion/cancel` | Cancela a exclusão dentro do prazo. As conexões e as mensagens voltam. | `200` perfil | `409 SEM_EXCLUSAO_PENDENTE` |
+| `DELETE /profile` | Exclui o perfil e tudo ligado a ele, **na hora**. As denúncias recebidas vão para um arquivo anônimo (só motivo e data, sem e-mail, telefone ou link no texto). Vale também para conta marcada para exclusão. | `204` | |
 | `GET /tags?category=TECHNICAL\|HOBBY` | Catálogo de tags, da mais usada para a menos usada. | `200 { tags }` | |
 | `POST /tags` | Cria uma tag (ou devolve a existente, sem diferenciar maiúsculas). Cargos e termos genéricos são recusados. | `201` | `400 TAG_INVALIDA` |
 

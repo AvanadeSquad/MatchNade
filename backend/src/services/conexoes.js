@@ -6,10 +6,14 @@ import { exigirPerfilCompleto, usoDaCota } from './perfil.js';
 import { afinidadeEntre, carregarBase } from './recomendacoes.js';
 
 export async function buscarConexaoDoParticipante(consulta, conexaoId, meuId) {
-  const [conexao] = await consulta('SELECT * FROM connection_match WHERE id = $1', [conexaoId]);
-  if (!conexao || (conexao.requester_id !== meuId && conexao.receiver_id !== meuId)) {
-    throw naoEncontrado('Conexão não encontrada.');
-  }
+  const [conexao] = await consulta(
+    `SELECT c.* FROM connection_match c
+       JOIN employee o ON o.id = CASE WHEN c.requester_id = $2 THEN c.receiver_id ELSE c.requester_id END
+      WHERE c.id = $1 AND (c.requester_id = $2 OR c.receiver_id = $2) AND o.is_active`,
+    [conexaoId, meuId],
+  );
+  // Conexão com quem foi ocultado (conta marcada para exclusão) some para os dois lados, como se não existisse.
+  if (!conexao) throw naoEncontrado('Conexão não encontrada.');
   return conexao;
 }
 

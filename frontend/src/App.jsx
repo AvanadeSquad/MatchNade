@@ -7,6 +7,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import CadastroDados from './pages/CadastroDados.jsx';
 import CadastroInteresses from './pages/CadastroInteresses.jsx';
 import CadastroPreferencias from './pages/CadastroPreferencias.jsx';
+import ContaMarcada from './pages/ContaMarcada.jsx';
 import Descobrir from './pages/Descobrir.jsx';
 import Login from './pages/Login.jsx';
 import Match from './pages/Match.jsx';
@@ -35,7 +36,9 @@ function RotaProtegida() {
         <Carregando />
       </main>
     );
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/login" replace />;
+  // Conta marcada para exclusão: só a tela de cancelar ou apagar agora; o resto do app fica fechado.
+  return perfil?.deletion ? <ContaMarcada /> : <Outlet />;
 }
 
 // Telas do uso diário só abrem com o cadastro concluído (unidade, 3 interesses e um objetivo).

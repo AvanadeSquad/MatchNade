@@ -41,7 +41,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
 - **Consentimento mútuo.** Match só existe com interesse dos dois lados. Chat e quebra-gelo exigem conexão aceita e sem bloqueio, e quem não participa da conexão recebe 404.
 - **Cota semanal.** De 1 a 5 solicitações por semana, de segunda a domingo. A checagem roda em transação com trava, então pedidos simultâneos não passam do limite.
 - **Expiração.** Solicitações pendentes há mais de 14 dias expiram.
-- **Privacidade.** A API guarda nome, e-mail corporativo, unidade, cidade, interesses, objetivos, bio e cargo (opcional). Cargo e bio só aparecem para outra pessoa depois do match. A pessoa pode pausar a exposição, bloquear, denunciar e excluir os dados (exclusão definitiva em cascata, incluindo os registros de IA).
+- **Privacidade.** A API guarda nome, e-mail corporativo, unidade, cidade, interesses, objetivos, bio e cargo (opcional). Cargo e bio só aparecem para outra pessoa depois do match. A pessoa pode pausar a exposição, bloquear, denunciar e excluir a conta. A exclusão tem prazo de arrependimento de 30 dias: a conta fica oculta e pode ser cancelada ao entrar de novo; depois, uma varredura na própria API (ao iniciar, a cada hora e no login, sob trava consultiva do PostgreSQL) apaga tudo em cascata, incluindo os registros de IA. As denúncias recebidas são arquivadas de forma anônima, só com motivo e data. O prazo é "no mínimo 30 dias": se a API estiver hibernada, o apagamento acontece na próxima execução da varredura. Conexões com uma conta oculta somem para a outra pessoa (lista, chat, quebra-gelo e atalhos).
 
 ## IA
 
