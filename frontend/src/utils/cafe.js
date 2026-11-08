@@ -43,6 +43,20 @@ export function proximosDiasUteis(quantidade = 5, hoje = new Date()) {
   return dias;
 }
 
+// Lê "Segunda-feira, 10/11 às 10:30" e devolve a data no fuso local. O texto não traz o ano:
+// vale o ano de `hoje`, ou o seguinte quando o dia já passou há mais de seis meses (virada de dezembro).
+export function dataDoCafe(quando, hoje = new Date()) {
+  const m = String(quando).match(/(\d{2})\/(\d{2}) às (\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [dia, mes, hora, minuto] = m.slice(1).map(Number);
+  let data = new Date(hoje.getFullYear(), mes - 1, dia, hora, minuto);
+  if (data.getMonth() !== mes - 1 || data.getDate() !== dia) return null;
+  if (hoje.getTime() - data.getTime() > 183 * 24 * 3600 * 1000) data = new Date(hoje.getFullYear() + 1, mes - 1, dia, hora, minuto);
+  return data;
+}
+
+export const DURACAO_CAFE_MINUTOS = 15;
+
 export const HORARIOS = ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00', '16:00', '17:00'];
 
 // Cafés agendados por conversa, guardados no navegador para a lista de matches.

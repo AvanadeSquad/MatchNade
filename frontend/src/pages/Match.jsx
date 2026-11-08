@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { LinkTeams } from '../components/AtalhosCorporativos.jsx';
 import { Avatar, Carregando, Erro } from '../components/Basicos.jsx';
 import { IconeBrilho, IconeCalendario, IconeCoracao, IconeMensagem } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -79,6 +80,7 @@ export default function Match() {
         <Link to={`/chat/${id}?cafe=1`} className="botao botao--branco">
           Iniciar Coffee Chat
         </Link>
+        <LinkTeams conexaoId={id} className="botao botao--contorno-branco" />
         <Link to="/descobrir" className="botao botao--contorno-branco">
           Continuar Descobrindo
         </Link>
@@ -127,6 +129,7 @@ export default function Match() {
           <Link to={`/chat/${id}?cafe=1`} className="botao botao--suave">
             <IconeCalendario /> Agendar Coffee Chat
           </Link>
+          <LinkTeams conexaoId={id} className="botao botao--contorno" />
           <Link to="/descobrir" className="link-acao link-acao--cinza">
             Continuar descobrindo
           </Link>

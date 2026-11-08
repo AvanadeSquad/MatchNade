@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { corpoGoogle, corpoCadastroLocal, corpoLoginLocal, corpoPerguntaRecuperacao, corpoRedefinirSenha } from '../routes/auth.js';
 import {
+  consultaConvite,
   consultaLista,
   consultaMensagens,
   consultaRecomendacoes,
@@ -261,6 +262,28 @@ export function gerarEspecificacao() {
             403: erro('SEM_MATCH'),
             404: erro('NAO_ENCONTRADO'),
             429: limiteExcedido,
+          },
+        }),
+      },
+      '/matches/{id}/contact': {
+        get: operacao('Chat', 'Link para abrir uma conversa com a outra pessoa no Teams. Só depois do match.', {
+          parametros: [id],
+          respostas: {
+            200: json('{ teams_url }'),
+            400: invalidos,
+            403: erro('SEM_MATCH: sem match ou com bloqueio.'),
+            404: erro('NAO_ENCONTRADO'),
+          },
+        }),
+      },
+      '/matches/{id}/invite': {
+        get: operacao('Chat', 'Convite de Coffee Chat para o Outlook: link do calendário e arquivo .ics. Só depois do match.', {
+          parametros: [id, ...consulta(consultaConvite)],
+          respostas: {
+            200: json('{ outlook_url, ics, ics_filename }'),
+            400: invalidos,
+            403: erro('SEM_MATCH: sem match ou com bloqueio.'),
+            404: erro('NAO_ENCONTRADO'),
           },
         }),
       },
