@@ -9,12 +9,12 @@ Na pasta `backend`:
 ```bash
 npm run carga                                   # PGlite, 30 perfis do seed
 CARGA_PERFIS=1000 npm run carga                 # completa a base até 1.000 perfis
-DATABASE_URL=postgresql://... CARGA_PERFIS=10000 npm run carga   # PostgreSQL vazio
+DATABASE_URL=postgresql://... CARGA_PERFIS=10000 npm run carga   # PostgreSQL vazio (banco com dados de outras pessoas é recusado)
 ```
 
 O script `backend/carga/executar.js`:
 
-1. Prepara o banco: aplica as migrações, roda o seed sem as conexões de demonstração e, se `CARGA_PERFIS` for maior que os 30 perfis do seed, insere perfis fictícios com 3 a 6 interesses cada, tirados do catálogo do seed. Sem `DATABASE_URL`, usa um PGlite numa pasta temporária, apagada no fim. Com `DATABASE_URL`, o banco deve estar vazio. O `npm run seed` e o seed de inicialização não mudam.
+1. Prepara o banco: aplica as migrações, roda o seed sem as conexões de demonstração e, se `CARGA_PERFIS` for maior que os 30 perfis do seed, insere perfis fictícios com 3 a 6 interesses cada, tirados do catálogo do seed. Sem `DATABASE_URL`, usa um PGlite numa pasta temporária, apagada no fim. Com `DATABASE_URL`, o banco deve estar vazio ou já preparado por este script: antes de qualquer escrita, o script confere a tabela `employee` e, se achar alguma pessoa que não seja do seed nem um perfil `carga*@exemplo.test`, recusa, explica o motivo, sai com código 1 e não altera nada. A trava existe porque o script ajusta a cota semanal de todas as pessoas. O `npm run seed` e o seed de inicialização não mudam.
 2. Sobe a API num processo próprio (porta `CARGA_PORTA`, padrão 3200) com `NODE_ENV=test`, `E2E_TEST_MODE=true` (para entrar por `/test/login`) e `RATE_LIMIT_DISABLED=true`.
 3. Roda cada cenário por `CARGA_DURACAO` segundos (padrão 10), com as conexões de `CARGA_CONEXOES` (padrão `10,50`). Antes de cada cenário espera a API esvaziar a fila do anterior.
 4. Imprime uma linha por cenário. Com `CARGA_SAIDA=arquivo.json`, grava também os resultados com data, máquina e banco. No fim, derruba a API.
