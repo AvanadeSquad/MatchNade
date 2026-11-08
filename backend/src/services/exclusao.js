@@ -72,11 +72,12 @@ export async function cancelarExclusao(banco, id) {
 }
 
 // Apaga as contas cujo prazo venceu. Sob trava consultiva: duas varreduras ao mesmo tempo (ou duas
-// instâncias da API) não se atropelam, e quem não consegue a trava devolve 0. Devolve quantas contas apagou.
+// instâncias da API) não se atropelam, porque a segunda espera a primeira terminar e então não acha mais nada
+// vencido. Espera em vez de desistir: desistir devolveria 0 mesmo com contas vencidas, e a trava vale para o
+// banco inteiro. Devolve quantas contas apagou.
 export async function varrerContasVencidas(banco, { agora = new Date(), dias = PRAZO_EXCLUSAO_DIAS } = {}) {
   return banco.tx(async ({ query }) => {
-    const [{ travou }] = await query('SELECT pg_try_advisory_xact_lock($1) AS travou', [TRAVA_VARREDURA]);
-    if (!travou) return 0;
+    await query('SELECT pg_advisory_xact_lock($1)', [TRAVA_VARREDURA]);
     const vencidas = await query(
       `SELECT id FROM employee
         WHERE deletion_requested_at IS NOT NULL AND deletion_requested_at <= $1::timestamptz - make_interval(days => $2::int)
