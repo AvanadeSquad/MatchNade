@@ -29,6 +29,7 @@ export function EditarBio({ aoFechar }) {
 
   async function enviar(evento) {
     evento.preventDefault();
+    setErro('');
     setSalvando(true);
     try {
       definirPerfil(await API.atualizarPerfil({ bio }));
@@ -81,6 +82,7 @@ export function EditarDados({ aoFechar }) {
 
   async function enviar(evento) {
     evento.preventDefault();
+    setErro('');
     setSalvando(true);
     try {
       definirPerfil(await API.atualizarPerfil(dados));
@@ -198,6 +200,11 @@ export function EditarInteresses({ categoria, aoFechar }) {
         />
       )}
       <p className="pequeno">No total, escolha ao menos 3 interesses somando os dois tipos.</p>
+      {selecionadas.size < 3 && (
+        <p className="erro-campo" role="status">
+          Com {selecionadas.size} {selecionadas.size === 1 ? 'interesse' : 'interesses'} não é possível salvar: escolha ao menos 3.
+        </p>
+      )}
       <MensagemDeErro erro={erro} />
       <div className="modal__acoes">
         <button type="button" className="botao botao--contorno" onClick={aoFechar} disabled={salvando}>
