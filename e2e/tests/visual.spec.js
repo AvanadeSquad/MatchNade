@@ -72,6 +72,8 @@ test.describe('regressão visual', () => {
 
     await page.goto(`/match/${matchId}`);
     await expect(page.getByRole('heading', { name: /É um Match( Bilateral)?!/ })).toBeVisible();
+    // O atalho do Teams chega de uma chamada à parte; sem esperar por ele a captura dependeria da ordem das respostas.
+    await expect(page.getByRole('link', { name: 'Abrir no Teams' })).toBeVisible();
     await capturar(page, 'match');
 
     // Marca as conexões como vistas antes de abrir a tela. Em desenvolvimento o React busca a lista
@@ -84,6 +86,7 @@ test.describe('regressão visual', () => {
 
     await page.goto(`/chat/${matchId}`);
     await expect(page.getByLabel('Mensagem', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Abrir no Teams' })).toBeVisible();
     await capturar(page, 'chat');
   });
 

@@ -33,6 +33,7 @@ export const IconePessoas = icone(
 );
 export const IconeX = icone('M6 6l12 12M18 6L6 18');
 export const IconeCoracao = icone('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z');
+export const IconeBaixar = icone('M12 3v12', 'M7 10l5 5 5-5', 'M4 21h16');
 export const IconeVoltar = icone('M19 12H5', 'M12 19l-7-7 7-7');
 export const IconeSeta = icone('M5 12h14', 'M12 5l7 7-7 7');
 export const IconeMais = icone('M12 5v.01M12 12v.01M12 19v.01');

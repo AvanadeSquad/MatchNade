@@ -16,6 +16,7 @@ import {
   IconeRelogio,
   IconeVoltar,
 } from '../components/Icones.jsx';
+import { AtalhosOutlook, LinkTeams } from '../components/AtalhosCorporativos.jsx';
 import MenuPessoa from '../components/MenuPessoa.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
@@ -274,6 +275,7 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
   // Estado de cada convite: aceito, substituído por um convite mais novo, ou aberto.
   const cafes = mensagens.map((m) => ({ m, cafe: lerMensagemDeCafe(m.body) }));
   const aceitos = new Set(cafes.filter((c) => c.cafe?.tipo === 'aceite').map((c) => c.cafe.quando));
+  const ultimoAceite = [...cafes].reverse().find((c) => c.cafe?.tipo === 'aceite')?.m.id;
   const ultimoConvite = [...cafes].reverse().find((c) => c.cafe?.tipo === 'convite')?.m.id;
   const estadoDoConvite = (m, quando) => (aceitos.has(quando) ? 'aceito' : m.id !== ultimoConvite ? 'substituido' : 'aberto');
   const comuns = conexao.shared_interests.slice(0, 3);
@@ -302,6 +304,7 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
           <button type="button" className="botao botao--suave botao--pequeno botao--auto" onClick={() => setProposta(true)}>
             <IconeCha /> Propor Coffee Chat (15 min)
           </button>
+          <LinkTeams conexaoId={id} className="botao botao--contorno botao--pequeno botao--auto conversa__teams" somenteIconeNoCelular />
           <Link to={`/pessoa/${conexao.employee_id}`} className="icone-botao" aria-label={`Ver perfil de ${conexao.name}`}>
             <IconePerfil />
           </Link>
@@ -345,9 +348,12 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
             );
           } else if (cafe?.tipo === 'aceite') {
             corpo = (
-              <p className="evento">
-                <IconeCheckCirculo /> {minha ? 'Você confirmou' : `${nome} confirmou`} o Coffee Chat: <strong>{cafe.quando}</strong>
-              </p>
+              <>
+                <p className="evento">
+                  <IconeCheckCirculo /> {minha ? 'Você confirmou' : `${nome} confirmou`} o Coffee Chat: <strong>{cafe.quando}</strong>
+                </p>
+                {m.id === ultimoAceite && <AtalhosOutlook conexaoId={id} quando={cafe.quando} />}
+              </>
             );
           } else {
             corpo = (

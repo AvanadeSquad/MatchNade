@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { enviarMensagem, listarMensagens } from '../services/chat.js';
+import { contatoDaConexao, conviteDaConexao } from '../services/convites.js';
 import { demonstrarInteresse, listarConexoes, obterQuebraGelo, responderSolicitacao } from '../services/conexoes.js';
 import { recomendar } from '../services/recomendacoes.js';
 import { lerId } from '../utils/validacao.js';
@@ -11,6 +12,10 @@ export const corpoMensagem = z.object({ body: z.string() });
 export const consultaLista = z.object({ peek: z.enum(['true', 'false']).optional() });
 export const consultaRecomendacoes = z.object({
   limit: z.coerce.number().int().positive().optional().describe('Quantidade de sugestões. Padrão 5; acima de 20 vira 20.'),
+});
+export const consultaConvite = z.object({
+  start: z.iso.datetime().describe('Início do Coffee Chat em ISO 8601 com fuso, por exemplo 2026-11-10T13:30:00.000Z.'),
+  minutes: z.coerce.number().int().min(15).max(120).default(15).describe('Duração em minutos. Padrão 15.'),
 });
 export const consultaMensagens = z.object({
   after: z.coerce.number().int().min(0).default(0),
@@ -42,6 +47,15 @@ export function rotasConexoes(ctx, autenticar) {
 
   router.get('/matches/:id/icebreaker', autenticar, ctx.limitarPorPessoa(60, 60 * 60 * 1000), async (req, res) => {
     res.json(await obterQuebraGelo(ctx, req.usuario.id, lerId(req)));
+  });
+
+  router.get('/matches/:id/contact', autenticar, async (req, res) => {
+    res.json(await contatoDaConexao(ctx, req.usuario.id, lerId(req)));
+  });
+
+  router.get('/matches/:id/invite', autenticar, async (req, res) => {
+    const { start, minutes } = consultaConvite.parse(req.query);
+    res.json(await conviteDaConexao(ctx, req.usuario.id, lerId(req), { inicio: start, minutos: minutes }));
   });
 
   router.get('/matches/:id/messages', autenticar, async (req, res) => {

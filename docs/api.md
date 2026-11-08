@@ -34,6 +34,7 @@ Regras que valem para essas rotas:
 - **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo Google) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
 - **Recuperação uniforme:** `POST /auth/recovery-question` sempre devolve uma pergunta e `available: true`. Para e-mail sem cadastro ou conta sem pergunta, a pergunta é fictícia (a mesma a cada consulta do mesmo e-mail), e a redefinição falha com a mesma mensagem genérica de uma resposta errada.
 - **Bloqueio da recuperação por conta:** 5 respostas erradas seguidas bloqueiam a redefinição daquela conta por 15 minutos. Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica. Uma redefinição com sucesso zera a contagem. Isso se soma ao limite por IP das rotas de login.
+- **Bloqueio do login por conta:** 5 senhas erradas seguidas bloqueiam o login daquela conta por 15 minutos. Durante o bloqueio nem a senha certa entra, e a resposta é a mesma de senha errada (`401`). Um acerto zera a contagem, e redefinir a senha libera o login. Conta inexistente, sem senha local ou inativa não conta erros.
 - **Sessões antigas invalidadas:** redefinir a senha incrementa a versão de sessão da conta, e todo JWT emitido antes passa a receber `401 NAO_AUTENTICADO`.
 
 Só em desenvolvimento e testes (a API recusa iniciar em produção com estas flags):
@@ -84,6 +85,8 @@ A cota semanal conta as solicitações que a pessoa envia (de segunda a domingo,
 | Método e rota | Função | Resposta | Erros |
 |---|---|---|---|
 | `GET /matches/:id/icebreaker` | Sugestão de abertura. Gerada uma vez e guardada. Se a IA falhar, devolve o texto padrão com `fallback: true`, sem guardar. Até 60 chamadas por hora por pessoa. | `200 { match_summary }` | `403 SEM_MATCH`, `404`, `429` |
+| `GET /matches/:id/contact` | Link para abrir a conversa com a outra pessoa no Teams. Só depois do match. | `200 { teams_url }` | `403 SEM_MATCH`, `404` |
+| `GET /matches/:id/invite?start=<ISO 8601 com fuso>&minutes=15` | Convite de Coffee Chat: link do calendário do Outlook e conteúdo do arquivo `.ics`. `minutes` de 15 a 120 (padrão 15). Só depois do match. | `200 { outlook_url, ics, ics_filename }` | `400`, `403 SEM_MATCH`, `404` |
 | `GET /matches/:id/messages?after=<id>&limit=100` | Mensagens com id maior que `after`, em ordem (`limit` de 1 a 200). Usado no polling. | `200 { messages }` | `403 SEM_MATCH`, `403 BLOQUEADO`, `404` |
 | `POST /matches/:id/messages` | Envia mensagem (até 1000 caracteres). Corpo: `{ "body" }`. | `201 { id, sender_id, body, created_at }` | `400 MENSAGEM_VAZIA`, `400 MENSAGEM_LONGA`, `403 SEM_MATCH`, `403 BLOQUEADO`, `404` |
 

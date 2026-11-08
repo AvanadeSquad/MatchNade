@@ -76,6 +76,8 @@ export const API = {
   demonstrarInteresse: (receiver_id) => api('/matches', { metodo: 'POST', corpo: { receiver_id } }),
   responder: (conexao, action) => api(`/matches/${id(conexao)}`, { metodo: 'PATCH', corpo: { action } }),
   quebraGelo: (conexao) => api(`/matches/${id(conexao)}/icebreaker`),
+  contato: (conexao) => api(`/matches/${id(conexao)}/contact`),
+  convite: (conexao, inicio, minutos = 15) => api(`/matches/${id(conexao)}/invite?start=${encodeURIComponent(inicio)}&minutes=${minutos}`),
   mensagens: (conexao, depois = 0, sinal) => api(`/matches/${id(conexao)}/messages?after=${depois}`, { sinal }),
   enviarMensagem: (conexao, body) => api(`/matches/${id(conexao)}/messages`, { metodo: 'POST', corpo: { body } }),
 
