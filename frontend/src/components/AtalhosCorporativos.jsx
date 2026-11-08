@@ -5,7 +5,7 @@ import { IconeBaixar, IconeCalendario, IconeMensagem } from './Icones.jsx';
 
 // Abre a conversa com a pessoa no Teams. O link vem pronto da API e só existe depois do match;
 // se a API recusar ou falhar, o atalho simplesmente não aparece.
-export function LinkTeams({ conexaoId, className = 'botao botao--contorno botao--pequeno botao--auto' }) {
+export function LinkTeams({ conexaoId, className = 'botao botao--contorno botao--pequeno botao--auto', somenteIconeNoCelular = false }) {
   const [url, setUrl] = useState(null);
 
   useEffect(() => {
@@ -21,8 +21,8 @@ export function LinkTeams({ conexaoId, className = 'botao botao--contorno botao-
 
   if (!url) return null;
   return (
-    <a className={className} href={url} target="_blank" rel="noopener noreferrer">
-      <IconeMensagem /> Abrir no Teams
+    <a className={className} href={url} target="_blank" rel="noopener noreferrer" aria-label="Abrir no Teams" title="Abrir no Teams">
+      <IconeMensagem /> <span className={somenteIconeNoCelular ? 'so-desktop' : undefined}>Abrir no Teams</span>
     </a>
   );
 }

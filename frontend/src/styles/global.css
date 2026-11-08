@@ -954,7 +954,7 @@ h1.perfil__nome { font-size: 28px; }
   .conversa__voltar { display: grid; }
   .conversa__topo { padding: 10px 12px; }
   .conversa__acoes .botao { display: none; }
-  .conversa__acoes .conversa__teams { display: inline-flex; }
+  .conversa__acoes .conversa__teams { display: inline-flex; justify-content: center; width: 40px; min-width: 40px; height: 40px; padding: 0; }
   .sinergia { display: none; }
   .conversa__mensagens { padding: 16px 14px; background: #f3f4f7; }
   .separador-dia { background: none; color: var(--texto-3); text-transform: uppercase; letter-spacing: 0.04em; }

@@ -304,7 +304,7 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
           <button type="button" className="botao botao--suave botao--pequeno botao--auto" onClick={() => setProposta(true)}>
             <IconeCha /> Propor Coffee Chat (15 min)
           </button>
-          <LinkTeams conexaoId={id} className="botao botao--contorno botao--pequeno botao--auto conversa__teams" />
+          <LinkTeams conexaoId={id} className="botao botao--contorno botao--pequeno botao--auto conversa__teams" somenteIconeNoCelular />
           <Link to={`/pessoa/${conexao.employee_id}`} className="icone-botao" aria-label={`Ver perfil de ${conexao.name}`}>
             <IconePerfil />
           </Link>
