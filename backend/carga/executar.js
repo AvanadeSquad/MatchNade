@@ -5,8 +5,10 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import pg from 'pg';
 import { criarBanco } from '../src/db/index.js';
 import { montarPessoas, semear } from '../src/db/seed.js';
+import { BancoComDadosAlheios, exigirBancoSemDadosAlheios } from './trava.js';
 
 // Teste de carga da API. Sobe a API num processo próprio, dispara os cenários com o autocannon e
 // derruba tudo no fim. Variáveis:
@@ -14,7 +16,8 @@ import { montarPessoas, semear } from '../src/db/seed.js';
 //   CARGA_DURACAO    segundos por cenário (padrão 10)
 //   CARGA_CONEXOES   conexões simultâneas, separadas por vírgula (padrão 10,50)
 //   CARGA_PORTA      porta da API (padrão 3200)
-//   DATABASE_URL     PostgreSQL vazio para usar no lugar do PGlite
+//   DATABASE_URL     PostgreSQL vazio (ou já preparado por este script) para usar no lugar do PGlite.
+//                    Um banco com pessoas que não vêm do seed nem deste script é recusado antes de qualquer escrita.
 //   CARGA_SAIDA      arquivo JSON para gravar os resultados
 const PERFIS = Number(process.env.CARGA_PERFIS || 30);
 const DURACAO = Number(process.env.CARGA_DURACAO || 10);
@@ -27,6 +30,21 @@ const EMAIL_LOCAL = 'carga.local@exemplo.test';
 // Pessoas usadas como remetentes no cenário de POST /matches.
 const REMETENTES_MAX = 200;
 const pastaBackend = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+// Confere o banco de DATABASE_URL antes de qualquer escrita, inclusive das migrações.
+async function conferirBanco() {
+  if (!DATABASE_URL) return;
+  const cliente = new pg.Client({ connectionString: DATABASE_URL });
+  await cliente.connect();
+  try {
+    await exigirBancoSemDadosAlheios(async (sql, parametros) => (await cliente.query(sql, parametros)).rows, {
+      emailsDoSeed: montarPessoas().map((p) => p.email),
+      emailDoScript: EMAIL_LOCAL,
+    });
+  } finally {
+    await cliente.end();
+  }
+}
 
 async function prepararBanco(dataDir) {
   const banco = await criarBanco({ databaseUrl: DATABASE_URL || undefined, dataDir });
@@ -146,6 +164,7 @@ function rodar(nome, conexoes, opcoes) {
 }
 
 async function principal() {
+  await conferirBanco();
   const dataDir = DATABASE_URL ? undefined : await mkdtemp(path.join(os.tmpdir(), 'matchnade-carga-'));
   const { pessoas, incompletos } = await prepararBanco(dataDir);
   const api = subirApi(dataDir);
@@ -244,4 +263,10 @@ async function principal() {
   }
 }
 
-await principal();
+try {
+  await principal();
+} catch (erro) {
+  if (!(erro instanceof BancoComDadosAlheios)) throw erro;
+  console.error(erro.message);
+  process.exitCode = 1;
+}
