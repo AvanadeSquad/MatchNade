@@ -16,6 +16,10 @@ const formatadorHora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minut
 export const hora = (iso) => formatadorHora.format(new Date(iso));
 
 const formatadorDia = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' });
+const formatadorDataCompleta = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// "12 de dezembro de 2026", no fuso do navegador.
+export const dataPorExtenso = (iso) => formatadorDataCompleta.format(new Date(iso));
 const formatadorDiaCurto = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' });
 const formatadorSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' });
 

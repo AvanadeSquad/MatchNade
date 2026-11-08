@@ -834,7 +834,7 @@
         "tags": [
           "Perfil"
         ],
-        "summary": "Exclui a pessoa e todos os dados ligados a ela.",
+        "summary": "Exclui a pessoa e todos os dados ligados a ela, na hora. As denúncias recebidas vão para o arquivo anônimo. Vale também para conta marcada para exclusão.",
         "security": [
           {
             "jwt": []
@@ -846,6 +846,126 @@
           },
           "401": {
             "description": "NAO_AUTENTICADO: sem token, token inválido ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/deletion": {
+      "post": {
+        "tags": [
+          "Perfil"
+        ],
+        "summary": "Marca a conta para exclusão em 30 dias: oculta a pessoa, derruba todas as sessões e exige o e-mail da própria conta. Entrar de novo permite cancelar.",
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirm_email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 254
+                  }
+                },
+                "required": [
+                  "confirm_email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ requested_at, scheduled_for }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "CONFIRMACAO_INVALIDA, DADOS_INVALIDOS ou CORPO_INVALIDO.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "NAO_AUTENTICADO: sem token, token inválido ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CONTA_EM_EXCLUSAO: a conta já está marcada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/deletion/cancel": {
+      "post": {
+        "tags": [
+          "Perfil"
+        ],
+        "summary": "Cancela a exclusão dentro do prazo. As conexões e as mensagens voltam. Devolve o perfil.",
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "NAO_AUTENTICADO: sem token, token inválido ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SEM_EXCLUSAO_PENDENTE",
             "content": {
               "application/json": {
                 "schema": {

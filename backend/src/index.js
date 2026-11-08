@@ -14,11 +14,13 @@ if (!config.producao && (config.seedNaInicializacao || !config.databaseUrl)) {
 }
 
 const app = criarApp({ banco, config, log, limitarRequisicoes: !config.limiteDeRequisicoesDesligado });
+const pararLimpeza = app.locals.limpeza.iniciar();
 const servidor = app.listen(config.porta, () => {
   log.info('api iniciada', { porta: config.porta, banco: banco.tipo });
 });
 
 async function encerrar() {
+  pararLimpeza();
   servidor.close();
   await banco.close();
   process.exit(0);

@@ -140,14 +140,42 @@ test.describe('segurança entre pessoas', () => {
 });
 
 test.describe('conta e sessão', () => {
-  test('excluir os dados encerra a sessão e invalida o token', async ({ page, request }) => {
-    const { a } = await parDePessoas(request, 'Xavier Exemplo', 'Yara Exemplo');
+  test('pedir a exclusão exige o e-mail, derruba a sessão e permite cancelar ao entrar de novo', async ({ page, request }) => {
+    const { a, b } = await parDePessoas(request, 'Xavier Exemplo', 'Yara Exemplo');
     await autenticarPagina(page, a.token);
     await abrirSecao(page, 'Conta');
-    await page.getByRole('button', { name: 'Excluir meus dados' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Excluir tudo' }).click();
+    await page.getByRole('button', { name: 'Excluir minha conta' }).click();
+    const dialogo = page.getByRole('dialog');
+    await expect(dialogo.getByRole('button', { name: 'Excluir minha conta' })).toBeDisabled();
+    await dialogo.getByLabel(/digite o e-mail da sua conta/i).fill(a.email);
+    await dialogo.getByRole('button', { name: 'Excluir minha conta' }).click();
     await expect(page).toHaveURL(/\/login$/);
     expect((await chamar(request, a.token, 'get', '/profile')).status()).toBe(401);
+
+    // A pessoa ficou oculta para as outras e a conta continua existindo.
+    const vistaPorB = await chamar(request, b.token, 'get', `/employees/${a.id}`);
+    expect(vistaPorB.status()).toBe(404);
+
+    // Entrando de novo, só aparece a tela de cancelar; o resto do app fica fechado.
+    const novoToken = await entrarPorApi(request, a.email);
+    await autenticarPagina(page, novoToken);
+    await page.goto('/descobrir');
+    await expect(page.getByRole('heading', { name: /marcada para exclusão/ })).toBeVisible();
+    await page.getByRole('button', { name: 'Cancelar a exclusão' }).click();
+    await expect(page).toHaveURL(/\/descobrir$/);
+    expect((await chamar(request, novoToken, 'get', '/profile')).status()).toBe(200);
+  });
+
+  test('excluir agora, na tela da conta marcada, apaga na hora e encerra a sessão', async ({ page, request }) => {
+    const { a } = await parDePessoas(request, 'Zuleica Exemplo', 'Wilson Exemplo');
+    expect((await chamar(request, a.token, 'post', '/profile/deletion', { confirm_email: a.email })).status()).toBe(200);
+    const novoToken = await entrarPorApi(request, a.email);
+    await autenticarPagina(page, novoToken);
+    await page.goto('/descobrir');
+    await page.getByRole('button', { name: 'Excluir agora' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Excluir tudo agora' }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect((await chamar(request, novoToken, 'get', '/profile')).status()).toBe(401);
   });
 
   test('token inválido volta ao login', async ({ page }) => {

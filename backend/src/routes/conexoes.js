@@ -27,6 +27,7 @@ export function rotasConexoes(ctx, autenticar) {
 
   router.get('/matches/recommendations', autenticar, async (req, res) => {
     const { limit } = consultaRecomendacoes.parse(req.query);
+    ctx.limpeza.executar();
     res.json(await recomendar(ctx, req.usuario.id, limit));
   });
 

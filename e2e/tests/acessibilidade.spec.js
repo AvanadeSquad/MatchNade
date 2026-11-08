@@ -193,7 +193,7 @@ test.describe('acessibilidade (axe)', () => {
     const dialogos = [
       { botao: 'Pessoas bloqueadas', secao: 'Privacidade' },
       { botao: 'Ler diretrizes', secao: 'Privacidade' },
-      { botao: 'Excluir meus dados', secao: 'Conta' },
+      { botao: 'Excluir minha conta', secao: 'Conta' },
     ];
     for (const { botao, secao } of dialogos) {
       await abrirSecao(page, secao);
@@ -203,5 +203,19 @@ test.describe('acessibilidade (axe)', () => {
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toHaveCount(0);
     }
+  });
+
+  test('conta marcada para exclusão e a confirmação de excluir agora', async ({ page, request }) => {
+    const pessoa = await criarPessoaPronta(request, { nome: 'Fátima Acessível', ...interessesExclusivos() });
+    expect((await chamar(request, pessoa.token, 'post', '/profile/deletion', { confirm_email: pessoa.email })).status()).toBe(200);
+    await autenticarPagina(page, await entrarPorApi(request, pessoa.email));
+    await page.goto('/descobrir');
+    await expect(page.getByRole('heading', { name: /marcada para exclusão/ })).toBeVisible();
+    await verificar(page, 'conta marcada para exclusão');
+    await page.getByRole('button', { name: 'Excluir agora' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await verificar(page, 'confirmação de excluir agora');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 });

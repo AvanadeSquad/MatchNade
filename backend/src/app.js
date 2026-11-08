@@ -12,6 +12,7 @@ import { rotasDev } from './routes/dev.js';
 import { rotasPerfil } from './routes/perfil.js';
 import { rotasPessoas } from './routes/pessoas.js';
 import { criarAutenticacao } from './services/autenticacao.js';
+import { criarLimpeza } from './services/exclusao.js';
 import { criarProntidao } from './services/prontidao.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
@@ -27,7 +28,7 @@ export function criarApp({
   log = criarLog({ nivel: config.logLevel }),
 }) {
   const autenticacao = criarAutenticacao(config, verificadorMicrosoft);
-  const ctx = { banco, config, autenticacao, ia: ia ?? criarServicoIa({ config, banco }) };
+  const ctx = { banco, config, autenticacao, ia: ia ?? criarServicoIa({ config, banco }), limpeza: criarLimpeza({ banco, log }) };
   // Limites por pessoa nas rotas que gastam a cota gratuita de IA.
   ctx.limitarPorPessoa = (max, janelaMs) =>
     limitarRequisicoes
@@ -77,6 +78,8 @@ export function criarApp({
   api.use(rotasConexoes(ctx, exigirLogin));
   api.use(rotasPessoas(ctx, exigirLogin));
   app.use('/api/v1', api);
+  // A varredura de contas vencidas só começa quando quem sobe a API chama `app.locals.limpeza.iniciar()`.
+  app.locals.limpeza = ctx.limpeza;
 
   app.use(rotaNaoEncontrada);
   app.use(tratarErros(registrarErro ?? ((erro, req) => log.error('erro inesperado', { request_id: req.id, ...resumirErro(erro) }))));

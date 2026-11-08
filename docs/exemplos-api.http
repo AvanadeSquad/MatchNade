@@ -135,7 +135,20 @@ Content-Type: application/json
   "is_paused": true
 }
 
-### Excluir o perfil e tudo ligado a ele
+### Pedir a exclusão da conta (30 dias para se arrepender; derruba as sessões)
+POST {{baseUrl}}/profile/deletion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "confirm_email": "pessoa.exemplo@exemplo.test"
+}
+
+### Cancelar a exclusão (entre de novo com a conta marcada e use o token novo)
+POST {{baseUrl}}/profile/deletion/cancel
+Authorization: Bearer {{token}}
+
+### Excluir o perfil e tudo ligado a ele, na hora
 DELETE {{baseUrl}}/profile
 Authorization: Bearer {{token}}
 

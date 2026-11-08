@@ -66,6 +66,8 @@ export const API = {
   salvarInteresses: (interests) => api('/profile/interests', { metodo: 'PUT', corpo: { interests } }),
   pausar: (is_paused) => api('/profile/pause', { metodo: 'PATCH', corpo: { is_paused } }),
   excluirPerfil: () => api('/profile', { metodo: 'DELETE' }),
+  solicitarExclusao: (confirm_email) => api('/profile/deletion', { metodo: 'POST', corpo: { confirm_email } }),
+  cancelarExclusao: () => api('/profile/deletion/cancel', { metodo: 'POST' }),
   tags: (categoria) => api(`/tags${categoria ? `?category=${categoria}` : ''}`),
   criarTag: (name, category) => api('/tags', { metodo: 'POST', corpo: { name, category } }),
 

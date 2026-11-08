@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, Cabecalho, Carregando, Modal } from '../components/Basicos.jsx';
+import ExcluirConta from '../components/ExcluirConta.jsx';
 import { Equilibrio, Interruptor, Polos, Segmentado } from '../components/Controles.jsx';
 import { EditarBio, EditarDados, EditarInteresses, PreviewPublico } from '../components/EdicaoPerfil.jsx';
 import {
@@ -31,6 +32,7 @@ import { useCarregar } from '../hooks/useCarregar.js';
 import { useCelular } from '../hooks/useCelular.js';
 import { usePreferencias } from '../hooks/usePreferencias.js';
 import { API } from '../services/api.js';
+import { dataPorExtenso } from '../utils/formatar.js';
 import { limparIgnorados } from '../utils/ignorados.js';
 import { OBJETIVOS, nomeDoObjetivo } from '../utils/objetivos.js';
 import { ALCANCES, limparPreferencias } from '../utils/preferencias.js';
@@ -82,7 +84,6 @@ export default function MeuPerfil() {
   const [pausado, setPausado] = useState(perfil.is_paused);
   const [salvandoObjetivos, setSalvandoObjetivos] = useState(false);
   const [salvandoCota, setSalvandoCota] = useState(false);
-  const [apagando, setApagando] = useState(false);
   const [secao, setSecao] = useState(null);
   const celular = useCelular();
   const layout = useLayout();
@@ -134,19 +135,16 @@ export default function MeuPerfil() {
     }
   }
 
-  async function excluir() {
-    setApagando(true);
-    try {
-      await API.excluirPerfil();
-    } catch (e) {
-      avisar(e.message, 'erro');
-      setApagando(false);
-      return;
-    }
+  // A exclusão só foi pedida: a conta fica oculta e a API encerra todas as sessões. Voltar a entrar dentro do prazo permite cancelar.
+  function aposPedirExclusao(previstoPara) {
     limparPreferencias(perfil.id);
     limparIgnorados(perfil.id);
     sair();
     navegar('/login', { replace: true });
+    avisar(
+      `Exclusão solicitada. Sua conta será apagada em ${dataPorExtenso(previstoPara)}. Entre de novo antes disso para cancelar.`,
+      'info',
+    );
   }
 
   function sairDaConta() {
@@ -357,7 +355,7 @@ export default function MeuPerfil() {
 
   const linkExcluir = (
     <button type="button" className="link-acao link-acao--perigo" onClick={() => setDialogo('excluir')}>
-      Excluir meus dados definitivamente
+      Excluir minha conta
     </button>
   );
 
@@ -375,7 +373,10 @@ export default function MeuPerfil() {
             <li>A API guarda nome, e-mail corporativo, unidade, cidade, interesses, objetivos, resumo e cargo (opcional).</li>
             <li>Cargo e resumo só aparecem para outra pessoa depois do match.</li>
             <li>O hub e os parâmetros do algoritmo ficam só neste navegador.</li>
-            <li>Você pode pausar sua exposição, bloquear, denunciar e excluir seus dados a qualquer momento. A exclusão é definitiva.</li>
+            <li>
+              Você pode pausar sua exposição, bloquear, denunciar e excluir seus dados a qualquer momento. A exclusão da conta tem um prazo
+              de 30 dias para você se arrepender.
+            </li>
           </ul>
           <button type="button" className="botao botao--contorno" onClick={fechar}>
             Fechar
@@ -393,19 +394,7 @@ export default function MeuPerfil() {
           </button>
         </Modal>
       )}
-      {dialogo === 'excluir' && (
-        <Modal titulo="Excluir meus dados?" aoFechar={fechar} ocupado={apagando}>
-          <p>Seu perfil, interesses, conexões e mensagens são apagados de forma definitiva. Esta ação não pode ser desfeita.</p>
-          <div className="modal__acoes">
-            <button type="button" className="botao botao--contorno" onClick={fechar} disabled={apagando}>
-              Cancelar
-            </button>
-            <button type="button" className="botao botao--perigo-forte" disabled={apagando} onClick={excluir}>
-              Excluir tudo
-            </button>
-          </div>
-        </Modal>
-      )}
+      {dialogo === 'excluir' && <ExcluirConta email={perfil.email} aoFechar={fechar} aoConcluir={aposPedirExclusao} />}
     </>
   );
 

@@ -67,14 +67,15 @@ export function rotasAuth(ctx) {
   router.post('/auth/login', async (req, res) => {
     const { email, password } = corpoLoginLocal.parse(req.body);
     const [funcionario] = await ctx.banco.query(
-      'SELECT id, password_hash, is_active, login_locked_until FROM employee WHERE LOWER(email) = LOWER($1)',
+      'SELECT id, password_hash, is_active, deletion_requested_at, login_locked_until FROM employee WHERE LOWER(email) = LOWER($1)',
       [email],
     );
     // Conta inexistente ou sem senha local passa pela mesma verificação custosa: o tempo não revela o cadastro.
     const senhaCerta = funcionario?.password_hash
       ? await verificarHash(password, funcionario.password_hash)
       : (await verificarContraFicticio(password), false);
-    const controlada = Boolean(funcionario?.password_hash && funcionario.is_active);
+    // Conta marcada para exclusão (is_active = false mais a data do pedido) entra, para poder cancelar.
+    const controlada = Boolean(funcionario?.password_hash && (funcionario.is_active || funcionario.deletion_requested_at));
     // Durante o bloqueio nem a senha certa entra, e a resposta é a mesma de senha errada.
     const bloqueada = controlada && estaBloqueada(funcionario.login_locked_until);
     if (!senhaCerta || !controlada || bloqueada) {
@@ -84,6 +85,7 @@ export function rotasAuth(ctx) {
     await ctx.banco.query('UPDATE employee SET last_seen_at = NOW(), login_failed_attempts = 0, login_locked_until = NULL WHERE id = $1', [
       funcionario.id,
     ]);
+    ctx.limpeza.executar();
     res.json({ token: await emitirToken(ctx, funcionario.id), employee: await montarPerfil(ctx, funcionario.id), is_new: false });
   });
 
@@ -92,9 +94,10 @@ export function rotasAuth(ctx) {
   // então a resposta não revela quem tem cadastro.
   router.post('/auth/recovery-question', async (req, res) => {
     const { email } = corpoPerguntaRecuperacao.parse(req.body);
-    const [funcionario] = await ctx.banco.query('SELECT security_question_id FROM employee WHERE LOWER(email) = LOWER($1) AND is_active', [
-      email,
-    ]);
+    const [funcionario] = await ctx.banco.query(
+      'SELECT security_question_id FROM employee WHERE LOWER(email) = LOWER($1) AND (is_active OR deletion_requested_at IS NOT NULL)',
+      [email],
+    );
     const pergunta = PERGUNTAS_SEGURANCA.find((p) => p.id === funcionario?.security_question_id);
     res.json({ question: pergunta?.pergunta ?? perguntaFicticia(email, ctx.config.jwtSecret), available: true });
   });
@@ -102,13 +105,14 @@ export function rotasAuth(ctx) {
   router.post('/auth/reset-password', async (req, res) => {
     const { email, security_answer, new_password } = corpoRedefinirSenha.parse(req.body);
     const [funcionario] = await ctx.banco.query(
-      `SELECT id, security_answer_hash, security_question_id, is_active, recovery_locked_until
+      `SELECT id, security_answer_hash, security_question_id, is_active, deletion_requested_at, recovery_locked_until
          FROM employee WHERE LOWER(email) = LOWER($1)`,
       [email],
     );
     const falha = () => naoAutenticado('Não foi possível validar a recuperação. Confira os dados e tente novamente.');
     const respostaNormalizada = normalizarRespostaSeguranca(security_answer);
-    const recuperavel = Boolean(funcionario?.is_active && funcionario.security_question_id && funcionario.security_answer_hash);
+    const contaViva = Boolean(funcionario?.is_active || funcionario?.deletion_requested_at);
+    const recuperavel = Boolean(contaViva && funcionario.security_question_id && funcionario.security_answer_hash);
     // Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica.
     const bloqueada = recuperavel && estaBloqueada(funcionario.recovery_locked_until);
     const correta = recuperavel
@@ -136,6 +140,7 @@ export function rotasAuth(ctx) {
     const identidade = await ctx.autenticacao.identificarPorMicrosoft(credential);
     const { id, novo } = await obterOuCriarPorProvedor(ctx.banco, identidade);
     await ctx.banco.query('UPDATE employee SET last_seen_at = COALESCE(last_seen_at, NOW()) WHERE id = $1', [id]);
+    ctx.limpeza.executar();
     res.json({ token: await emitirToken(ctx, id), employee: await montarPerfil(ctx, id), is_new: novo });
   });
 
