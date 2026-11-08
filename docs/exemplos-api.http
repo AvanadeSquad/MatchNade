@@ -1,0 +1,230 @@
+# Exemplos de requisições da API (REST Client e extensões compatíveis).
+# Só dados fictícios. Preencha @token com o valor devolvido por um login (cadastro, login,
+# /auth/dev-login ou /test/login). Os ids (42, 7) são exemplos: troque pelos do seu banco.
+
+@baseUrl = http://localhost:3000/api/v1
+@token = cole-aqui-o-token-devolvido-pelo-login
+
+### Saúde do serviço
+GET {{baseUrl}}/health
+
+### Prontidão (confere o banco)
+GET {{baseUrl}}/health/ready
+
+########## Autenticação local
+
+### Perguntas de segurança aceitas no cadastro
+GET {{baseUrl}}/auth/security-questions
+
+### Criar conta com senha e pergunta de segurança
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Pessoa Exemplo",
+  "email": "pessoa.exemplo@exemplo.test",
+  "password": "senha-ficticia-123",
+  "security_question_id": "primeiro_pet",
+  "security_answer": "Rex"
+}
+
+### Entrar com e-mail e senha
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "pessoa.exemplo@exemplo.test",
+  "password": "senha-ficticia-123"
+}
+
+### Pergunta de segurança da conta (sempre responde, mesmo sem cadastro)
+POST {{baseUrl}}/auth/recovery-question
+Content-Type: application/json
+
+{
+  "email": "pessoa.exemplo@exemplo.test"
+}
+
+### Redefinir a senha com a resposta de segurança
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "pessoa.exemplo@exemplo.test",
+  "security_answer": "rex",
+  "new_password": "nova-senha-ficticia-456"
+}
+
+### Login com Google (credential é o ID token devolvido pelo botão do Google)
+POST {{baseUrl}}/auth/google
+Content-Type: application/json
+
+{
+  "credential": "id-token-do-google"
+}
+
+########## Só em desenvolvimento e testes
+
+### Lista de pessoas para entrar sem senha (AUTH_DEV_LOGIN=true)
+GET {{baseUrl}}/auth/dev-users
+
+### Entrar sem senha (AUTH_DEV_LOGIN=true)
+POST {{baseUrl}}/auth/dev-login
+Content-Type: application/json
+
+{
+  "email": "ana.silva@exemplo.test"
+}
+
+### Entrar com qualquer e-mail, criando a pessoa se preciso (E2E_TEST_MODE=true)
+POST {{baseUrl}}/test/login
+Content-Type: application/json
+
+{
+  "email": "teste.e2e@exemplo.test"
+}
+
+########## Perfil
+
+### Perfil da pessoa logada
+GET {{baseUrl}}/profile
+Authorization: Bearer {{token}}
+
+### Atualizar dados do perfil
+PUT {{baseUrl}}/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Pessoa Exemplo",
+  "bio": "Curto dados abertos, trilhas e xadrez.",
+  "department": "Data & AI",
+  "location": "Recife, PE",
+  "connection_goals": ["NETWORKING", "MENTORIA"],
+  "max_weekly_matches": 3
+}
+
+### Extrair tags da bio com IA
+POST {{baseUrl}}/profile/enrich-bio
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "raw_bio": "Trabalho com Python e gosto de fotografia e corrida."
+}
+
+### Substituir os interesses (mínimo de 3)
+PUT {{baseUrl}}/profile/interests
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "interests": [
+    { "name": "Python", "category": "TECHNICAL", "source": "AI", "confidence": 0.9 },
+    { "name": "Fotografia", "category": "HOBBY" },
+    { "name": "Corrida", "category": "HOBBY" }
+  ]
+}
+
+### Pausar a exposição na descoberta
+PATCH {{baseUrl}}/profile/pause
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "is_paused": true
+}
+
+### Excluir o perfil e tudo ligado a ele
+DELETE {{baseUrl}}/profile
+Authorization: Bearer {{token}}
+
+########## Tags
+
+### Catálogo de tags de uma categoria
+GET {{baseUrl}}/tags?category=TECHNICAL
+Authorization: Bearer {{token}}
+
+### Criar uma tag (ou receber a existente)
+POST {{baseUrl}}/tags
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Terraform",
+  "category": "TECHNICAL"
+}
+
+########## Descoberta e conexões
+
+### Recomendações por afinidade
+GET {{baseUrl}}/matches/recommendations?limit=5
+Authorization: Bearer {{token}}
+
+### Demonstrar interesse
+POST {{baseUrl}}/matches
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "receiver_id": 42
+}
+
+### Aceitar ou recusar uma solicitação recebida
+PATCH {{baseUrl}}/matches/7
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "action": "accept"
+}
+
+### Conexões em três grupos, sem marcar como vistas
+GET {{baseUrl}}/matches?peek=true
+Authorization: Bearer {{token}}
+
+### Perfil de outra pessoa
+GET {{baseUrl}}/employees/42
+Authorization: Bearer {{token}}
+
+########## Chat
+
+### Sugestão de abertura da conversa
+GET {{baseUrl}}/matches/7/icebreaker
+Authorization: Bearer {{token}}
+
+### Mensagens depois de um id
+GET {{baseUrl}}/matches/7/messages?after=0&limit=100
+Authorization: Bearer {{token}}
+
+### Enviar mensagem
+POST {{baseUrl}}/matches/7/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "body": "Oi! Vi que você também curte fotografia."
+}
+
+########## Bloqueio e denúncia
+
+### Bloquear uma pessoa
+POST {{baseUrl}}/employees/42/block
+Authorization: Bearer {{token}}
+
+### Desbloquear (reabre o chat de uma conexão aceita)
+DELETE {{baseUrl}}/employees/42/block
+Authorization: Bearer {{token}}
+
+### Pessoas bloqueadas
+GET {{baseUrl}}/blocks
+Authorization: Bearer {{token}}
+
+### Denunciar uma pessoa
+POST {{baseUrl}}/employees/42/report
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Mensagens ofensivas no chat."
+}

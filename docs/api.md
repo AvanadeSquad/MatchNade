@@ -1,6 +1,6 @@
 # API
 
-Prefixo `/api/v1`. Todas as rotas, exceto `/health`, `/health/ready`, o login e as rotas de desenvolvimento e teste, exigem `Authorization: Bearer <jwt>`. Erros seguem o formato:
+Prefixo `/api/v1`. Todas as rotas, exceto `/health`, `/health/ready`, as rotas de autenticação (`/auth/...`) e as rotas de desenvolvimento e teste, exigem `Authorization: Bearer <jwt>`. Erros seguem o formato:
 
 ```json
 { "code": "TEXTO_CURTO", "message": "explicação para a pessoa" }
@@ -8,7 +8,7 @@ Prefixo `/api/v1`. Todas as rotas, exceto `/health`, `/health/ready`, o login e 
 
 Dados inválidos devolvem `400 DADOS_INVALIDOS` com `details` (campo e problema). Sessão inválida ou expirada devolve `401 NAO_AUTENTICADO`. JSON malformado devolve `400 CORPO_INVALIDO`, rota inexistente `404 NAO_ENCONTRADO` e erro inesperado `500 ERRO_INTERNO`.
 
-Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/health/ready`) e 30 por 15 minutos nas rotas de login. Acima do limite a resposta é `429`.
+Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/health/ready`) e 30 por 15 minutos nas rotas de autenticação (`/auth/...`). Acima do limite a resposta é `429`.
 
 ## Sessão
 
@@ -18,11 +18,28 @@ Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/healt
 | `GET /health/ready` | Verifica se o banco atende. O resultado fica guardado por alguns segundos, e a rota não conta no limite de requisições. | `200 { "status": "ok", "banco": "ok" }` | `503 { "status": "indisponivel", "banco": "erro" }` |
 | `POST /auth/google` | Valida o ID token do Google, cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA`, `503 GOOGLE_NAO_CONFIGURADO` |
 
+### Autenticação local (e-mail e senha)
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /auth/security-questions` | Lista as perguntas de segurança aceitas no cadastro. | `200 { questions: [{ id, pergunta }] }` | |
+| `POST /auth/register` | Cria a conta com senha e pergunta de segurança e já devolve o JWT. Corpo: `{ name, email, password, security_question_id, security_answer }`. Senha de 10 a 128 caracteres; o e-mail é guardado em minúsculas. Senha e resposta ficam só como hash (scrypt com salt). | `201 { token, employee, is_new: true }` | `400 DADOS_INVALIDOS`, `403 EMAIL_NAO_LIBERADO`, `409 EMAIL_JA_CADASTRADO` |
+| `POST /auth/login` | Entra com e-mail e senha. Corpo: `{ email, password }`. | `200 { token, employee, is_new: false }` | `401 NAO_AUTENTICADO` ("E-mail ou senha incorretos.") |
+| `POST /auth/recovery-question` | Devolve a pergunta de segurança da conta. Corpo: `{ email }`. | `200 { question, available: true }` | `400 DADOS_INVALIDOS` |
+| `POST /auth/reset-password` | Redefine a senha com a resposta de segurança. Corpo: `{ email, security_answer, new_password }`. A resposta é comparada sem acentos, sem diferenciar maiúsculas e sem espaços nas pontas. | `200 { message }` | `400 DADOS_INVALIDOS`, `401 NAO_AUTENTICADO` (mensagem genérica) |
+
+Regras que valem para essas rotas:
+
+- **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo Google) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
+- **Recuperação uniforme:** `POST /auth/recovery-question` sempre devolve uma pergunta e `available: true`. Para e-mail sem cadastro ou conta sem pergunta, a pergunta é fictícia (a mesma a cada consulta do mesmo e-mail), e a redefinição falha com a mesma mensagem genérica de uma resposta errada.
+- **Bloqueio da recuperação por conta:** 5 respostas erradas seguidas bloqueiam a redefinição daquela conta por 15 minutos. Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica. Uma redefinição com sucesso zera a contagem. Isso se soma ao limite por IP das rotas de login.
+- **Sessões antigas invalidadas:** redefinir a senha incrementa a versão de sessão da conta, e todo JWT emitido antes passa a receber `401 NAO_AUTENTICADO`.
+
 Só em desenvolvimento e testes (a API recusa iniciar em produção com estas flags):
 
 | Rota | Flag | Função |
 |---|---|---|
-| `GET /auth/dev-users`, `POST /auth/dev-login` | `AUTH_DEV_LOGIN=true` | Lista pessoas e entra sem Google. |
+| `GET /auth/dev-users`, `POST /auth/dev-login` | `AUTH_DEV_LOGIN=true` | Lista pessoas e entra sem senha nem Google. Corpo do login: `{ email }`, que precisa estar liberado. |
 | `POST /test/login` | `E2E_TEST_MODE=true` | Entra com qualquer e-mail (cria a pessoa se não existir). Usada pelos testes de ponta a ponta. |
 
 ## Perfil
