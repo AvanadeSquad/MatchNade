@@ -2,7 +2,7 @@ import { naoAutenticado, proibido } from '../utils/erros.js';
 import { buscarFuncionarioDaSessao } from '../services/perfil.js';
 
 // Única coisa que uma conta marcada para exclusão pode fazer: ver o próprio perfil, cancelar ou apagar agora.
-const ROTAS_EM_EXCLUSAO = new Set(['GET /profile', 'POST /profile/deletion/cancel', 'DELETE /profile']);
+const ROTAS_EM_EXCLUSAO = new Set(['GET /profile', 'GET /profile/export', 'POST /profile/deletion/cancel', 'DELETE /profile']);
 
 // Exige `Authorization: Bearer <jwt>` e carrega o id da pessoa em req.usuario.
 // Token emitido antes da última redefinição de senha (versão de sessão menor) é recusado.
