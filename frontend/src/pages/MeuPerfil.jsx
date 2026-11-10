@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, Cabecalho, Carregando, Modal } from '../components/Basicos.jsx';
+import BaixarDados from '../components/BaixarDados.jsx';
 import ExcluirConta from '../components/ExcluirConta.jsx';
 import { Equilibrio, Interruptor, Polos, Segmentado } from '../components/Controles.jsx';
 import { EditarBio, EditarDados, EditarInteresses, PreviewPublico } from '../components/EdicaoPerfil.jsx';
@@ -354,9 +355,12 @@ export default function MeuPerfil() {
   );
 
   const linkExcluir = (
-    <button type="button" className="link-acao link-acao--perigo" onClick={() => setDialogo('excluir')}>
-      Excluir minha conta
-    </button>
+    <div className="acoes-conta">
+      <BaixarDados />
+      <button type="button" className="link-acao link-acao--perigo" onClick={() => setDialogo('excluir')}>
+        Excluir minha conta
+      </button>
+    </div>
   );
 
   const dialogos = (

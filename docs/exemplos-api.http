@@ -135,6 +135,10 @@ Content-Type: application/json
   "is_paused": true
 }
 
+### Baixar uma cópia dos próprios dados em JSON (até 5 por hora)
+GET {{baseUrl}}/profile/export
+Authorization: Bearer {{token}}
+
 ### Pedir a exclusão da conta (30 dias para se arrepender; derruba as sessões)
 POST {{baseUrl}}/profile/deletion
 Authorization: Bearer {{token}}

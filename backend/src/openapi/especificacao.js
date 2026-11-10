@@ -188,6 +188,18 @@ export function gerarEspecificacao() {
           },
         ),
       },
+      '/profile/export': {
+        get: operacao(
+          'Perfil',
+          'Baixa um JSON com os dados da própria pessoa: perfil, interesses, conexões (a outra pessoa só pelo nome), mensagens, bloqueios e denúncias feitas. Não inclui senha, resposta de segurança nem dado de terceiros. Até 5 chamadas por hora por pessoa. Vale também para conta marcada para exclusão.',
+          {
+            respostas: {
+              200: json('{ exported_at, profile, interests, connections, messages, blocks, reports_made }'),
+              429: limiteExcedido,
+            },
+          },
+        ),
+      },
       '/profile/deletion': {
         post: operacao(
           'Perfil',

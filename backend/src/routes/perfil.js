@@ -13,6 +13,7 @@ import {
   salvarInteresses,
 } from '../services/perfil.js';
 import { cancelarExclusao, solicitarExclusao } from '../services/exclusao.js';
+import { exportarDados } from '../services/exportacao.js';
 
 const texto = (max) => z.string().trim().max(max);
 
@@ -76,6 +77,12 @@ export function rotasPerfil(ctx, autenticar) {
     const { is_paused: pausado } = corpoPausa.parse(req.body);
     await definirPausa(banco, req.usuario.id, pausado);
     res.json({ is_paused: pausado });
+  });
+
+  router.get('/profile/export', autenticar, ctx.limitarPorPessoa(5, 60 * 60 * 1000), async (req, res) => {
+    const dados = await exportarDados(banco, req.usuario.id);
+    res.set('Content-Disposition', 'attachment; filename="meus-dados-avanade-connect.json"');
+    res.json(dados);
   });
 
   router.post('/profile/deletion', autenticar, async (req, res) => {

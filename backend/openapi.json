@@ -857,6 +857,51 @@
         }
       }
     },
+    "/profile/export": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "summary": "Baixa um JSON com os dados da própria pessoa: perfil, interesses, conexões (a outra pessoa só pelo nome), mensagens, bloqueios e denúncias feitas. Não inclui senha, resposta de segurança nem dado de terceiros. Até 5 chamadas por hora por pessoa. Vale também para conta marcada para exclusão.",
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ exported_at, profile, interests, connections, messages, blocks, reports_made }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "NAO_AUTENTICADO: sem token, token inválido ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "LIMITE_EXCEDIDO: limite de chamadas atingido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/profile/deletion": {
       "post": {
         "tags": [
