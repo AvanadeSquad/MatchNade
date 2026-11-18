@@ -45,7 +45,9 @@ Tudo roda em planos gratuitos. Não usa Docker.
 
 ## IA
 
-A extração de tags envia a bio ao provedor entre as marcas `<bio>` e `</bio>`, tratadas como dado. O quebra-gelo envia só os nomes dos interesses das duas pessoas, nunca cargo, e é gerado uma vez e guardado na conexão.
+A extração de tags envia a bio ao provedor entre as marcas `<bio>` e `</bio>`, tratadas como dado, e acrescenta ao prompt de sistema o catálogo das tags mais usadas do aplicativo (até 150), para o modelo reaproveitar a grafia. Depois da resposta, o backend troca cada tag pela grafia e pela categoria do catálogo, comparando sem acento, maiúsculas ou pontuação. O quebra-gelo envia só os nomes dos interesses que as duas pessoas têm em comum, nunca cargo nem a lista completa de cada uma, e é gerado uma vez e guardado na conexão.
+
+Os prompts ficam em `backend/src/ai/prompts.js` com número de versão (extração v3, quebra-gelo v2). As versões anteriores continuam no arquivo: voltar atrás é trocar as duas últimas linhas. `npm run avaliar-ia` mede a extração com 20 bios anotadas.
 
 Parâmetros padrão (variáveis de ambiente no `backend/.env.example`):
 
