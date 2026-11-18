@@ -30,8 +30,14 @@ describe('exclusão de conta com prazo', () => {
     await a.como(bruno.email).post('/matches', { receiver_id: ana.id });
     return id;
   };
+  // Recua um minuto além dos dias pedidos. A varredura compara o relógio da aplicação (milissegundos) com NOW() do
+  // banco (microssegundos): marcada com exatamente N dias e varrida logo em seguida, a conta ainda pode não valer
+  // como vencida quando os dois relógios caem no mesmo milissegundo, o que acontece em PostgreSQL real.
   const marcarHa = (pessoa, dias) =>
-    a.banco.query(`UPDATE employee SET deletion_requested_at = NOW() - make_interval(days => $1) WHERE id = $2`, [dias, pessoa.id]);
+    a.banco.query(`UPDATE employee SET deletion_requested_at = NOW() - make_interval(days => $1, mins => 1) WHERE id = $2`, [
+      dias,
+      pessoa.id,
+    ]);
 
   describe('pedir a exclusão', () => {
     it('marca a conta, esconde a pessoa e derruba as sessões', async () => {
