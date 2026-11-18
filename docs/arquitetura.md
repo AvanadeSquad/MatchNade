@@ -22,7 +22,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
 | Acesso a dados | SQL parametrizado direto com `pg`, sem ORM. | O modelo tem 8 tabelas e poucas consultas; menos camadas para manter. |
 | Login | E-mail e senha, ou ID token da Microsoft validado no servidor, depois JWT de 8 h. | O front não guarda segredo e a API decide quem entra pela lista de e-mails liberados. |
 | Chat | Polling a cada 5 s, só com a aba visível. | Funciona na hospedagem gratuita; WebSocket exigiria outro tipo de serviço. |
-| Afinidade | Jaccard ponderado pela raridade da tag (IDF), por eixo (profissional e pessoal), mais 0,05 para unidade diferente quando já há afinidade. | Matemática simples e explicável, sem IA. Evita recomendar a todos quem só tem tags populares. |
+| Afinidade | Jaccard ponderado pela raridade da tag (IDF, peso `ln(1 + N/df)`, nunca zero), por eixo (profissional e pessoal), mais 0,05 para unidade diferente quando já há afinidade. | Matemática simples e explicável, sem IA. Evita recomendar a todos quem só tem tags populares. |
 | IA | Provedor principal e reserva, timeout, nova tentativa, disjuntor, prazo total e validação da saída. | A IA nunca bloqueia o fluxo: se falhar, a pessoa escolhe as tags manualmente e o chat usa um texto padrão. |
 
 ## Regras de produto que a arquitetura garante

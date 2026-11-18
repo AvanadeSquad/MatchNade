@@ -53,8 +53,8 @@ const PESSOAS_FIXAS = [
   },
   {
     nome: 'Camila Rocha', unidade: 'Cloud', cidade: 'Rio de Janeiro', cargo: 'Arquiteto de Soluções',
-    bio: 'Infraestrutura como código e nuvem. Corro e leio ficção científica.',
-    tecnicas: ['Azure', 'Node.js', 'Terraform'], hobbies: ['Corrida', 'Ficção científica'],
+    bio: 'Infraestrutura como código e nuvem. Fotografo quando viajo e leio ficção científica.',
+    tecnicas: ['Azure', 'Node.js', 'Terraform'], hobbies: ['Fotografia', 'Viagens', 'Ficção científica'],
     objetivos: ['CONHECER_GENTE', 'MENTORIA'],
   },
   {
