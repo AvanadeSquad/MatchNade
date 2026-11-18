@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Avatar, Barra, Cabecalho, Carregando, Erro } from '../components/Basicos.jsx';
+import { Avatar, Barra, Cabecalho, Carregando, Erro, Pronomes } from '../components/Basicos.jsx';
 import {
   IconeCoracao,
   IconeEscudoCheck,
@@ -107,9 +107,11 @@ export default function PerfilPessoa() {
           acao={<MenuPessoa pessoaId={pessoa.id} nome={pessoa.name} aoBloquear={() => navegar('/descobrir', { replace: true })} />}
         />
         <div className="linha">
-          <Avatar nome={pessoa.name} tamanho={64} />
+          <Avatar nome={pessoa.name} avatarId={pessoa.avatar_id} tamanho={64} />
           <div>
-            <h1 className="perfil__nome">{pessoa.name}</h1>
+            <h1 className="perfil__nome">
+              {pessoa.name} <Pronomes valor={pessoa.pronouns} />
+            </h1>
             <p className="pequeno">{[confirmada && pessoa.position, pessoa.department, pessoa.city].filter(Boolean).join(' • ')}</p>
           </div>
         </div>
@@ -208,11 +210,13 @@ export default function PerfilPessoa() {
         <div className="coluna">
           <section className="cartao bloco perfil__cartao">
             <div className="linha linha--entre linha--topo">
-              <Avatar nome={pessoa.name} tamanho={96} quadrado />
+              <Avatar nome={pessoa.name} avatarId={pessoa.avatar_id} tamanho={96} quadrado />
               <MenuPessoa pessoaId={pessoa.id} nome={pessoa.name} aoBloquear={() => navegar('/descobrir', { replace: true })} />
             </div>
             <div>
-              <h1 className="perfil__nome">{pessoa.name}</h1>
+              <h1 className="perfil__nome">
+                {pessoa.name} <Pronomes valor={pessoa.pronouns} />
+              </h1>
               {confirmada && pessoa.position && <p>{pessoa.position}</p>}
               <p className="pequeno meta">
                 <IconeMaleta /> {pessoa.department}

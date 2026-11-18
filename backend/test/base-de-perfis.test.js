@@ -7,7 +7,7 @@ import { criarAmbiente } from './ajudante.js';
 // garantir que a consulta agregada de carregarBase produz exatamente a mesma base.
 async function baseDeReferencia(consulta) {
   const linhas = await consulta(
-    `SELECT e.id, e.name, e.department, e.location, e.is_paused, t.id AS tag_id, t.name AS tag_name, t.category
+    `SELECT e.id, e.name, e.department, e.location, e.is_paused, e.visibility, e.avatar_id, e.pronouns, t.id AS tag_id, t.name AS tag_name, t.category
        FROM employee e
        LEFT JOIN employee_interest ei ON ei.employee_id = e.id
        LEFT JOIN interest_tag t ON t.id = ei.interest_id
@@ -24,6 +24,9 @@ async function baseDeReferencia(consulta) {
         unidade: linha.department,
         cidade: linha.location,
         pausado: linha.is_paused,
+        visibilidade: linha.visibility,
+        avatar: linha.avatar_id,
+        pronomes: linha.pronouns,
         tecnicas: [],
         hobbies: [],
       });

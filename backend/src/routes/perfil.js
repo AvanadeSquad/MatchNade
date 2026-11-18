@@ -3,7 +3,11 @@ import { z } from 'zod';
 import { invalido } from '../utils/erros.js';
 import { limparTexto } from '../utils/tags.js';
 import {
+  AVATARES,
+  HORARIOS_CAFE,
+  MAX_HORARIOS_PREFERIDOS,
   OBJETIVOS,
+  VISIBILIDADES,
   atualizarPerfil,
   definirPausa,
   excluirPerfil,
@@ -25,6 +29,10 @@ export const corpoPerfil = z.object({
   location: texto(80).optional(),
   connection_goals: z.array(z.enum(OBJETIVOS)).max(OBJETIVOS.length).optional(),
   max_weekly_matches: z.number().int().min(1).max(5).optional(),
+  pronouns: texto(30).optional(),
+  visibility: z.enum(VISIBILIDADES).optional(),
+  avatar_id: z.enum(AVATARES).nullable().optional(),
+  preferred_coffee_slots: z.array(z.enum(HORARIOS_CAFE)).max(MAX_HORARIOS_PREFERIDOS).optional(),
 });
 
 export const corpoBio = z.object({ raw_bio: z.string().max(2000) });

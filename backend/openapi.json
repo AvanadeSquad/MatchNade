@@ -739,7 +739,7 @@
         "tags": [
           "Perfil"
         ],
-        "summary": "Atualiza os dados do perfil. Todos os campos são opcionais.",
+        "summary": "Atualiza os dados do perfil e a personalização (pronomes, visibilidade ALL ou UNIT, avatar pronto e horários preferidos de Coffee Chat). Todos os campos são opcionais.",
         "security": [
           {
             "jwt": []
@@ -791,6 +791,60 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 5
+                  },
+                  "pronouns": {
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "ALL",
+                      "UNIT"
+                    ]
+                  },
+                  "avatar_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "aurora",
+                          "montanha",
+                          "folha",
+                          "onda",
+                          "estrela",
+                          "raio",
+                          "lua",
+                          "sol",
+                          "nuvem",
+                          "chama",
+                          "gota",
+                          "cristal"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "preferred_coffee_slots": {
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "09:00",
+                        "09:30",
+                        "10:00",
+                        "10:30",
+                        "11:00",
+                        "14:00",
+                        "14:30",
+                        "15:00",
+                        "16:00",
+                        "17:00"
+                      ]
+                    }
                   }
                 }
               }
@@ -1441,6 +1495,18 @@
                               "null"
                             ]
                           },
+                          "avatar_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "pronouns": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "affinity_score": {
                             "type": "number"
                           },
@@ -1456,6 +1522,8 @@
                           "name",
                           "department",
                           "city",
+                          "avatar_id",
+                          "pronouns",
                           "affinity_score",
                           "shared_interests"
                         ],
@@ -2277,6 +2345,18 @@
                             "null"
                           ]
                         },
+                        "avatar_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "pronouns": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
                         "connection_goals": {
                           "type": "array",
                           "items": {
@@ -2424,6 +2504,8 @@
                         "name",
                         "department",
                         "city",
+                        "avatar_id",
+                        "pronouns",
                         "connection_goals",
                         "tags",
                         "affinity",
@@ -2451,6 +2533,18 @@
                           ]
                         },
                         "city": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "avatar_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "pronouns": {
                           "type": [
                             "string",
                             "null"
@@ -2608,6 +2702,8 @@
                         "name",
                         "department",
                         "city",
+                        "avatar_id",
+                        "pronouns",
                         "connection_goals",
                         "tags",
                         "affinity",

@@ -2,7 +2,7 @@ import { naoEncontrado } from '../utils/erros.js';
 import { arredondar } from './afinidade.js';
 import { bloqueadoEntre } from './bloqueios.js';
 import { expirarPendentes } from './expiracao.js';
-import { buscarFuncionario, buscarTagsDoFuncionario, exigirPerfilCompleto } from './perfil.js';
+import { buscarFuncionario, buscarTagsDoFuncionario, exigirPerfilCompleto, mesmaUnidade } from './perfil.js';
 import { afinidadeEntre, carregarBase } from './recomendacoes.js';
 
 // Perfil de outra pessoa. Cargo e bio só são devolvidos depois do match.
@@ -24,6 +24,9 @@ export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
   );
   const confirmada = conexao?.status === 'ACCEPTED';
   if (outro.is_paused && !conexao) throw naoEncontrado('Pessoa não encontrada.');
+  // Quem restringiu a visibilidade à própria unidade some para outras unidades, salvo se já houver conexão.
+  const eu = base.perfis.get(meuId);
+  if (outro.visibility === 'UNIT' && !mesmaUnidade(outro.department, eu.unidade) && !conexao) throw naoEncontrado('Pessoa não encontrada.');
 
   const afinidade = afinidadeEntre(base, base.perfis.get(meuId), base.perfis.get(outroId), config.regras.bonusUnidade);
 
@@ -32,6 +35,8 @@ export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
     name: outro.name,
     department: outro.department,
     city: outro.location,
+    avatar_id: outro.avatar_id,
+    pronouns: outro.pronouns,
     connection_goals: outro.connection_goals,
     tags: await buscarTagsDoFuncionario(banco.query, outroId),
     affinity: {

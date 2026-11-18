@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar, Carregando, Erro, Vazio } from '../components/Basicos.jsx';
+import { Avatar, Carregando, Erro, Vazio, Pronomes } from '../components/Basicos.jsx';
 import {
   IconeAjustes,
   IconeBrilho,
@@ -47,16 +47,16 @@ function dispensar(usuarioId, conexaoId) {
 }
 
 // Destaque do match mais recente ainda não visto.
-function DestaqueMatch({ eu, conexao, aoDispensar }) {
+function DestaqueMatch({ eu, euAvatar, conexao, aoDispensar }) {
   const comuns = conexao.shared_interests.slice(0, 3);
   return (
     <section className="destaque-match" aria-label="Nova conexão recíproca">
       <div className="destaque-match__avatares" aria-hidden="true">
-        <Avatar nome={eu} tamanho={84} />
+        <Avatar nome={eu} avatarId={euAvatar} tamanho={84} />
         <span className="destaque-match__coracao">
           <IconeCoracao />
         </span>
-        <Avatar nome={conexao.name} tamanho={84} />
+        <Avatar nome={conexao.name} avatarId={conexao.avatar_id} tamanho={84} />
       </div>
       <div className="destaque-match__texto">
         <p className="sobretitulo">
@@ -102,12 +102,12 @@ function LinhaMatch({ conexao, tipo, cafe, aoResponder, ocupado }) {
   const comuns = conexao.shared_interests.slice(0, 2);
   return (
     <li className="cartao linha-match">
-      <Avatar nome={conexao.name} tamanho={56} quadrado>
+      <Avatar nome={conexao.name} avatarId={conexao.avatar_id} tamanho={56} quadrado>
         <span className={`selo-status selo-status--${tipo === 'confirmada' ? 'ativo' : 'espera'}`} aria-hidden="true" />
       </Avatar>
       <div className="linha-match__info">
         <p className="linha-match__nome">
-          <strong>{conexao.name}</strong>
+          <strong>{conexao.name}</strong> <Pronomes valor={conexao.pronouns} />
           <span className="pilula pilula--laranja">
             <IconeRaio /> {porcentagem(conexao.affinity_score)} compatível
           </span>
@@ -189,10 +189,10 @@ function LinhaCelular({ conexao, tipo, cafe, aoResponder, ocupado }) {
   const comuns = conexao.shared_interests;
   const conteudo = (
     <>
-      <Avatar nome={conexao.name} tamanho={52} quadrado />
+      <Avatar nome={conexao.name} avatarId={conexao.avatar_id} tamanho={52} quadrado />
       <span className="linha-celular__texto">
         <span className="linha-celular__topo">
-          <strong>{conexao.name}</strong>
+          <strong>{conexao.name}</strong> <Pronomes valor={conexao.pronouns} />
           {tipo === 'aguardando' && <span className="pequeno">Aguardando</span>}
           {cafe && <span className="pequeno destaque-verde">Café agendado</span>}
         </span>
@@ -397,6 +397,7 @@ export default function Matches() {
           {destaque && (
             <DestaqueMatch
               eu={perfil.name}
+              euAvatar={perfil.avatar_id}
               conexao={destaque}
               aoDispensar={() => {
                 dispensar(perfil.id, destaque.match_id);

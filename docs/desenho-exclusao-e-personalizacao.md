@@ -1,6 +1,6 @@
 # Desenho: exclusão de conta e personalização de perfil
 
-Estado: **desenho fechado em 08/11/2026, nada implementado.** Origem: pedido da reunião de avaliação de 28/10 (pensar a personalização do perfil, incluindo a exclusão de conta). As decisões abaixo são do P.O. do projeto. A construção está dividida em três fatias, cada uma em um pull request (seção 9).
+Estado: **desenho fechado em 08/11/2026. Implementado: exclusão com prazo, exportação dos dados e personalização (pronomes, visibilidade por unidade, avatares prontos e horários preferidos).** Origem: pedido da reunião de avaliação de 28/10 (pensar a personalização do perfil, incluindo a exclusão de conta). As decisões abaixo são do P.O. do projeto. A construção está dividida em três fatias, cada uma em um pull request (seção 9).
 
 ## 1. Situação hoje
 - `DELETE /profile` (`backend/src/services/perfil.js`, `excluirPerfil`) apaga na hora: remove `ai_interaction_log` da pessoa e depois o `employee`, com `ON DELETE CASCADE` nas demais tabelas (interesses, conexões, mensagens, bloqueios e **denúncias, tanto as feitas quanto as recebidas**).

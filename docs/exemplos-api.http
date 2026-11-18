@@ -90,6 +90,18 @@ Content-Type: application/json
 GET {{baseUrl}}/profile
 Authorization: Bearer {{token}}
 
+### Personalizar o perfil (avatar pronto, pronomes, visibilidade por unidade e horários de Coffee Chat)
+PUT {{baseUrl}}/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "avatar_id": "lua",
+  "pronouns": "ela/dela",
+  "visibility": "UNIT",
+  "preferred_coffee_slots": ["09:30", "14:00"]
+}
+
 ### Atualizar dados do perfil
 PUT {{baseUrl}}/profile
 Authorization: Bearer {{token}}

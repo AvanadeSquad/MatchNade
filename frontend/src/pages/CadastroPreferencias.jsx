@@ -119,7 +119,7 @@ export default function CadastroPreferencias() {
           </div>
           <div className="cartao bloco resumo-perfil">
             <div className="linha">
-              <Avatar nome={perfil.name} tamanho={64} quadrado />
+              <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={64} quadrado />
               <div>
                 <p className="resumo-perfil__nome">
                   {perfil.name} <IconeVerificado className="icone-verificado" aria-label="Verificado" />

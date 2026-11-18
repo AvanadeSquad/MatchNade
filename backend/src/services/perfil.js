@@ -1,14 +1,36 @@
 import { conflito, invalido, naoEncontrado } from '../utils/erros.js';
-import { limparTexto, normalizarTag, unicas } from '../utils/tags.js';
+import { limparTexto, mencionaDadoSensivel, normalizarTag, unicas } from '../utils/tags.js';
 import { excluirDefinitivamente, previstoPara } from './exclusao.js';
 import { inicioDaSemana } from './semana.js';
 
 export const OBJETIVOS = ['NETWORKING', 'TROCA_DE_CONHECIMENTO', 'HOBBY', 'MENTORIA', 'CONHECER_GENTE'];
 
+// Avatares prontos (sem upload): o backend só valida o código; a ilustração fica no frontend.
+export const AVATARES = ['aurora', 'montanha', 'folha', 'onda', 'estrela', 'raio', 'lua', 'sol', 'nuvem', 'chama', 'gota', 'cristal'];
+export const VISIBILIDADES = ['ALL', 'UNIT'];
+// Mesmos horários que o seletor de Coffee Chat do chat oferece.
+export const HORARIOS_CAFE = ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00', '16:00', '17:00'];
+export const MAX_HORARIOS_PREFERIDOS = 5;
+const PADRAO_PRONOMES = /^[\p{L}/ .-]+$/u;
+
+// Pronomes: texto simples (letras, barra, espaço, ponto e hífen), até 30 caracteres, sem dado sensível.
+export function validarPronomes(texto) {
+  const limpo = limparTexto(texto);
+  if (!limpo) return null;
+  if (limpo.length > 30 || !PADRAO_PRONOMES.test(limpo) || mencionaDadoSensivel(limpo)) {
+    throw invalido('PRONOMES_INVALIDOS', 'Use só letras e barra, como ela/dela, ele/dele ou elu/delu, com até 30 caracteres.');
+  }
+  return limpo;
+}
+
+// Duas pessoas são da mesma unidade quando ambas têm unidade e ela coincide, sem diferenciar maiúsculas.
+export const mesmaUnidade = (a, b) => Boolean(a) && Boolean(b) && a.trim().toLowerCase() === b.trim().toLowerCase();
+
 export async function buscarFuncionario(consulta, id) {
   const [linha] = await consulta(
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
-            is_active, is_paused, last_seen_at, created_at, token_version
+            is_active, is_paused, last_seen_at, created_at, token_version,
+            pronouns, visibility, avatar_id, preferred_coffee_slots
        FROM employee WHERE id = $1 AND is_active`,
     [id],
   );
@@ -20,7 +42,8 @@ export async function buscarFuncionario(consulta, id) {
 export async function buscarFuncionarioDaSessao(consulta, id) {
   const [linha] = await consulta(
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
-            is_active, is_paused, last_seen_at, created_at, token_version, deletion_requested_at
+            is_active, is_paused, last_seen_at, created_at, token_version, deletion_requested_at,
+            pronouns, visibility, avatar_id, preferred_coffee_slots
        FROM employee WHERE id = $1 AND (is_active OR deletion_requested_at IS NOT NULL)`,
     [id],
   );
@@ -80,6 +103,10 @@ export async function montarPerfil({ banco, config }, id) {
     connection_goals: funcionario.connection_goals,
     max_weekly_matches: funcionario.max_weekly_matches,
     is_paused: funcionario.is_paused,
+    pronouns: funcionario.pronouns,
+    visibility: funcionario.visibility,
+    avatar_id: funcionario.avatar_id,
+    preferred_coffee_slots: funcionario.preferred_coffee_slots,
     tags,
     profile_complete: perfilCompleto(funcionario, tags.technical.length + tags.hobby.length, config.regras.minTags),
     quota: { used: usadas, max: funcionario.max_weekly_matches },
@@ -106,6 +133,13 @@ export async function atualizarPerfil(banco, id, dados) {
   if (dados.location !== undefined) definir('location', limparTexto(dados.location) || null);
   if (dados.connection_goals !== undefined) definir('connection_goals', JSON.stringify(unicas(dados.connection_goals)), '::jsonb');
   if (dados.max_weekly_matches !== undefined) definir('max_weekly_matches', dados.max_weekly_matches);
+  if (dados.pronouns !== undefined) definir('pronouns', validarPronomes(dados.pronouns));
+  if (dados.visibility !== undefined) definir('visibility', dados.visibility);
+  if (dados.avatar_id !== undefined) definir('avatar_id', dados.avatar_id);
+  if (dados.preferred_coffee_slots !== undefined) {
+    const escolhidos = new Set(dados.preferred_coffee_slots);
+    definir('preferred_coffee_slots', JSON.stringify(HORARIOS_CAFE.filter((h) => escolhidos.has(h))), '::jsonb');
+  }
 
   if (campos.length) {
     valores.push(id);
