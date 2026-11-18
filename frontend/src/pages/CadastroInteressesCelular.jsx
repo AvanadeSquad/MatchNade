@@ -325,7 +325,7 @@ export default function CadastroInteressesCelular({
       </header>
 
       <section className="cartao bloco revisao__pessoa">
-        <Avatar nome={perfil.name} tamanho={64} />
+        <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={64} />
         <div>
           <h2>{perfil.name}</h2>
           <p className="pequeno">{perfil.department || 'Colaborador Avanade'}</p>

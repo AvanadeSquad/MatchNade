@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar, Cabecalho, Carregando, Modal } from '../components/Basicos.jsx';
+import { Avatar, Cabecalho, Carregando, Modal, Pronomes } from '../components/Basicos.jsx';
 import BaixarDados from '../components/BaixarDados.jsx';
 import ExcluirConta from '../components/ExcluirConta.jsx';
+import PersonalizarPerfil from '../components/PersonalizarPerfil.jsx';
 import { Equilibrio, Interruptor, Polos, Segmentado } from '../components/Controles.jsx';
 import { EditarBio, EditarDados, EditarInteresses, PreviewPublico } from '../components/EdicaoPerfil.jsx';
 import {
@@ -366,6 +367,7 @@ export default function MeuPerfil() {
   const dialogos = (
     <>
       {dialogo === 'dados' && <EditarDados aoFechar={fechar} />}
+      {dialogo === 'personalizar' && <PersonalizarPerfil aoFechar={fechar} />}
       {dialogo === 'bio' && <EditarBio aoFechar={fechar} />}
       {dialogo === 'tecnicas' && <EditarInteresses categoria="TECHNICAL" aoFechar={fechar} />}
       {dialogo === 'hobbies' && <EditarInteresses categoria="HOBBY" aoFechar={fechar} />}
@@ -433,7 +435,7 @@ export default function MeuPerfil() {
             )}
             {novos.map((c) => (
               <Link key={c.match_id} to={`/match/${c.match_id}`} state={{ pessoaId: c.employee_id }} className="notificacoes__item">
-                <Avatar nome={c.name} tamanho={28} /> Novo match com {c.name}
+                <Avatar nome={c.name} avatarId={c.avatar_id} tamanho={28} /> Novo match com {c.name}
               </Link>
             ))}
           </section>
@@ -484,6 +486,7 @@ export default function MeuPerfil() {
       { id: 'notificacoes', rotulo: 'Notificações', Icone: IconeSino, aviso: recebidas.length + novos.length > 0 },
       { id: 'busca', rotulo: 'Preferências de Busca', Icone: IconeAjustes },
       { id: 'unidade', rotulo: 'Unidade / Cidade', Icone: IconePino, abrir: () => setDialogo('dados') },
+      { id: 'personalizar', rotulo: 'Personalizar perfil', Icone: IconeEstrela, abrir: () => setDialogo('personalizar') },
       { id: 'privacidade', rotulo: 'Privacidade', Icone: IconeEscudo },
       { id: 'interesses', rotulo: 'Interesses', Icone: IconeEstrela },
       { id: 'sobre', rotulo: 'Sobre o Avanade Global Connect', Icone: IconeInfo, abrir: () => setDialogo('sobre') },
@@ -501,7 +504,7 @@ export default function MeuPerfil() {
           }
         />
         <section className="cartao bloco perfil-celular">
-          <Avatar nome={perfil.name} tamanho={64}>
+          <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={64}>
             <span className="selo-check" role="img" aria-label="Perfil verificado">
               <IconeCheck />
             </span>
@@ -573,18 +576,23 @@ export default function MeuPerfil() {
         <div className="coluna">
           <section className="cartao bloco perfil__cartao">
             <div className="linha linha--entre linha--topo">
-              <Avatar nome={perfil.name} tamanho={84}>
+              <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={84}>
                 <span className="selo-check" role="img" aria-label="Perfil verificado">
                   <IconeCheck />
                 </span>
               </Avatar>
-              <button type="button" className="botao botao--cinza botao--pequeno botao--auto" onClick={() => setDialogo('dados')}>
-                <IconeEditar /> Editar perfil
-              </button>
+              <div className="acoes-perfil">
+                <button type="button" className="botao botao--cinza botao--pequeno botao--auto" onClick={() => setDialogo('dados')}>
+                  <IconeEditar /> Editar perfil
+                </button>
+                <button type="button" className="botao botao--cinza botao--pequeno botao--auto" onClick={() => setDialogo('personalizar')}>
+                  <IconeEstrela /> Personalizar
+                </button>
+              </div>
             </div>
             <div>
               <h2 className="perfil__nome">
-                {perfil.name} <IconeVerificado className="icone-verificado" aria-hidden="true" />
+                {perfil.name} <IconeVerificado className="icone-verificado" aria-hidden="true" /> <Pronomes valor={perfil.pronouns} />
               </h2>
               <p>{[perfil.position, perfil.department].filter(Boolean).join(' • ')}</p>
               {perfil.location && (

@@ -40,6 +40,41 @@ test.describe('edição de perfil', () => {
     await expect(page.getByRole('checkbox', { name: /Mentoria de carreira/ })).toBeChecked();
   });
 
+  test('personalizar: avatar, pronomes, visibilidade e horários persistem e a outra pessoa vê avatar e pronomes', async ({ browser, page, request, baseURL, contextOptions }) => {
+    const tags = interessesExclusivos();
+    const vera = await criarPessoaPronta(request, { nome: 'Vera Personalizada', ...tags });
+    const wagner = await criarPessoaPronta(request, { nome: 'Wagner Observador', ...tags });
+    await autenticarPagina(page, vera.token);
+    await page.goto('/eu');
+
+    await page.getByRole('button', { name: celular(page) ? 'Personalizar perfil' : 'Personalizar', exact: true }).click();
+    const dialogo = page.getByRole('dialog', { name: 'Personalizar perfil' });
+    await dialogo.getByRole('button', { name: 'Avatar Sol' }).click();
+    await dialogo.getByLabel(/Pronomes/).fill('ela/dela');
+    await dialogo.getByRole('radio', { name: 'Só a minha unidade' }).click();
+    await dialogo.getByRole('button', { name: '10:30' }).click();
+    await dialogo.getByRole('button', { name: 'Salvar' }).click();
+    await expect(page.getByText('Personalização salva.')).toBeVisible();
+
+    const perfil = await (await chamar(request, vera.token, 'get', '/profile')).json();
+    expect(perfil).toMatchObject({ avatar_id: 'sol', pronouns: 'ela/dela', visibility: 'UNIT', preferred_coffee_slots: ['10:30'] });
+
+    // Quem é da mesma unidade continua vendo a pessoa, agora com avatar e pronomes.
+    const { viewport, isMobile, hasTouch } = test.info().project.use;
+    const contexto = await browser.newContext({ ...contextOptions, viewport, isMobile, hasTouch, baseURL });
+    try {
+      const outra = await contexto.newPage();
+      await autenticarPagina(outra, wagner.token);
+      await outra.goto('/descobrir');
+      const cartao = outra.getByRole('article', { name: 'Sugestão: Vera Personalizada' });
+      await expect(cartao).toBeVisible();
+      await expect(cartao.getByText('ela/dela')).toBeVisible();
+      await expect(cartao.locator('.avatar--pronto')).toBeVisible();
+    } finally {
+      await contexto.close();
+    }
+  });
+
   test('remover um interesse deixando menos de 3 é recusado com mensagem', async ({ page, request }) => {
     const pessoa = await criarPessoaPronta(request, { nome: 'Wagner Exemplo', ...interessesExclusivos() });
     await autenticarPagina(page, pessoa.token);

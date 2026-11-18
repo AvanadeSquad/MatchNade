@@ -58,9 +58,9 @@ export default function Match() {
           Você e <strong>{pessoa.name}</strong> demonstraram interesse mútuo!
         </p>
         <div className="match-celular__avatares" aria-hidden="true">
-          <Avatar nome={perfil.name} tamanho={88} />
+          <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={88} />
           <span className="match-celular__wow">WOW</span>
-          <Avatar nome={pessoa.name} tamanho={88} />
+          <Avatar nome={pessoa.name} avatarId={pessoa.avatar_id} tamanho={88} />
         </div>
         {comuns.length > 0 && (
           <div className="match-celular__comum">
@@ -95,11 +95,11 @@ export default function Match() {
           <IconeBrilho /> Nova conexão recíproca
         </p>
         <div className="destaque-match__avatares" aria-hidden="true">
-          <Avatar nome={perfil.name} tamanho={104} />
+          <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={104} />
           <span className="destaque-match__coracao">
             <IconeCoracao />
           </span>
-          <Avatar nome={pessoa.name} tamanho={104} />
+          <Avatar nome={pessoa.name} avatarId={pessoa.avatar_id} tamanho={104} />
         </div>
         <h1>É um Match Bilateral!</h1>
         <p>

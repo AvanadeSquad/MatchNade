@@ -225,7 +225,7 @@ export function PreviewPublico({ aoFechar }) {
     <Modal titulo="Preview público do seu cartão" aoFechar={aoFechar}>
       <div className="preview">
         <div className="linha">
-          <Avatar nome={perfil.name} tamanho={56} quadrado />
+          <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={56} quadrado />
           <div>
             <strong>{perfil.name}</strong>
             <p className="pequeno">{perfil.department}</p>

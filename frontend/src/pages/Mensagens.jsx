@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Avatar, Carregando, Erro, Modal, Vazio } from '../components/Basicos.jsx';
+import { Avatar, Carregando, Erro, Modal, Vazio, Pronomes } from '../components/Basicos.jsx';
 import {
   IconeAtualizar,
   IconeBrilho,
@@ -54,9 +54,11 @@ async function todasMensagens(conexaoId, sinal) {
 
 // Escolha de dia e horário para o convite de Coffee Chat.
 function PropostaCafe({ nome, aoFechar, aoEnviar }) {
+  const { perfil } = useAuth();
+  const preferidos = perfil?.preferred_coffee_slots ?? [];
   const dias = proximosDiasUteis(5);
   const [dia, setDia] = useState(dias[0]);
-  const [horario, setHorario] = useState('10:30');
+  const [horario, setHorario] = useState(preferidos[0] ?? '10:30');
   const [enviando, setEnviando] = useState(false);
 
   async function enviar(evento) {
@@ -88,14 +90,17 @@ function PropostaCafe({ nome, aoFechar, aoEnviar }) {
               <button
                 key={h}
                 type="button"
-                className={`chip chip--escolha chip--laranja${horario === h ? ' chip--ativo' : ''}`}
+                className={`chip chip--escolha chip--laranja${horario === h ? ' chip--ativo' : ''}${preferidos.includes(h) ? ' chip--preferido' : ''}`}
                 aria-pressed={horario === h}
+                title={preferidos.includes(h) ? 'Um dos seus horários preferidos' : undefined}
                 onClick={() => setHorario(h)}
               >
                 {h}
+                {preferidos.includes(h) && <span className="chip__preferido"> preferido</span>}
               </button>
             ))}
           </div>
+          {preferidos.length > 0 && <span className="campo__ajuda">Seus horários preferidos aparecem em destaque.</span>}
         </fieldset>
         <div className="modal__acoes">
           <button type="button" className="botao botao--contorno" onClick={aoFechar} disabled={enviando}>
@@ -286,12 +291,13 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
         <button type="button" className="icone-botao conversa__voltar" aria-label="Voltar às conversas" onClick={aoVoltar}>
           <IconeVoltar />
         </button>
-        <Avatar nome={conexao.name} tamanho={44}>
+        <Avatar nome={conexao.name} avatarId={conexao.avatar_id} tamanho={44}>
           <span className="selo-status selo-status--ativo" aria-hidden="true" />
         </Avatar>
         <div className="conversa__quem">
           <p>
-            <strong>{conexao.name}</strong> {conexao.new && <span className="pilula pilula--verde">Match recente</span>}
+            <strong>{conexao.name}</strong> <Pronomes valor={conexao.pronouns} />{' '}
+            {conexao.new && <span className="pilula pilula--verde">Match recente</span>}
           </p>
           <p className="pequeno so-desktop">
             {unidadeECidade(conexao.department, conexao.city)} <span className="destaque-verde">• Conexão confirmada</span>
@@ -358,7 +364,7 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
           } else {
             corpo = (
               <div className={`mensagem${minha ? ' mensagem--minha' : ''}`}>
-                {!minha && <Avatar nome={conexao.name} tamanho={28} />}
+                {!minha && <Avatar nome={conexao.name} avatarId={conexao.avatar_id} tamanho={28} />}
                 <div>
                   <p className="mensagem__bolha">{m.body}</p>
                   <p className="mensagem__meta">
@@ -599,12 +605,12 @@ export default function Mensagens() {
             {visiveis.map(({ c, previa, naoLida: pendente }) => (
               <li key={c.match_id}>
                 <NavLink to={`/chat/${c.match_id}`} className={({ isActive }) => `chat__item${isActive ? ' ativo' : ''}`}>
-                  <Avatar nome={c.name} tamanho={44}>
+                  <Avatar nome={c.name} avatarId={c.avatar_id} tamanho={44}>
                     <span className="selo-status selo-status--ativo" aria-hidden="true" />
                   </Avatar>
                   <span className="chat__item-texto">
                     <span className="chat__item-linha">
-                      <strong>{c.name}</strong>
+                      <strong>{c.name}</strong> <Pronomes valor={c.pronouns} />
                       {previa?.ultima && (
                         <span className={`pequeno${pendente ? ' destaque' : ''}`}>{quandoCurto(previa.ultima.created_at)}</span>
                       )}

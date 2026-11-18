@@ -176,10 +176,14 @@ export function gerarEspecificacao() {
         get: operacao('Perfil', 'Perfil da pessoa logada, com tags, cota e profile_complete.', {
           respostas: { 200: json('Perfil'), 404: erro('NAO_ENCONTRADO') },
         }),
-        put: operacao('Perfil', 'Atualiza os dados do perfil. Todos os campos são opcionais.', {
-          requisicao: corpo(corpoPerfil),
-          respostas: { 200: json('Perfil'), 400: invalidos },
-        }),
+        put: operacao(
+          'Perfil',
+          'Atualiza os dados do perfil e a personalização (pronomes, visibilidade ALL ou UNIT, avatar pronto e horários preferidos de Coffee Chat). Todos os campos são opcionais.',
+          {
+            requisicao: corpo(corpoPerfil),
+            respostas: { 200: json('Perfil'), 400: invalidos },
+          },
+        ),
         delete: operacao(
           'Perfil',
           'Exclui a pessoa e todos os dados ligados a ela, na hora. As denúncias recebidas vão para o arquivo anônimo. Vale também para conta marcada para exclusão.',

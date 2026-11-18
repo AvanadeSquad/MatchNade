@@ -1,21 +1,35 @@
 import { useEffect, useId, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { iniciais, tomDoNome } from '../utils/formatar.js';
+import { IlustracaoAvatar, avatarPorId } from './AvataresProntos.jsx';
 import { IconeVoltar } from './Icones.jsx';
 
 // Avatar com as iniciais do nome e uma cor fixa por pessoa. `tamanho` em pixels.
+// Com `avatarId` de um avatar pronto, mostra a ilustração escolhida no lugar das iniciais.
 // `quadrado` usa cantos arredondados em vez de círculo; `children` vira um selo no canto.
-export function Avatar({ nome, tamanho = 48, quadrado = false, children }) {
+export function Avatar({ nome, tamanho = 48, quadrado = false, avatarId = null, children }) {
+  const pronto = avatarPorId(avatarId);
+  const estilo = { width: tamanho, height: tamanho, fontSize: tamanho * 0.36, '--tom': tomDoNome(nome) };
+  if (pronto) estilo['--avatar-cor'] = pronto.cor;
   return (
     <div
-      className={`avatar${quadrado ? ' avatar--quadrado' : ''}`}
-      style={{ width: tamanho, height: tamanho, fontSize: tamanho * 0.36, '--tom': tomDoNome(nome) }}
+      className={`avatar${quadrado ? ' avatar--quadrado' : ''}${pronto ? ' avatar--pronto' : ''}`}
+      style={estilo}
       aria-hidden={children ? undefined : 'true'}
     >
-      <span aria-hidden="true">{iniciais(nome)}</span>
+      {pronto ? (
+        <IlustracaoAvatar avatar={pronto} tamanho={Math.round(tamanho * 0.56)} />
+      ) : (
+        <span aria-hidden="true">{iniciais(nome)}</span>
+      )}
       {children}
     </div>
   );
+}
+
+// Pronomes escolhidos pela pessoa, em texto discreto ao lado do nome.
+export function Pronomes({ valor }) {
+  return valor ? <span className="pronomes">{valor}</span> : null;
 }
 
 // Barra superior das telas de celular: botão de voltar, título centralizado e uma ação opcional à direita.

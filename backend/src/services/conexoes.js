@@ -2,7 +2,7 @@ import { conflito, invalido, naoEncontrado, proibido } from '../utils/erros.js';
 import { arredondar } from './afinidade.js';
 import { expirarPendentes } from './expiracao.js';
 import { bloqueadoEntre } from './bloqueios.js';
-import { exigirPerfilCompleto, usoDaCota } from './perfil.js';
+import { exigirPerfilCompleto, mesmaUnidade, usoDaCota } from './perfil.js';
 import { afinidadeEntre, carregarBase } from './recomendacoes.js';
 
 export async function buscarConexaoDoParticipante(consulta, conexaoId, meuId) {
@@ -36,6 +36,16 @@ export async function demonstrarInteresse({ banco, config }, meuId, receiverId) 
   const alvo = base.perfis.get(receiverId);
   if (!alvo || alvo.tecnicas.length + alvo.hobbies.length < config.regras.minTags) {
     throw invalido('RECEIVER_INVALIDO', 'Esta pessoa não está disponível.');
+  }
+  // Quem restringiu a visibilidade à própria unidade não recebe interesse de outra unidade, salvo se já havia
+  // conexão (por exemplo, a pessoa já tinha demonstrado interesse antes de restringir). A resposta não revela o motivo.
+  if (alvo.visibilidade === 'UNIT' && !mesmaUnidade(alvo.unidade, eu.unidade)) {
+    const [existente] = await banco.query(
+      `SELECT 1 AS ok FROM connection_match
+        WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1)) AND status IN ('PENDING', 'ACCEPTED')`,
+      [meuId, receiverId],
+    );
+    if (!existente) throw invalido('RECEIVER_INVALIDO', 'Esta pessoa não está disponível.');
   }
   const score = arredondar(afinidadeEntre(base, eu, alvo, config.regras.bonusUnidade).score, 4);
 
@@ -128,6 +138,8 @@ export async function listarConexoes({ banco, config }, meuId, { marcarVisto = t
       name: linha.name,
       department: linha.department,
       city: linha.location,
+      avatar_id: base.perfis.get(linha.outro_id).avatar,
+      pronouns: base.perfis.get(linha.outro_id).pronomes,
       affinity_score: arredondar(afinidade.score),
       shared_interests: afinidade.comuns,
     };

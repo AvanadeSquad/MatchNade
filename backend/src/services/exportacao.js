@@ -7,7 +7,7 @@ export async function exportarDados(banco, id) {
   const { query } = banco;
   const [conta] = await query(
     `SELECT id, name, email, bio, position, department, location, connection_goals, max_weekly_matches,
-            is_paused, created_at, last_seen_at, deletion_requested_at
+            is_paused, pronouns, visibility, avatar_id, preferred_coffee_slots, created_at, last_seen_at, deletion_requested_at
        FROM employee WHERE id = $1 AND (is_active OR deletion_requested_at IS NOT NULL)`,
     [id],
   );
@@ -66,6 +66,10 @@ export async function exportarDados(banco, id) {
       connection_goals: conta.connection_goals,
       max_weekly_matches: conta.max_weekly_matches,
       is_paused: conta.is_paused,
+      pronouns: conta.pronouns,
+      visibility: conta.visibility,
+      avatar_id: conta.avatar_id,
+      preferred_coffee_slots: conta.preferred_coffee_slots,
       created_at: conta.created_at,
       last_seen_at: conta.last_seen_at,
       deletion_requested_at: conta.deletion_requested_at,

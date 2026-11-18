@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Avatar, Carregando, Erro, Modal, Vazio } from '../components/Basicos.jsx';
+import { Avatar, Carregando, Erro, Modal, Vazio, Pronomes } from '../components/Basicos.jsx';
 import { Segmentado } from '../components/Controles.jsx';
 import {
   IconeAjustes,
@@ -68,9 +68,9 @@ function CartaoSugestaoCelular({ sugestao, detalhe, valorSinergia, enviando, cot
     <>
       <article className="cartao sugestao-celular" aria-label={`Sugestão: ${sugestao.name}`}>
         <div className="sugestao-celular__topo">
-          <Avatar nome={sugestao.name} tamanho={44} />
+          <Avatar nome={sugestao.name} avatarId={sugestao.avatar_id} tamanho={44} />
           <span>
-            <strong>{sugestao.name}</strong>
+            <strong>{sugestao.name}</strong> <Pronomes valor={sugestao.pronouns} />
             <span className="pequeno">{sugestao.department}</span>
           </span>
           <span className="pilula pilula--contorno">{Math.round(valorSinergia * 100)}% compatível</span>
@@ -149,12 +149,14 @@ function CartaoSugestao({ sugestao, detalhe, valorSinergia, enviando, cotaEsgota
 
       <div className="sugestao__corpo">
         <div className="sugestao__pessoa">
-          <Avatar nome={sugestao.name} tamanho={128} quadrado>
+          <Avatar nome={sugestao.name} avatarId={sugestao.avatar_id} tamanho={128} quadrado>
             <span className="selo-disponivel">● Disponível</span>
           </Avatar>
           <div className="sugestao__dados">
             <div className="sugestao__nome">
-              <h2>{sugestao.name}</h2>
+              <h2>
+                {sugestao.name} <Pronomes valor={sugestao.pronouns} />
+              </h2>
               <span className="pilula pilula--laranja pilula--maiuscula">{sugestao.department}</span>
             </div>
             <p className="sugestao__meta">

@@ -76,7 +76,7 @@ function Notificacoes({ conexoes, mostrarPonto }) {
               className="notificacoes__item"
               onClick={() => setAberto(false)}
             >
-              <Avatar nome={c.name} tamanho={28} />
+              <Avatar nome={c.name} avatarId={c.avatar_id} tamanho={28} />
               <span>Novo match com {c.name}</span>
             </Link>
           ))}
@@ -156,7 +156,7 @@ export default function Layout() {
                 <IconeAjuda />
               </button>
               <Link to="/eu" className="topo__usuario" aria-label={`Meu perfil: ${perfil.name}`}>
-                <Avatar nome={perfil.name} tamanho={36} />
+                <Avatar nome={perfil.name} avatarId={perfil.avatar_id} tamanho={36} />
                 <span>
                   <strong>{perfil.name}</strong>
                   <span>{perfil.location}</span>

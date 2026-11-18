@@ -49,7 +49,7 @@ Só em desenvolvimento e testes (a API recusa iniciar em produção com estas fl
 | Método e rota | Função | Resposta | Erros |
 |---|---|---|---|
 | `GET /profile` | Perfil da pessoa logada, com tags, cota e `profile_complete`. | `200` | |
-| `PUT /profile` | Atualiza `name`, `bio`, `position` (opcional), `department`, `location`, `connection_goals` e `max_weekly_matches` (1 a 5). | `200` perfil | `400` |
+| `PUT /profile` | Atualiza `name`, `bio`, `position` (opcional), `department`, `location`, `connection_goals` e `max_weekly_matches` (1 a 5). Personalização: `pronouns` (texto simples até 30 caracteres, vazio limpa), `visibility` (`ALL` ou `UNIT`), `avatar_id` (um dos 12 códigos, `null` volta às iniciais) e `preferred_coffee_slots` (até 5 dos horários do Coffee Chat). | `200` perfil | `400`, `400 PRONOMES_INVALIDOS` |
 | `POST /profile/enrich-bio` | Extrai tags da bio com IA. Corpo: `{ "raw_bio" }`. Até 15 chamadas por hora por pessoa. | `200 { technical_tags, hobby_tags }`, ou com `fallback: true` e listas vazias se a IA falhar | `400 BIO_VAZIA` |
 | `PUT /profile/interests` | Substitui os interesses. Corpo: `{ "interests": [{ name, category, source?, confidence? }] }`. | `200` perfil | `400 MENOS_DE_3_TAGS`, `400 TAG_INVALIDA` |
 | `PATCH /profile/pause` | Pausa ou retoma a exposição. Corpo: `{ "is_paused" }`. | `200 { is_paused }` | |
@@ -66,11 +66,11 @@ Só em desenvolvimento e testes (a API recusa iniciar em produção com estas fl
 
 | Método e rota | Função | Resposta | Erros |
 |---|---|---|---|
-| `GET /matches/recommendations?limit=5` | Pessoas por afinidade (máximo 20). Esconde quem já tem conexão, quem bloqueou, quem foi bloqueado, quem pausou e quem tem menos de 3 interesses. | `200 { recommendations }`; com a cota usada ou sem ninguém, lista vazia com `message` | `409 PERFIL_INCOMPLETO` |
+| `GET /matches/recommendations?limit=5` | Pessoas por afinidade (máximo 20), com `avatar_id` e `pronouns`. Esconde quem já tem conexão, quem bloqueou, quem foi bloqueado, quem pausou, quem tem menos de 3 interesses e quem restringiu a visibilidade à própria unidade (`visibility = UNIT`) quando você é de outra unidade. | `200 { recommendations }`; com a cota usada ou sem ninguém, lista vazia com `message` | `409 PERFIL_INCOMPLETO` |
 | `POST /matches` | Demonstra interesse. Corpo: `{ "receiver_id" }`. Se a outra pessoa já tinha demonstrado, a conexão vira match. | `201 { status, match_id }`; match mútuo: `status: "ACCEPTED"` e `new: true` | `400 RECEIVER_INVALIDO`, `403 BLOQUEADO`, `403 COTA_ESGOTADA`, `409 JA_EXISTE`, `409 PERFIL_INCOMPLETO` |
 | `PATCH /matches/:id` | Aceita ou recusa uma solicitação recebida. Corpo: `{ "action": "accept" \| "decline" }`. | `200 { match_id, status }` | `403 NAO_E_DESTINATARIO`, `403 BLOQUEADO`, `404`, `409 JA_RESPONDIDA` |
 | `GET /matches?peek=true` | Conexões em três grupos: `recebidas`, `aguardando` e `confirmadas`. O cargo (`position`) só vem nas confirmadas. Cada consulta marca as confirmadas como vistas (some o selo `new`), exceto com `peek=true`. | `200` | |
-| `GET /employees/:id` | Perfil de outra pessoa, com afinidade por eixo. `position` e `bio` só depois do match. | `200` | `404`, `409 PERFIL_INCOMPLETO` |
+| `GET /employees/:id` | Perfil de outra pessoa, com afinidade por eixo, `avatar_id` e `pronouns`. `position` e `bio` só depois do match. Quem restringiu a visibilidade à própria unidade responde `404` para outra unidade, salvo se já houver conexão. | `200` | `404`, `409 PERFIL_INCOMPLETO` |
 
 Estados de uma conexão:
 

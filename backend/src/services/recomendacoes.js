@@ -1,7 +1,7 @@
 import { naoEncontrado } from '../utils/erros.js';
 import { arredondar, calcularAfinidade, calcularIdf } from './afinidade.js';
 import { expirarPendentes } from './expiracao.js';
-import { exigirPerfilCompleto, usoDaCota } from './perfil.js';
+import { exigirPerfilCompleto, mesmaUnidade, usoDaCota } from './perfil.js';
 
 // Carrega os perfis ativos com seus interesses e calcula os pesos de raridade (IDF).
 // Busca uma linha por pessoa, com os ids das tags agregados, e o catálogo de tags à parte:
@@ -9,7 +9,7 @@ import { exigirPerfilCompleto, usoDaCota } from './perfil.js';
 export async function carregarBase(consulta) {
   const [linhas, catalogo] = await Promise.all([
     consulta(
-      `SELECT e.id, e.name, e.department, e.location, e.is_paused,
+      `SELECT e.id, e.name, e.department, e.location, e.is_paused, e.visibility, e.avatar_id, e.pronouns,
               COALESCE(array_agg(ei.interest_id ORDER BY ei.interest_id) FILTER (WHERE ei.interest_id IS NOT NULL), '{}') AS tags
          FROM employee e
          LEFT JOIN employee_interest ei ON ei.employee_id = e.id
@@ -30,6 +30,9 @@ export async function carregarBase(consulta) {
       unidade: linha.department,
       cidade: linha.location,
       pausado: linha.is_paused,
+      visibilidade: linha.visibility,
+      avatar: linha.avatar_id,
+      pronomes: linha.pronouns,
       tecnicas: [],
       hobbies: [],
     };
@@ -85,6 +88,8 @@ export async function recomendar({ banco, config }, meuId, limiteSolicitado) {
 
   const candidatos = [...base.perfis.values()]
     .filter((p) => !excluidos.has(p.id) && !p.pausado && p.tecnicas.length + p.hobbies.length >= config.regras.minTags)
+    // Quem restringiu a visibilidade à própria unidade só aparece para a mesma unidade.
+    .filter((p) => p.visibilidade !== 'UNIT' || mesmaUnidade(p.unidade, eu.unidade))
     .map((p) => ({ perfil: p, ...afinidadeEntre(base, eu, p, config.regras.bonusUnidade) }))
     .sort((x, y) => y.score - x.score || x.perfil.nome.localeCompare(y.perfil.nome))
     .slice(0, limite);
@@ -94,6 +99,8 @@ export async function recomendar({ banco, config }, meuId, limiteSolicitado) {
     name: perfil.nome,
     department: perfil.unidade,
     city: perfil.cidade,
+    avatar_id: perfil.avatar,
+    pronouns: perfil.pronomes,
     affinity_score: arredondar(score),
     shared_interests: comuns,
   }));
