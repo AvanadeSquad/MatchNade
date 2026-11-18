@@ -2,12 +2,13 @@
 // separadamente para o eixo técnico e o pessoal, com média dos dois eixos e um
 // pequeno bônus para pessoas de unidades diferentes. Não usa IA.
 
-// idf[tag] = ln(N / df). N = perfis ativos; df = perfis que têm a tag.
-// Uma tag que todos têm (df = N) pesa 0.
+// idf[tag] = ln(1 + N / df). N = perfis ativos; df = perfis que têm a tag.
+// O 1 somado mantém o peso positivo mesmo quando todos têm a tag (df = N pesa ln 2): sem ele, duas pessoas
+// com perfis idênticos numa base pequena apareceriam com afinidade 0. Tag rara continua pesando mais que tag comum.
 export function calcularIdf(totalPerfis, contagemPorTag) {
   const idf = new Map();
   for (const [tagId, df] of contagemPorTag) {
-    idf.set(tagId, df > 0 && totalPerfis > 0 ? Math.log(totalPerfis / df) : 0);
+    idf.set(tagId, df > 0 && totalPerfis > 0 ? Math.log(1 + totalPerfis / df) : 0);
   }
   return idf;
 }

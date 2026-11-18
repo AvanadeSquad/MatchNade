@@ -15,7 +15,7 @@ docs/       API, arquitetura, publicação e referência de design
 
 ## Rodar localmente
 
-Requer Node.js 20 ou superior. No PowerShell, a partir da raiz do repositório:
+Requer Node.js 20 ou superior. Os comandos abaixo são do PowerShell, a partir da raiz do repositório; no macOS e no Linux, troque `Copy-Item .env.example .env` por `cp .env.example .env`:
 
 ```powershell
 # terminal 1: API em http://localhost:3000
@@ -31,7 +31,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias, e a tela de login oferece uma lista para entrar sem senha (`AUTH_DEV_LOGIN=true` no `.env.example`). Entre como Ana Silva para ver o app com conexões de exemplo, como outra pessoa para ver a descoberta, ou informe um e-mail que ainda não exista para passar pelo cadastro do início.
+Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias. Na tela de login, entre com `ana.silva@exemplo.test` e a senha de demonstração descrita mais abaixo para ver o app com conexões de exemplo; use qualquer outra conta `@exemplo.test` para ver a descoberta, ou crie uma conta com um e-mail novo para passar pelo cadastro do início. `AUTH_DEV_LOGIN=true` (no `.env.example`) só liga as rotas `/auth/dev-users` e `/auth/dev-login` da API, úteis para testar sem senha; a tela de login não as usa.
 
 A tela de login aceita conta com e-mail e senha, criada no próprio app, e o login corporativo com a Microsoft (Entra ID, ativo quando o aplicativo é registrado). A conta com senha tem recuperação por pergunta de segurança. As rotas, as respostas e o bloqueio por tentativas estão em [`docs/api.md`](docs/api.md), e há um exemplo de cada requisição em [`docs/exemplos-api.http`](docs/exemplos-api.http).
 
