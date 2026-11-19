@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { criarBanco } from '../src/db/index.js';
+import { popularBanco } from '../src/db/populacao.js';
 import { montarPessoas, semear } from '../src/db/seed.js';
 import { BancoComDadosAlheios, exigirBancoSemDadosAlheios } from './trava.js';
 
@@ -46,12 +47,17 @@ async function conferirBanco() {
   }
 }
 
+const REALISTA = process.env.CARGA_POPULACAO === 'realista';
+
 async function prepararBanco(dataDir) {
   const banco = await criarBanco({ databaseUrl: DATABASE_URL || undefined, dataDir });
   await semear(banco, { demonstracao: false });
   const [{ total }] = await banco.query('SELECT COUNT(*)::int AS total FROM employee');
   const faltam = Math.max(0, PERFIS - total);
-  if (faltam) {
+  if (faltam && REALISTA) {
+    // Cadastros completos, interesses por trilha e histórico de conexões (mesmo gerador de `npm run popular`).
+    await popularBanco(banco, { total: faltam });
+  } else if (faltam) {
     await banco.query(
       `INSERT INTO employee (auth_provider_id, name, email, department, location, connection_goals)
        SELECT 'carga-' || n, 'Pessoa de Carga ' || n, 'carga' || n || '@exemplo.test',
@@ -75,8 +81,14 @@ async function prepararBanco(dataDir) {
     `SELECT COUNT(*)::int AS incompletos FROM employee e
       WHERE (SELECT COUNT(*) FROM employee_interest i WHERE i.employee_id = e.id) < 3`,
   );
+  const emailsExtras = (
+    await banco.query(`SELECT email FROM employee WHERE auth_provider_id LIKE $1 ORDER BY id LIMIT $2`, [
+      REALISTA ? 'pop-%' : 'carga-%',
+      REMETENTES_MAX,
+    ])
+  ).map((l) => l.email);
   await banco.close();
-  return { pessoas, incompletos };
+  return { pessoas, incompletos, emailsExtras };
 }
 
 function subirApi(dataDir) {
@@ -166,7 +178,7 @@ function rodar(nome, conexoes, opcoes) {
 async function principal() {
   await conferirBanco();
   const dataDir = DATABASE_URL ? undefined : await mkdtemp(path.join(os.tmpdir(), 'matchnade-carga-'));
-  const { pessoas, incompletos } = await prepararBanco(dataDir);
+  const { pessoas, incompletos, emailsExtras } = await prepararBanco(dataDir);
   const api = subirApi(dataDir);
   try {
     await esperarApi();
@@ -181,10 +193,7 @@ async function principal() {
     });
 
     // Remetentes e destinatários do POST /matches: pares diferentes a cada requisição, até a cota acabar.
-    const extras = Array.from(
-      { length: Math.max(0, Math.min(REMETENTES_MAX, pessoas) - emails.length) },
-      (_, i) => `carga${i + 1}@exemplo.test`,
-    );
+    const extras = emailsExtras;
     const remetentes = [];
     for (const email of [...emails, ...extras].slice(0, REMETENTES_MAX)) {
       const sessao = await postar('/test/login', { email });

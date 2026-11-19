@@ -1,6 +1,6 @@
 // Trava do teste de carga. O script ajusta a cota semanal de todas as pessoas e insere perfis fictícios,
 // então só pode rodar num banco que tenha apenas dados dele mesmo: vazio, ou já preparado por uma
-// execução anterior (pessoas do seed e perfis `carga*@exemplo.test`).
+// execução anterior (pessoas do seed, perfis `carga*@exemplo.test` e a população fictícia de `npm run popular`).
 
 export class BancoComDadosAlheios extends Error {
   constructor(quantidade) {
@@ -21,7 +21,8 @@ export async function exigirBancoSemDadosAlheios(consultar, { emailsDoSeed, emai
   if (!existe) return;
   const [{ total }] = await consultar(
     `SELECT COUNT(*)::int AS total FROM employee
-      WHERE email <> ALL($1::text[]) AND email <> $2 AND email NOT LIKE 'carga%@exemplo.test'`,
+      WHERE email <> ALL($1::text[]) AND email <> $2 AND email NOT LIKE 'carga%@exemplo.test'
+        AND auth_provider_id NOT LIKE 'pop-%'`,
     [emailsDoSeed, emailDoScript],
   );
   if (total > 0) throw new BancoComDadosAlheios(total);
