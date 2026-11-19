@@ -525,6 +525,8 @@ select.campo__controle { appearance: none; padding-right: 36px; background-image
 .filtros h2 svg { width: 18px; height: 18px; color: var(--laranja-texto); }
 .filtros__grupo { display: flex; flex-direction: column; gap: 10px; }
 .filtros .segmentado__opcao { font-size: 12px; min-height: 36px; padding: 4px 6px; }
+.filtros .segmentado { flex-wrap: wrap; }
+.filtros .segmentado__opcao { min-width: 0; padding: 4px 8px; }
 .filtros .chip { font-size: 12px; padding: 5px 10px; }
 .nota-segura { display: flex; gap: 12px; padding: 18px; }
 .nota-segura > svg { width: 22px; height: 22px; color: var(--laranja-texto); }

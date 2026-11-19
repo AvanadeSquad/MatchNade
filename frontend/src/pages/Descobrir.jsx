@@ -30,6 +30,7 @@ import { listaEmTexto, primeiroNome } from '../utils/formatar.js';
 import { ignorar, lerIgnorados, limparIgnorados } from '../utils/ignorados.js';
 import { FILTROS_DE_OBJETIVO, nomeDoObjetivo } from '../utils/objetivos.js';
 import { CIDADE_DO_HUB, mesmaCidade } from '../utils/preferencias.js';
+import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima } from '../utils/sinergia.js';
 
 const ALCANCES = [
   { id: 'LOCAL', rotulo: 'Local' },
@@ -273,6 +274,7 @@ export default function Descobrir() {
   const [alcance, setAlcance] = useState(preferencias.alcance);
   const [cidade, setCidade] = useState('');
   const [objetivo, setObjetivo] = useState(null);
+  const [sinergiaMinima, setSinergiaMinima] = useState(0);
   const [indice, setIndice] = useState(0);
   const [enviando, setEnviando] = useState(false);
   const celular = useCelular();
@@ -303,7 +305,7 @@ export default function Descobrir() {
 
   const fila = useMemo(() => {
     const filtroObjetivo = FILTROS_DE_OBJETIVO.find((f) => f.id === objetivo);
-    return todas
+    const candidatas = todas
       .filter((s) => !areas.size || areas.has(s.department))
       .filter((s) => alcance !== 'LOCAL' || mesmaCidade(s.city, perfil.location))
       .filter((s) => !cidade || s.city === cidade)
@@ -324,20 +326,21 @@ export default function Descobrir() {
         ];
         return textos.some((t) => t?.toLowerCase().includes(busca));
       })
-      .map((s) => ({ ...s, sinergia: sinergia(s, detalhes.get(s.employee_id), peso, cidadesDosPolos) }))
-      .sort((a, b) => b.sinergia - a.sinergia || a.name.localeCompare(b.name));
-  }, [todas, areas, alcance, cidade, objetivo, busca, detalhes, peso, cidadesDosPolos, perfil.location]);
+      .map((s) => ({ ...s, sinergia: sinergia(s, detalhes.get(s.employee_id), peso, cidadesDosPolos) }));
+    return filtrarPorSinergiaMinima(candidatas, sinergiaMinima).sort((a, b) => b.sinergia - a.sinergia || a.name.localeCompare(b.name));
+  }, [todas, areas, alcance, cidade, objetivo, busca, sinergiaMinima, detalhes, peso, cidadesDosPolos, perfil.location]);
 
   const posicao = Math.min(indice, Math.max(fila.length - 1, 0));
   const atual = fila[posicao];
   const cotaEsgotada = perfil.quota.used >= perfil.quota.max;
-  const filtrosAtivos = areas.size > 0 || alcance !== preferencias.alcance || cidade || objetivo || busca;
+  const filtrosAtivos = areas.size > 0 || alcance !== preferencias.alcance || cidade || objetivo || busca || sinergiaMinima > 0;
 
   function limparFiltros() {
     setAreas(new Set());
     setAlcance(preferencias.alcance);
     setCidade('');
     setObjetivo(null);
+    setSinergiaMinima(0);
     setIndice(0);
     if (busca) setParams({});
   }
@@ -482,6 +485,24 @@ export default function Descobrir() {
           <button type="button" className="link-acao" onClick={limparFiltros}>
             <IconeAtualizar /> Limpar
           </button>
+        )}
+      </div>
+
+      <div className="filtros__grupo">
+        <p className="rotulo">Sinergia mínima</p>
+        <Segmentado
+          rotulo="Sinergia mínima"
+          opcoes={SINERGIA_MINIMA_OPCOES}
+          valor={sinergiaMinima}
+          aoMudar={(v) => {
+            setSinergiaMinima(v);
+            setIndice(0);
+          }}
+        />
+        {todas.length > 0 && (
+          <p className="pequeno" role="status">
+            {fila.length} de {todas.length} sugestões
+          </p>
         )}
       </div>
 
