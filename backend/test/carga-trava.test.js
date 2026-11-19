@@ -47,6 +47,13 @@ describe('trava do teste de carga', () => {
     await expect(conferir()).rejects.toThrow(/2 pessoas/);
   });
 
+  it('aceita a população fictícia gerada por npm run popular', async () => {
+    await banco.query(
+      `INSERT INTO employee (auth_provider_id, name, email) VALUES ('pop-ana.souza@exemplo.test', 'Ana Souza', 'ana.souza@exemplo.test')`,
+    );
+    await expect(conferir()).resolves.toBeUndefined();
+  });
+
   it('recusa e-mail que só se parece com o do script', async () => {
     await inserir('carga@empresa.com');
     await inserir('xcarga1@exemplo.test');
