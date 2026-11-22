@@ -142,6 +142,50 @@ describe('POST /auth/microsoft', () => {
     expect(r.body.employee.id).toBe(existente.id);
   });
 
+  describe('conta pessoal da Microsoft não assume conta existente pelo e-mail', () => {
+    const pessoal = (extra = {}) => claims({ tid: LOCATARIO_PESSOAL, oid: 'oid-pessoal', ...extra });
+
+    it('primeiro acesso cria a conta, com a identidade do locatário pessoal', async () => {
+      dados = pessoal();
+      const r = await entrar();
+      expect(r.status).toBe(200);
+      expect(r.body.is_new).toBe(true);
+      const [linha] = await a.banco.query('SELECT auth_provider_id FROM employee');
+      expect(linha.auth_provider_id).toBe(`microsoft:${LOCATARIO_PESSOAL}:oid-pessoal`);
+    });
+
+    it('com o e-mail de uma conta de outro provedor, recusa com 409 e não altera nem cria conta', async () => {
+      const existente = await a.criarPessoa({ nome: 'Ana Silva' });
+      await a.banco.query('UPDATE employee SET email = $1 WHERE id = $2', ['ana.silva@empresa.test', existente.id]);
+      dados = pessoal();
+
+      const r = await entrar();
+
+      expect(r.status).toBe(409);
+      expect(r.body.code).toBe('EMAIL_JA_CADASTRADO');
+      const linhas = await a.banco.query('SELECT id, auth_provider_id FROM employee');
+      expect(linhas).toEqual([{ id: existente.id, auth_provider_id: `teste-${existente.email}` }]);
+    });
+
+    it('quem já entrou com a conta pessoal continua entrando na mesma conta', async () => {
+      dados = pessoal();
+      const primeira = await entrar();
+      const segunda = await entrar();
+      expect(segunda.status).toBe(200);
+      expect(segunda.body.is_new).toBe(false);
+      expect(segunda.body.employee.id).toBe(primeira.body.employee.id);
+    });
+
+    it('conta de organização continua entrando na conta existente com o mesmo e-mail', async () => {
+      const existente = await a.criarPessoa({ nome: 'Ana Silva' });
+      await a.banco.query('UPDATE employee SET email = $1 WHERE id = $2', ['ana.silva@empresa.test', existente.id]);
+      dados = claims();
+      const r = await entrar();
+      expect(r.status).toBe(200);
+      expect(r.body.employee.id).toBe(existente.id);
+    });
+  });
+
   it('usa o preferred_username quando o token não traz email', async () => {
     dados = claims({ email: undefined, preferred_username: 'Bia@empresa.test' });
     const r = await entrar();

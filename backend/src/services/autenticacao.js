@@ -1,4 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { LOCATARIO_CONTAS_PESSOAIS } from '../config/env.js';
 import jwt from 'jsonwebtoken';
 import { promisify } from 'node:util';
 import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
@@ -165,7 +166,9 @@ export function criarAutenticacao(config, verificadorMicrosoft) {
       if (!this.emailPermitido(email)) {
         throw proibido('EMAIL_NAO_LIBERADO', 'Seu e-mail ainda não está liberado.');
       }
-      return { sub: `microsoft:${dados.tid}:${dados.oid}`, email, nome: dados.name };
+      // Conta pessoal (Outlook, Hotmail, Live): nenhum locatário garante a posse do e-mail, então ela não pode
+      // assumir por e-mail uma conta que já existe (ver obterOuCriarPorProvedor).
+      return { sub: `microsoft:${dados.tid}:${dados.oid}`, email, nome: dados.name, contaPessoal: dados.tid === LOCATARIO_CONTAS_PESSOAIS };
     },
 
     emailPermitido(email) {

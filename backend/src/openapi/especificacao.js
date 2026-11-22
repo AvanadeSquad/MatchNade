@@ -146,7 +146,7 @@ export function gerarEspecificacao() {
             400: invalidos,
             401: erro('NAO_AUTENTICADO: token inválido, de outro locatário ou sem e-mail.'),
             403: erro('EMAIL_NAO_LIBERADO'),
-            409: erro('CONTA_INATIVA'),
+            409: erro('CONTA_INATIVA, ou EMAIL_JA_CADASTRADO quando uma conta pessoal usa o e-mail de uma conta existente.'),
             429: limiteExcedido,
             503: erro('MICROSOFT_NAO_CONFIGURADA'),
           },

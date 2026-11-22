@@ -506,7 +506,7 @@
             }
           },
           "409": {
-            "description": "CONTA_INATIVA",
+            "description": "CONTA_INATIVA, ou EMAIL_JA_CADASTRADO quando uma conta pessoal usa o e-mail de uma conta existente.",
             "content": {
               "application/json": {
                 "schema": {

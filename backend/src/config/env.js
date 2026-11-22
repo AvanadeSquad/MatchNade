@@ -14,7 +14,7 @@ const inteiro = (valor, padrao) => {
 };
 
 // Locatário fixo dos tokens de contas pessoais da Microsoft (documentado pela Microsoft).
-const LOCATARIO_CONTAS_PESSOAIS = '9188040d-6c67-4c5c-b112-36a304b66dad';
+export const LOCATARIO_CONTAS_PESSOAIS = '9188040d-6c67-4c5c-b112-36a304b66dad';
 
 const booleano = (valor) => String(valor).toLowerCase() === 'true';
 
