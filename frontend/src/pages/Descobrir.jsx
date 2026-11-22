@@ -29,22 +29,26 @@ import { API } from '../services/api.js';
 import { listaEmTexto, primeiroNome } from '../utils/formatar.js';
 import { ignorar, lerIgnorados, limparIgnorados } from '../utils/ignorados.js';
 import { FILTROS_DE_OBJETIVO, nomeDoObjetivo } from '../utils/objetivos.js';
-import { CIDADE_DO_HUB, mesmaCidade } from '../utils/preferencias.js';
-import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima } from '../utils/sinergia.js';
+import { mesmaCidade } from '../utils/preferencias.js';
+import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima, sinergiaExibida } from '../utils/sinergia.js';
 
 const ALCANCES = [
   { id: 'LOCAL', rotulo: 'Local' },
   { id: 'REGIONAL', rotulo: 'Brasil' },
   { id: 'CONTINENTAL', rotulo: 'LATAM' },
 ];
-const BONUS_POLO = 0.05;
 
-// Sinergia exibida: a afinidade da API reponderada pelo equilíbrio escolhido (profissional x pessoal).
-// Com 50/50 coincide com a média dos dois eixos que a API usa. Polos habilitados ganham um pequeno bônus.
-function sinergia(sugestao, detalhe, peso, cidadesDosPolos) {
-  let valor = detalhe ? peso * detalhe.affinity.technical + (1 - peso) * detalhe.affinity.personal : sugestao.affinity_score;
-  if (valor > 0 && cidadesDosPolos.some((c) => mesmaCidade(c, sugestao.city))) valor += BONUS_POLO;
-  return Math.min(1, valor);
+// Sinergia da sugestão com os eixos do detalhe, quando já carregado.
+function sinergiaDaSugestao(sugestao, detalhe, preferencias) {
+  return sinergiaExibida(
+    {
+      tecnica: detalhe?.affinity.technical,
+      pessoal: detalhe?.affinity.personal,
+      cidade: sugestao.city,
+      scoreDaApi: sugestao.affinity_score,
+    },
+    preferencias,
+  );
 }
 
 // Frase de apresentação montada com os interesses: a bio só é liberada pela API depois do match.
@@ -297,8 +301,6 @@ export default function Descobrir() {
     };
   }, [dados]);
 
-  const peso = preferencias.pesoProfissional / 100;
-  const cidadesDosPolos = useMemo(() => preferencias.polos.map((p) => CIDADE_DO_HUB[p]).filter(Boolean), [preferencias.polos]);
   const todas = useMemo(() => (dados?.recommendations ?? []).filter((s) => !ignorados.has(s.employee_id)), [dados, ignorados]);
   const unidades = useMemo(() => [...new Set(todas.map((s) => s.department).filter(Boolean))].sort(), [todas]);
   const cidades = useMemo(() => [...new Set(todas.map((s) => s.city).filter(Boolean))].sort(), [todas]);
@@ -326,9 +328,9 @@ export default function Descobrir() {
         ];
         return textos.some((t) => t?.toLowerCase().includes(busca));
       })
-      .map((s) => ({ ...s, sinergia: sinergia(s, detalhes.get(s.employee_id), peso, cidadesDosPolos) }));
+      .map((s) => ({ ...s, sinergia: sinergiaDaSugestao(s, detalhes.get(s.employee_id), preferencias) }));
     return filtrarPorSinergiaMinima(candidatas, sinergiaMinima).sort((a, b) => b.sinergia - a.sinergia || a.name.localeCompare(b.name));
-  }, [todas, areas, alcance, cidade, objetivo, busca, sinergiaMinima, detalhes, peso, cidadesDosPolos, perfil.location]);
+  }, [todas, areas, alcance, cidade, objetivo, busca, sinergiaMinima, detalhes, preferencias, perfil.location]);
 
   const posicao = Math.min(indice, Math.max(fila.length - 1, 0));
   const atual = fila[posicao];

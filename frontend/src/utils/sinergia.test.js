@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima } from './sinergia.js';
+import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima, sinergiaExibida } from './sinergia.js';
 
 const lista = [
   { nome: 'A', sinergia: 0.95 },
@@ -35,5 +35,34 @@ describe('filtrarPorSinergiaMinima', () => {
   it('as opções começam em "Qualquer" e crescem de 20 em 20', () => {
     expect(SINERGIA_MINIMA_OPCOES.map((o) => o.id)).toEqual([0, 20, 40, 60, 80]);
     expect(SINERGIA_MINIMA_OPCOES[0].rotulo).toBe('Qualquer');
+  });
+});
+
+describe('sinergiaExibida', () => {
+  const recife = 'Avanade Recife (Porto Digital)';
+  const padrao = { pesoProfissional: 70, polos: [] };
+
+  it('repondera os eixos pelo equilíbrio escolhido (70% profissional por padrão)', () => {
+    const valor = sinergiaExibida({ tecnica: 0.5, pessoal: 0.3, scoreDaApi: 0.4 }, padrao);
+    expect(valor).toBeCloseTo(0.44, 5);
+  });
+
+  it('com 50/50 coincide com a média dos dois eixos', () => {
+    const valor = sinergiaExibida({ tecnica: 0.5, pessoal: 0.3, scoreDaApi: 0.4 }, { ...padrao, pesoProfissional: 50 });
+    expect(valor).toBeCloseTo(0.4, 5);
+  });
+
+  it('sem os dois eixos usa o score devolvido pela API', () => {
+    expect(sinergiaExibida({ scoreDaApi: 0.37 }, padrao)).toBe(0.37);
+  });
+
+  it('soma o bônus de 0,05 para colega de cidade de polo habilitado', () => {
+    const valor = sinergiaExibida({ tecnica: 0.5, pessoal: 0.3, cidade: 'Recife', scoreDaApi: 0 }, { ...padrao, polos: [recife] });
+    expect(valor).toBeCloseTo(0.49, 5);
+  });
+
+  it('não dá bônus a quem tem sinergia zero nem passa de 100%', () => {
+    expect(sinergiaExibida({ tecnica: 0, pessoal: 0, cidade: 'Recife', scoreDaApi: 0 }, { ...padrao, polos: [recife] })).toBe(0);
+    expect(sinergiaExibida({ tecnica: 1, pessoal: 1, cidade: 'Recife', scoreDaApi: 1 }, { ...padrao, polos: [recife] })).toBe(1);
   });
 });

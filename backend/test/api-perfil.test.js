@@ -251,6 +251,18 @@ describe('autenticação e perfil', () => {
       expect(r.body.code).toBe('BIO_VAZIA');
     });
 
+    it('recusa bio acima de 1000 caracteres em vez de cortar em silêncio', async () => {
+      const { email } = await a.criarPessoa({ nome: 'Ana Teste' });
+      const r = await a.como(email).post('/profile/enrich-bio', { raw_bio: 'a'.repeat(1001) });
+      expect(r.status).toBe(400);
+    });
+
+    it('aceita bio de exatamente 1000 caracteres', async () => {
+      const { email } = await a.criarPessoa({ nome: 'Ana Teste' });
+      const r = await a.como(email).post('/profile/enrich-bio', { raw_bio: 'a'.repeat(1000) });
+      expect(r.status).toBe(200);
+    });
+
     it('sem IA configurada devolve listas vazias com fallback', async () => {
       const { email } = await a.criarPessoa({ nome: 'Ana Teste' });
       const r = await a.como(email).post('/profile/enrich-bio', { raw_bio: 'Curto React e xadrez' });

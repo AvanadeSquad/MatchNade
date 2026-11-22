@@ -35,7 +35,7 @@ export const corpoPerfil = z.object({
   preferred_coffee_slots: z.array(z.enum(HORARIOS_CAFE)).max(MAX_HORARIOS_PREFERIDOS).optional(),
 });
 
-export const corpoBio = z.object({ raw_bio: z.string().max(2000) });
+export const corpoBio = z.object({ raw_bio: z.string().max(1000) });
 
 export const corpoInteresses = z.object({
   interests: z
