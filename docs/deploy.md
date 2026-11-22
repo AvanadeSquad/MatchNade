@@ -2,6 +2,22 @@
 
 Três serviços gratuitos: banco (Neon), API (Render) e frontend (Vercel ou Netlify). Confira os limites atuais de cada plano antes de depender deles.
 
+## Roteiro do primeiro deploy (cartão E0-06)
+
+Ordem que evita retrabalho. Cada passo tem a seção correspondente abaixo; marque ao concluir.
+
+1. [ ] Banco: criar o projeto no Neon e guardar `DATABASE_URL` (seção 1).
+2. [ ] Decidir quem entra: `ALLOWED_EMAIL_DOMAINS` ou `ALLOWED_EMAILS` (seção 2).
+3. [ ] Gerar `JWT_SECRET` com 32 ou mais caracteres. No PowerShell: `-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 40 | ForEach-Object {[char]$_})`.
+4. [ ] API: criar o Blueprint no Render e preencher as variáveis (seção 4). Anotar a URL da API.
+5. [ ] Conferir a API sozinha, antes do frontend: `Invoke-RestMethod "<API>/health"` deve devolver `status: ok`. A primeira chamada pode levar cerca de um minuto, porque o plano gratuito hiberna.
+6. [ ] Frontend: Vercel ou Netlify, com `VITE_API_URL` apontando para `<API>/api/v1` (seção 5). Anotar a URL do frontend.
+7. [ ] Voltar ao Render e preencher `FRONTEND_URL` com a URL do frontend; sem isso, o navegador bloqueia as chamadas (CORS).
+8. [ ] Conferência de ponta a ponta (seção "Conferência"): conta liberada entra e conclui o cadastro; conta fora da lista é recusada.
+9. [ ] Só depois: IA (`GEMINI_API_KEY`, seção 3) e login Microsoft (seção "Login com Microsoft").
+
+O banco do Neon começa vazio e a API cria as tabelas sozinha. O seed de pessoas fictícias só roda com banco vazio e `SEED_ON_START=true`; **não ligue em produção real**.
+
 ## 1. Banco (Neon)
 
 1. Crie um projeto no Neon e copie a string de conexão (já inclui `sslmode=require`).

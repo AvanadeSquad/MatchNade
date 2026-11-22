@@ -56,7 +56,7 @@ Parâmetros padrão (variáveis de ambiente no `backend/.env.example`):
 | Timeout por chamada | 2,5 s |
 | Nova tentativa | 1, após 0,5 s, em 429, erro 5xx ou timeout |
 | Disjuntor | abre após 3 falhas em 60 s |
-| Prazo total | 8 s (dá tempo de o provedor reserva responder) |
+| Prazo total | 8 s (dá tempo de o provedor reserva responder); a meta de 3 s vale para a mediana. Detalhes em [`ia-cota-e-reserva.md`](ia-cota-e-reserva.md) |
 | Temperatura | 0,1 na extração e 0,4 no quebra-gelo |
 
 O plano gratuito do Gemini pode usar o conteúdo enviado para melhorar produtos do Google. Confirme com a área de privacidade da empresa antes de usar bios reais, ou use um plano pago.

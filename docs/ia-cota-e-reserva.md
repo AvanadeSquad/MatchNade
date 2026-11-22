@@ -24,6 +24,19 @@ Para cada chamada, `backend/src/ai` percorre os provedores configurados (Gemini 
 
 A IA nunca derruba a rota: o cadastro e a conexão continuam funcionando sem ela. O texto padrão não é guardado, então a próxima chamada tenta a IA de novo. O `ai_interaction_log` registra o status (`OK`, `ERRO`, `FORA_DO_SCHEMA` ou `REJEITADO`), o tempo e a versão do prompt, sem a bio.
 
+## Prazo: meta de 3 s e teto de 8 s
+
+O cartão E7-06 pedia 3 segundos. Há dois números diferentes e os dois valem:
+
+- **Meta de 3 s para a mediana.** Medida em 20 bios com o Gemini Flash-Lite: mediana de 1,1 s (`npm run avaliar-ia`).
+- **Teto de 8 s para o pior caso** (`AI_SLA_MS`). É o tempo para o principal falhar (2,5 s, nova tentativa de 0,5 s e outros 2,5 s) e a reserva ainda responder. Com teto de 3 s a reserva quase nunca responderia a tempo e mais bios cairiam no caminho manual.
+
+Decisão de 22/11: manter 8 s de teto. A pessoa nunca fica esperando em silêncio: a tela mostra "Analisando..." e, vencido o prazo, segue para a escolha manual de tags.
+
+## Frase de abertura padrão não é guardada
+
+Quando a IA falha, o quebra-gelo mostra o texto padrão com `fallback: true` e não o grava na conexão. Assim, a próxima vez que a pessoa abrir a conexão, a IA é consultada de novo e, se estiver de volta, a frase personalizada é gerada e guardada. O custo é uma nova chamada por abertura enquanto a IA estiver fora, limitada a 60 por hora por pessoa. Decisão de 22/11.
+
 ## O que está coberto por teste
 
 | Comportamento | Teste |
