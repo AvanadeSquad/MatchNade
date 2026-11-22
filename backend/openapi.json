@@ -2488,6 +2488,29 @@
                             "type": "string"
                           }
                         },
+                        "related_interests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mine": {
+                                "type": "string"
+                              },
+                              "theirs": {
+                                "type": "string"
+                              },
+                              "similarity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "mine",
+                              "theirs",
+                              "similarity"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "connection": {
                           "anyOf": [
                             {
@@ -2534,6 +2557,7 @@
                         "tags",
                         "affinity",
                         "shared_interests",
+                        "related_interests",
                         "connection"
                       ],
                       "additionalProperties": false,
@@ -2681,6 +2705,29 @@
                             "type": "string"
                           }
                         },
+                        "related_interests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mine": {
+                                "type": "string"
+                              },
+                              "theirs": {
+                                "type": "string"
+                              },
+                              "similarity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "mine",
+                              "theirs",
+                              "similarity"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "connection": {
                           "type": "object",
                           "properties": {
@@ -2732,6 +2779,7 @@
                         "tags",
                         "affinity",
                         "shared_interests",
+                        "related_interests",
                         "connection",
                         "position",
                         "bio"

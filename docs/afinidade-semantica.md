@@ -44,5 +44,4 @@ Medido em 22/11 com 2.000 pessoas, 168 tags e 1.092 pares (vetores sintéticos, 
 
 - **Medição com chave real.** Não havia chave do Gemini no ambiente de desenvolvimento. O provedor de embeddings (`batchEmbedContents`) foi escrito pela documentação e testado só com resposta simulada; a primeira execução real de `npm run embeddings` confirma o formato. O limiar de 0,75 é um ponto de partida: a varredura de `npm run avaliar-semantica` dá o número que vale.
 - **Vetor ao criar a tag.** Tags novas (criadas por bios analisadas pela IA ou digitadas pela pessoa) ficam sem vetor, e valem só pelo score exato, até o próximo `npm run embeddings`. O comando é seguro para repetir e só chama o provedor para as tags que faltam.
-- **Texto de por que combinam** (opcional no cartão): não implementado; `related_interests` já explica por pares.
-- **Outras telas.** A tela de Matches usa o score guardado na conexão; o interesse relacionado só aparece nas recomendações. O front ainda não exibe `related_interests`.
+- **Texto de por que combinam.** `related_interests` aparece na Descoberta e no perfil como "Interesses parecidos" (some quando vazio). Não há texto gerado por IA para explicar.

@@ -21,6 +21,7 @@ import MenuPessoa from '../components/MenuPessoa.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCarregar } from '../hooks/useCarregar.js';
+import { usePreferencias } from '../hooks/usePreferencias.js';
 import { API } from '../services/api.js';
 import {
   HORARIOS,
@@ -33,6 +34,7 @@ import {
 } from '../utils/cafe.js';
 import { diaDaConversa, hora, listaEmTexto, porcentagem, primeiroNome, quandoCurto, unidadeECidade } from '../utils/formatar.js';
 import { lerLidas, marcarLida, naoLida } from '../utils/lidas.js';
+import { sinergiaDaConexao } from '../utils/sinergia.js';
 
 const INTERVALO_MS = 5000;
 const INTERVALO_LISTA_MS = 20000;
@@ -160,6 +162,7 @@ function CartaoConvite({ mensagem, quando, minha, estado, nomeOutra, aoAceitar, 
 // Conversa aberta: histórico, sugestão de abertura, convites de café e envio. Polling a cada 5 s com a aba visível.
 function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear, aoAtualizar }) {
   const { perfil } = useAuth();
+  const [preferencias] = usePreferencias();
   const avisar = useAviso();
   const [estado, setEstado] = useState({ carregando: true, erro: null, indisponivel: false });
   const [mensagens, setMensagens] = useState([]);
@@ -329,7 +332,7 @@ function Conversa({ id, conexao, abrirCafe, aoConsumirCafe, aoVoltar, aoBloquear
           </p>
           {quebraGelo && <p className="pequeno">{quebraGelo}</p>}
         </div>
-        <span className="sinergia__valor">{porcentagem(conexao.affinity_score)} afinidade</span>
+        <span className="sinergia__valor">{porcentagem(sinergiaDaConexao(conexao, preferencias))} afinidade</span>
       </aside>
 
       <div className="conversa__mensagens" role="log" aria-live="polite" aria-label="Mensagens">

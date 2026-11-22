@@ -3,7 +3,7 @@ import { arredondar } from './afinidade.js';
 import { bloqueadoEntre } from './bloqueios.js';
 import { expirarPendentes } from './expiracao.js';
 import { buscarFuncionario, buscarTagsDoFuncionario, exigirPerfilCompleto, mesmaUnidade } from './perfil.js';
-import { afinidadeEntre, carregarBase } from './recomendacoes.js';
+import { afinidadeEntre, carregarBase, relacionado } from './recomendacoes.js';
 
 // Perfil de outra pessoa. Cargo e bio só são devolvidos depois do match.
 export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
@@ -45,6 +45,7 @@ export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
       personal: arredondar(afinidade.pessoal),
     },
     shared_interests: afinidade.comuns,
+    related_interests: afinidade.relacionados.map(relacionado),
     connection: conexao
       ? { match_id: conexao.id, status: conexao.status, direction: conexao.requester_id === meuId ? 'SENT' : 'RECEIVED' }
       : null,

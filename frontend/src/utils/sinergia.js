@@ -30,3 +30,12 @@ export function sinergiaExibida({ tecnica, pessoal, cidade, scoreDaApi }, { peso
   if (valor > 0 && cidadesDosPolos.some((c) => mesmaCidade(c, cidade))) valor += BONUS_POLO;
   return Math.min(1, valor);
 }
+
+// Mesma conta para uma conexão da lista de matches e das conversas: usa os eixos que a API devolve e, sem eles,
+// o score da API. Assim a pessoa vê o mesmo percentual na Descoberta, no perfil, em Matches e no chat.
+export function sinergiaDaConexao(conexao, preferencias) {
+  return sinergiaExibida(
+    { tecnica: conexao.affinity_technical, pessoal: conexao.affinity_personal, cidade: conexao.city, scoreDaApi: conexao.affinity_score },
+    preferencias,
+  );
+}

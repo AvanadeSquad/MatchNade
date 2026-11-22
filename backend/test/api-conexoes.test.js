@@ -87,6 +87,17 @@ describe('recomendações, conexões, chat e bloqueio', () => {
       expect((await a.como(ana.email).get('/matches')).body.aguardando.map((c) => c.employee_id)).toEqual([bruno.id]);
     });
 
+    it('a lista de conexões traz os eixos técnico e pessoal e os interesses relacionados, como a Descoberta', async () => {
+      await a.como(ana.email).post('/matches', { receiver_id: bruno.id });
+      const [conexao] = (await a.como(ana.email).get('/matches')).body.aguardando;
+      expect(typeof conexao.affinity_technical).toBe('number');
+      expect(typeof conexao.affinity_personal).toBe('number');
+      expect(conexao.related_interests).toEqual([]);
+      expect((await a.como(ana.email).get(`/employees/${bruno.id}`)).body.related_interests).toEqual([]);
+      // O score da lista é a média dos dois eixos (mais o bônus de unidade), o mesmo cálculo da Descoberta.
+      expect(conexao.affinity_score).toBeCloseTo((conexao.affinity_technical + conexao.affinity_personal) / 2 + 0.05, 1);
+    });
+
     it('interesse mútuo vira match na mesma conexão e marca como nova', async () => {
       const primeira = await a.como(ana.email).post('/matches', { receiver_id: bruno.id });
       const mutua = await a.como(bruno.email).post('/matches', { receiver_id: ana.id });

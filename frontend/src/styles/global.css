@@ -559,6 +559,8 @@ select.campo__controle { appearance: none; padding-right: 36px; background-image
 .afinidades li > span > span { font-size: 11px; color: var(--texto-3); }
 .eixos { display: flex; gap: 20px; font-size: 13px; color: var(--texto-2); }
 .eixos strong { color: var(--texto); }
+.interesses-relacionados__lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--texto-2); }
+.interesses-relacionados__lista strong { color: var(--texto); }
 .sugestao__acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid var(--borda); }
 .sugestao__principais { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
 .paginacao { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; font-size: 14px; color: var(--texto-2); }
