@@ -13,6 +13,9 @@ const inteiro = (valor, padrao) => {
   return Number.isFinite(numero) ? numero : padrao;
 };
 
+// Locatário fixo dos tokens de contas pessoais da Microsoft (documentado pela Microsoft).
+const LOCATARIO_CONTAS_PESSOAIS = '9188040d-6c67-4c5c-b112-36a304b66dad';
+
 const booleano = (valor) => String(valor).toLowerCase() === 'true';
 
 // Número entre 0 e 1; valor ausente, inválido ou fora da faixa volta ao padrão.
@@ -40,7 +43,16 @@ export function carregarConfig(origem = process.env) {
     frontendUrl: origem.FRONTEND_URL || 'http://localhost:5173',
     // O e-mail de um token da Microsoft não é prova de posse em aplicativos multitenant: só entram
     // tokens de locatários (tenants) listados em tenantIds.
-    microsoft: { clientId: origem.MICROSOFT_CLIENT_ID || '', tenantIds: lista(origem.MICROSOFT_ALLOWED_TENANTS) },
+    // Com MICROSOFT_ALLOW_PERSONAL, contas pessoais (Outlook, Hotmail, Live) também entram: elas emitem tokens do
+    // locatário fixo "consumers". Os demais locatários continuam valendo só se estiverem em MICROSOFT_ALLOWED_TENANTS.
+    microsoft: {
+      clientId: origem.MICROSOFT_CLIENT_ID || '',
+      permitirPessoais: booleano(origem.MICROSOFT_ALLOW_PERSONAL),
+      tenantIds: [
+        ...lista(origem.MICROSOFT_ALLOWED_TENANTS),
+        ...(booleano(origem.MICROSOFT_ALLOW_PERSONAL) ? [LOCATARIO_CONTAS_PESSOAIS] : []),
+      ],
+    },
     emailsPermitidos: lista(origem.ALLOWED_EMAILS),
     dominiosPermitidos: lista(origem.ALLOWED_EMAIL_DOMAINS),
     authDevLogin: booleano(origem.AUTH_DEV_LOGIN),
