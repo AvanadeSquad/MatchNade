@@ -1,8 +1,9 @@
 export const MICROSOFT_CLIENT_ID = import.meta.env.VITE_MICROSOFT_CLIENT_ID || '';
 
-// Contas de trabalho ou escola de qualquer organização; contas pessoais da Microsoft ficam de fora.
+// Contas de trabalho ou escola e contas pessoais (Outlook, Hotmail, Live). Quem decide o que entra é a API (lista de
+// locatários e MICROSOFT_ALLOW_PERSONAL) e o tipo de conta aceito no registro do aplicativo.
 // A API confere o locatário e o e-mail liberados, então escolher a organização aqui não dá acesso.
-const AUTORIDADE = 'https://login.microsoftonline.com/organizations';
+const AUTORIDADE = 'https://login.microsoftonline.com/common';
 
 // Abre a janela de login da Microsoft (código de autorização com PKCE, feito pela biblioteca) e
 // devolve o ID token para a API validar. Devolve null quando a pessoa fecha a janela.

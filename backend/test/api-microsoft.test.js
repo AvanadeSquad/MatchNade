@@ -196,3 +196,50 @@ describe('POST /auth/microsoft sem configuração', () => {
     expect(r.body.code).toBe('MICROSOFT_NAO_CONFIGURADA');
   });
 });
+
+// Contas pessoais (Outlook, Hotmail, Live) emitem tokens do locatário fixo "consumers".
+const LOCATARIO_PESSOAL = '9188040d-6c67-4c5c-b112-36a304b66dad';
+
+describe('contas pessoais da Microsoft', () => {
+  let par;
+  const chaves = async () => par.publicKey;
+  const tokenPessoal = (extra = {}) =>
+    new SignJWT({ tid: LOCATARIO_PESSOAL, oid: 'oid-pessoal', email: 'ana@outlook.test', ...extra })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuer(`https://login.microsoftonline.com/${extra.tid ?? LOCATARIO_PESSOAL}/v2.0`)
+      .setAudience(CLIENTE)
+      .setExpirationTime('5m')
+      .sign(par.privateKey);
+
+  beforeAll(async () => {
+    par = await generateKeyPair('RS256');
+  });
+
+  it('por padrão a conta pessoal é recusada', async () => {
+    const verificar = criarVerificadorMicrosoft(configDeTeste(AMBIENTE), { chaves });
+    await expect(verificar(await tokenPessoal())).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('com MICROSOFT_ALLOW_PERSONAL=true a conta pessoal é aceita, mesmo sem lista de locatários', async () => {
+    const config = configDeTeste({ MICROSOFT_CLIENT_ID: CLIENTE, MICROSOFT_ALLOW_PERSONAL: 'true' });
+    const dados = await criarVerificadorMicrosoft(config, { chaves })(await tokenPessoal());
+    expect(dados).toMatchObject({ tid: LOCATARIO_PESSOAL, oid: 'oid-pessoal' });
+  });
+
+  it('a opção não abre outros locatários: o que não está na lista continua recusado', async () => {
+    const config = configDeTeste({ ...AMBIENTE, MICROSOFT_ALLOW_PERSONAL: 'true' });
+    const verificar = criarVerificadorMicrosoft(config, { chaves });
+    await expect(verificar(await tokenPessoal({ tid: OUTRO_LOCATARIO }))).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('com a opção e a lista, aceita as contas da organização e as pessoais', async () => {
+    const config = configDeTeste({ ...AMBIENTE, MICROSOFT_ALLOW_PERSONAL: 'true' });
+    expect(config.microsoft.tenantIds).toEqual([LOCATARIO, LOCATARIO_PESSOAL]);
+    expect(config.microsoft.permitirPessoais).toBe(true);
+  });
+
+  it('sem a opção, a configuração não inclui o locatário pessoal', () => {
+    expect(configDeTeste(AMBIENTE).microsoft.tenantIds).toEqual([LOCATARIO]);
+    expect(configDeTeste(AMBIENTE).microsoft.permitirPessoais).toBe(false);
+  });
+});

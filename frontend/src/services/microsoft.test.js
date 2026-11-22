@@ -15,12 +15,12 @@ function biblioteca({ loginPopup }) {
 }
 
 describe('obterIdTokenMicrosoft', () => {
-  it('configura o aplicativo para contas de trabalho e devolve o ID token', async () => {
+  it('configura o aplicativo para contas de trabalho e pessoais e devolve o ID token', async () => {
     const { carregar, instancias } = biblioteca({ loginPopup: vi.fn().mockResolvedValue({ idToken: 'token-da-microsoft' }) });
     const token = await obterIdTokenMicrosoft({ clientId: 'app-1', carregar });
     expect(token).toBe('token-da-microsoft');
     const [app] = instancias;
-    expect(app.configuracao.auth).toMatchObject({ clientId: 'app-1', authority: 'https://login.microsoftonline.com/organizations' });
+    expect(app.configuracao.auth).toMatchObject({ clientId: 'app-1', authority: 'https://login.microsoftonline.com/common' });
     expect(app.initialize).toHaveBeenCalled();
     expect(app.loginPopup).toHaveBeenCalledWith(expect.objectContaining({ scopes: ['openid', 'profile', 'email'] }));
   });
