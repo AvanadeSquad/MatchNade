@@ -11,7 +11,7 @@ export async function perfilDaPessoa({ banco, config }, meuId, outroId) {
   if (!outro || outroId === meuId || (await bloqueadoEntre(banco.query, meuId, outroId))) {
     throw naoEncontrado('Pessoa não encontrada.');
   }
-  const base = await carregarBase(banco.query);
+  const base = await carregarBase(banco.query, config.semantica);
   exigirPerfilCompleto(base.perfis.get(meuId), config.regras.minTags);
 
   // Expira antes de ler a conexão, para uma pendente vencida não aparecer como PENDING.

@@ -10,6 +10,7 @@ const TABELAS = [
   'chat_message',
   'connection_match',
   'employee_interest',
+  'tag_similarity',
   'interest_tag',
   'employee',
 ];

@@ -65,6 +65,7 @@ Os testes de ponta a ponta sobem a API e o app sozinhos em portas próprias (310
 - [`docs/roteiro-demonstracao.md`](docs/roteiro-demonstracao.md): roteiro de 8 minutos com plano B.
 - [`docs/populacao-e-indicadores.md`](docs/populacao-e-indicadores.md): `npm run popular` e `npm run metricas`.
 - [`docs/teste-de-carga.md`](docs/teste-de-carga.md): carga, concorrência e população realista.
+- [`docs/afinidade-semantica.md`](docs/afinidade-semantica.md): score semântico entre tags (Django e Python), desligado por padrão.
 - [`docs/ia-cota-e-reserva.md`](docs/ia-cota-e-reserva.md): o que a IA faz com cota esgotada.
 - [`docs/design/`](docs/design/README.md): telas e tokens de referência.
 - [`docs/desenho-exclusao-e-personalizacao.md`](docs/desenho-exclusao-e-personalizacao.md): desenho da exclusão de conta e da personalização de perfil (implementados).

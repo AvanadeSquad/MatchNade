@@ -17,6 +17,8 @@
     "medir": "node scripts/medir.js",
     "carga": "node carga/executar.js",
     "avaliar-ia": "node avaliacao/avaliar-ia.js",
+    "avaliar-semantica": "node avaliacao/avaliar-semantica-cli.js",
+    "embeddings": "node src/db/embeddings-cli.js",
     "openapi": "node src/openapi/gerar-cli.js",
     "lint": "eslint .",
     "format": "prettier --write .",

@@ -1515,6 +1515,29 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "related_interests": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "mine": {
+                                  "type": "string"
+                                },
+                                "theirs": {
+                                  "type": "string"
+                                },
+                                "similarity": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "mine",
+                                "theirs",
+                                "similarity"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
                         "required": [
@@ -1525,7 +1548,8 @@
                           "avatar_id",
                           "pronouns",
                           "affinity_score",
-                          "shared_interests"
+                          "shared_interests",
+                          "related_interests"
                         ],
                         "additionalProperties": false
                       }
