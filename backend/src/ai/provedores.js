@@ -55,6 +55,37 @@ export function provedorGemini({ chave, modelo }) {
   };
 }
 
+// Embeddings do Gemini (batchEmbedContents). Recebe só nomes de tag e devolve um vetor por nome, na mesma ordem.
+// Resposta com quantidade diferente de vetores é erro: nunca se grava vetor no lugar errado.
+export function provedorEmbeddingsGemini({ chave, modelo }) {
+  return {
+    nome: 'gemini-embeddings',
+    modelo,
+    async gerar(nomes, sinal = AbortSignal.timeout(15000)) {
+      const dados = await chamar(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:batchEmbedContents`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': chave },
+          body: JSON.stringify({
+            requests: nomes.map((nome) => ({
+              model: `models/${modelo}`,
+              taskType: 'SEMANTIC_SIMILARITY',
+              content: { parts: [{ text: nome }] },
+            })),
+          }),
+        },
+        sinal,
+      );
+      const vetores = dados?.embeddings?.map((e) => e?.values);
+      if (!Array.isArray(vetores) || vetores.length !== nomes.length || vetores.some((v) => !Array.isArray(v) || v.length === 0)) {
+        throw new ErroIa('resposta de embeddings incompleta');
+      }
+      return vetores;
+    },
+  };
+}
+
 // Groq (API compatível com OpenAI), usado como reserva do Gemini.
 export function provedorGroq({ chave, modelo }) {
   return {

@@ -15,6 +15,12 @@ const inteiro = (valor, padrao) => {
 
 const booleano = (valor) => String(valor).toLowerCase() === 'true';
 
+// Número entre 0 e 1; valor ausente, inválido ou fora da faixa volta ao padrão.
+const fracao = (valor, padrao) => {
+  const numero = Number.parseFloat(valor);
+  return Number.isFinite(numero) && numero >= 0 && numero <= 1 ? numero : padrao;
+};
+
 // Lê e valida as variáveis de ambiente. Recebe o objeto de origem para permitir
 // testes com valores controlados; em execução normal usa process.env.
 export function carregarConfig(origem = process.env) {
@@ -52,6 +58,13 @@ export function carregarConfig(origem = process.env) {
       slaMs: inteiro(origem.AI_SLA_MS, 8000),
       breakerFalhas: inteiro(origem.AI_BREAKER_FAILURES, 3),
       breakerJanelaMs: inteiro(origem.AI_BREAKER_WINDOW_MS, 60000),
+    },
+    // Score semântico de tags (S4-14): desligado até medir o gabarito de pares com um provedor real.
+    semantica: {
+      ativa: booleano(origem.SEMANTIC_AFFINITY_ENABLED),
+      limiar: fracao(origem.SEMANTIC_THRESHOLD, 0.75),
+      peso: fracao(origem.SEMANTIC_WEIGHT, 0.5),
+      modelo: origem.GEMINI_EMBED_MODEL || 'gemini-embedding-001',
     },
     regras: {
       minTags: 3,

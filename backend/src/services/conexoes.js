@@ -30,7 +30,7 @@ export async function demonstrarInteresse({ banco, config }, meuId, receiverId) 
     throw proibido('BLOQUEADO', 'Não é possível conectar com esta pessoa.');
   }
 
-  const base = await carregarBase(banco.query);
+  const base = await carregarBase(banco.query, config.semantica);
   const eu = base.perfis.get(meuId);
   exigirPerfilCompleto(eu, config.regras.minTags);
   const alvo = base.perfis.get(receiverId);
@@ -113,7 +113,7 @@ export async function responderSolicitacao({ banco, config }, meuId, conexaoId, 
 // Com `marcarVisto: false` a consulta não atualiza o último acesso, e o selo "novo" continua.
 export async function listarConexoes({ banco, config }, meuId, { marcarVisto = true } = {}) {
   await expirarPendentes(banco.query, config.regras.diasExpiracao);
-  const base = await carregarBase(banco.query);
+  const base = await carregarBase(banco.query, config.semantica);
   const eu = base.perfis.get(meuId);
 
   const linhas = await banco.query(
@@ -174,7 +174,7 @@ export async function obterQuebraGelo({ banco, config, ia }, meuId, conexaoId) {
   }
   if (conexao.icebreaker) return { match_summary: conexao.icebreaker };
 
-  const base = await carregarBase(banco.query);
+  const base = await carregarBase(banco.query, config.semantica);
   const eu = base.perfis.get(meuId);
   const outro = base.perfis.get(outroId);
   const nomesDe = (perfil) => [...perfil.tecnicas, ...perfil.hobbies].map((id) => base.nomes.get(id).nome);

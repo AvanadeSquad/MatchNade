@@ -17,6 +17,7 @@ export const respostaRecomendacoes = z.strictObject({
       pronouns: z.string().nullable(),
       affinity_score: z.number(),
       shared_interests: z.array(z.string()),
+      related_interests: z.array(z.strictObject({ mine: z.string(), theirs: z.string(), similarity: z.number() })),
     }),
   ),
   message: z.string().optional(),
