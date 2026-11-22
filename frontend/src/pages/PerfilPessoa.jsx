@@ -18,10 +18,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCarregar } from '../hooks/useCarregar.js';
 import { useCelular } from '../hooks/useCelular.js';
+import { usePreferencias } from '../hooks/usePreferencias.js';
 import { API } from '../services/api.js';
 import { porcentagem, primeiroNome } from '../utils/formatar.js';
 import { ignorar } from '../utils/ignorados.js';
 import { nomeDoObjetivo } from '../utils/objetivos.js';
+import { sinergiaExibida } from '../utils/sinergia.js';
 
 // Perfil de outra pessoa. Cargo e resumo só vêm da API depois do match.
 export default function PerfilPessoa() {
@@ -30,6 +32,7 @@ export default function PerfilPessoa() {
   const avisar = useAviso();
   const { perfil, atualizarPerfilEmSilencio } = useAuth();
   const celular = useCelular();
+  const [preferencias] = usePreferencias();
   const { atualizarNotificacoes } = useLayout();
   const { dados: pessoa, erro, carregando, recarregar } = useCarregar(() => API.pessoa(id), [id]);
   const [enviando, setEnviando] = useState(false);
@@ -97,6 +100,11 @@ export default function PerfilPessoa() {
   const { connection } = pessoa;
   const confirmada = connection?.status === 'ACCEPTED';
   const nome = primeiroNome(pessoa.name);
+  // Mesmo número da Descoberta: eixos reponderados pela preferência da pessoa logada.
+  const sinergia = sinergiaExibida(
+    { tecnica: pessoa.affinity.technical, pessoal: pessoa.affinity.personal, cidade: pessoa.city, scoreDaApi: pessoa.affinity.score },
+    preferencias,
+  );
 
   // Celular: "Detalhes do Colaborador", com listas em tópicos e as ações fixas no rodapé.
   if (celular) {
@@ -127,7 +135,7 @@ export default function PerfilPessoa() {
         <section className="caixa-afinidade" aria-label="Afinidade com você">
           <p className="caixa-afinidade__titulo">
             <span>Afinidade com você</span>
-            <strong>{porcentagem(pessoa.affinity.score)}</strong>
+            <strong>{porcentagem(sinergia)}</strong>
           </p>
           <p>
             <span>Interesses profissionais</span>
@@ -275,7 +283,7 @@ export default function PerfilPessoa() {
             <div className="titulo-secao">
               <h3>Afinidade com você</h3>
               <span className="pilula pilula--verde">
-                <IconeRaio /> {porcentagem(pessoa.affinity.score)}
+                <IconeRaio /> {porcentagem(sinergia)}
               </span>
             </div>
             <Barra rotulo="Interesses profissionais" valor={pessoa.affinity.technical} />

@@ -142,6 +142,9 @@ function ImportacaoIA({ bioInicial, aoReceberTags }) {
           maxLength={LIMITE_ANALISE}
           placeholder="Ex.: Sou designer de UX há 4 anos, trabalho com Figma e design systems. Fora do trabalho corro e jogo jogos de tabuleiro."
         />
+        <span className="campo__ajuda">
+          {texto.length}/{LIMITE_ANALISE}
+        </span>
         <label className="marcar marcar--pequeno">
           <input type="checkbox" checked={usarComoBio} onChange={(e) => setUsarComoBio(e.target.checked)} />
           <span>Usar este texto como meu resumo profissional (primeiros {LIMITE_BIO} caracteres)</span>

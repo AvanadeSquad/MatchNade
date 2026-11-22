@@ -16,7 +16,7 @@ import SeletorTags from '../components/SeletorTags.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { usePreferencias } from '../hooks/usePreferencias.js';
-import { LIMITE_BIO, analisarComIA, lerArquivoDeTexto } from '../utils/importacao.js';
+import { LIMITE_ANALISE, LIMITE_BIO, analisarComIA, lerArquivoDeTexto } from '../utils/importacao.js';
 
 // Textos e ícones dos propósitos na versão de celular.
 const PROPOSITOS_CELULAR = {
@@ -201,9 +201,12 @@ export default function CadastroInteressesCelular({
             rows={4}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            maxLength={2000}
+            maxLength={LIMITE_ANALISE}
             placeholder="Ou cole aqui: o que você faz, tecnologias que usa e do que gosta fora do trabalho."
           />
+          <span className="campo__ajuda">
+            {texto.length}/{LIMITE_ANALISE}
+          </span>
         </div>
         {erroIA && (
           <p className="erro-campo" role="alert">
