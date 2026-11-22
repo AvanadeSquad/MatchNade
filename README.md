@@ -62,6 +62,10 @@ Os testes de ponta a ponta sobem a API e o app sozinhos em portas próprias (310
 - [`docs/api.md`](docs/api.md): rotas, erros e estados de uma conexão.
 - [`docs/arquitetura.md`](docs/arquitetura.md): decisões, regras que o código garante, IA e dados.
 - [`docs/deploy.md`](docs/deploy.md): publicação gratuita (Neon, Render, Vercel ou Netlify).
+- [`docs/roteiro-demonstracao.md`](docs/roteiro-demonstracao.md): roteiro de 8 minutos com plano B.
+- [`docs/populacao-e-indicadores.md`](docs/populacao-e-indicadores.md): `npm run popular` e `npm run metricas`.
+- [`docs/teste-de-carga.md`](docs/teste-de-carga.md): carga, concorrência e população realista.
+- [`docs/ia-cota-e-reserva.md`](docs/ia-cota-e-reserva.md): o que a IA faz com cota esgotada.
 - [`docs/design/`](docs/design/README.md): telas e tokens de referência.
 - [`docs/desenho-exclusao-e-personalizacao.md`](docs/desenho-exclusao-e-personalizacao.md): desenho da exclusão de conta e da personalização de perfil (implementados).
 - [`docs/evolucao.md`](docs/evolucao.md): o que ainda não foi exercitado e o que pode evoluir.
