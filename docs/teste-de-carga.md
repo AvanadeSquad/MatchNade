@@ -122,6 +122,37 @@ Os erros de `POST /matches` com 30 e 1.000 perfis são recusas da regra de negó
 - **`GET /profile` não depende do volume:** cerca de 1.100 rps no PostgreSQL e 260 rps no PGlite.
 - **O PGlite é o limite do desenvolvimento:** atende uma consulta por vez e fica de 4 a 5 vezes mais lento que o PostgreSQL local nas rotas leves.
 
+## Carga com população realista
+
+Com `CARGA_POPULACAO=realista`, o script usa o mesmo gerador do `npm run popular` (ver [população e indicadores](populacao-e-indicadores.md)) no lugar dos perfis mínimos: cadastros completos, 4 a 12 interesses por pessoa espalhados em 8 trilhas profissionais com popularidade desigual, 168 tags, e histórico de conexões e mensagens. A base fica mais parecida com a real: tags comuns aparecem em muita gente e tags raras em poucas, o que muda o custo do cálculo de afinidade.
+
+```bash
+CARGA_POPULACAO=realista CARGA_PERFIS=5000 npm run carga
+```
+
+Medição em 18 de novembro de 2026, PGlite, 8 s por cenário, no mesmo notebook (i3-1315U, 16 GB). Nesse dia a máquina estava mais lenta que na medição de 4 de novembro (`GET /profile` fez 100 rps contra cerca de 260), então compare as linhas entre si e não com as tabelas acima.
+
+| Cenário | Perfis | Conexões | rps | p50 (ms) | p95 (ms) | p99 (ms) | Erros |
+|---|---|---|---|---|---|---|---|
+| GET /profile | 1.000 | 10 | 100 | 99 | 119 | 131 | 0% |
+| GET /matches/recommendations | 1.000 | 10 | 13 | 742 | 941 | 977 | 0% |
+| POST /matches | 1.000 | 10 | 14 | 675 | 947 | 1.289 | 5,4% |
+| GET /matches | 1.000 | 10 | 15 | 643 | 737 | 778 | 0% |
+| POST /auth/login | 1.000 | 10 | 36 | 271 | 306 | 316 | 0% |
+| GET /profile | 5.000 | 10 | 99 | 100 | 126 | 134 | 0% |
+| GET /matches/recommendations | 5.000 | 10 | 3,3 | 2.930 | 3.535 | 3.561 | 0% |
+| POST /matches | 5.000 | 10 | 4,3 | 2.104 | 3.526 | 3.784 | 0% |
+| GET /matches | 5.000 | 10 | 4,8 | 2.070 | 3.042 | 3.183 | 0% |
+| POST /auth/login | 5.000 | 10 | 16 | 511 | 1.047 | 1.171 | 0% |
+
+Com 20 conexões e 5.000 perfis, as três rotas que carregam a base passam de 3,8 s de p50 e as recusas por timeout chegam a 8% (recomendações) e 11% (`POST /matches`). O erro de `POST /matches` com 1.000 perfis é a regra de negócio (cota semanal e pares já existentes), como nas tabelas acima.
+
+O que isso mostra:
+
+- **A conclusão anterior se mantém e fica mais forte.** O custo das três rotas cresce com o número de perfis e de interesses, porque cada chamada carrega a base inteira. Com 8 interesses por pessoa (contra 3 a 6 nos perfis mínimos) e 5.000 perfis, o p50 das recomendações é de 2,9 s no PGlite.
+- **O login varia com a CPU livre.** O custo do `scrypt` é fixo, mas a vazão cai quando a API divide o processador com o cálculo de afinidade.
+- **PostgreSQL não foi medido neste dia** (não há instância local). Os números de PostgreSQL das tabelas acima seguem valendo como referência, e a otimização proposta abaixo continua sendo o caminho.
+
 ## Proposta de otimização (não implementada)
 
 Como o p95 das recomendações passou de 1 s com 1.000 perfis no PGlite com 50 conexões, e com 10.000 perfis nos dois bancos com 50 conexões:
