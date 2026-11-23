@@ -30,6 +30,7 @@ import { listaEmTexto, primeiroNome } from '../utils/formatar.js';
 import { ignorar, lerIgnorados, limparIgnorados } from '../utils/ignorados.js';
 import { FILTROS_DE_OBJETIVO, nomeDoObjetivo } from '../utils/objetivos.js';
 import { mesmaCidade } from '../utils/preferencias.js';
+import InteressesRelacionados from '../components/InteressesRelacionados.jsx';
 import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima, sinergiaExibida } from '../utils/sinergia.js';
 
 const ALCANCES = [
@@ -226,6 +227,8 @@ function CartaoSugestao({ sugestao, detalhe, valorSinergia, enviando, cotaEsgota
             </div>
           )}
         </section>
+
+        <InteressesRelacionados pares={detalhe?.related_interests} nome={nome} />
 
         {detalhe?.tags.hobby.length > 0 && (
           <section className="sugestao__secao" aria-label="Interesses pessoais e hobbies">

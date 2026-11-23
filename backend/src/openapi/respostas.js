@@ -34,6 +34,7 @@ const campos = {
   tags: z.strictObject({ technical: z.array(tag), hobby: z.array(tag) }),
   affinity: z.strictObject({ score: z.number(), technical: z.number(), personal: z.number() }),
   shared_interests: z.array(z.string()),
+  related_interests: z.array(z.strictObject({ mine: z.string(), theirs: z.string(), similarity: z.number() })),
 };
 const direcao = z.enum(['SENT', 'RECEIVED']);
 

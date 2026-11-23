@@ -13,6 +13,7 @@ import {
   IconeX,
 } from '../components/Icones.jsx';
 import { useLayout } from '../components/Layout.jsx';
+import InteressesRelacionados from '../components/InteressesRelacionados.jsx';
 import MenuPessoa from '../components/MenuPessoa.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
@@ -300,6 +301,7 @@ export default function PerfilPessoa() {
                 </div>
               </>
             )}
+            <InteressesRelacionados pares={pessoa.related_interests} nome={nome} />
           </section>
         </div>
 

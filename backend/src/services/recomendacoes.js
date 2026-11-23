@@ -57,6 +57,9 @@ export async function carregarBase(consulta, semantica = null) {
   };
 }
 
+// Par de interesses parecidos, no formato da API.
+export const relacionado = (r) => ({ mine: r.minha, theirs: r.dela, similarity: arredondar(r.similaridade) });
+
 // Afinidade entre duas pessoas já carregadas, com os interesses em comum (técnicos primeiro).
 export function afinidadeEntre(base, a, b, bonusUnidade) {
   const resultado = calcularAfinidade(a, b, base.idf, bonusUnidade, base.semantica);
@@ -117,7 +120,7 @@ export async function recomendar({ banco, config }, meuId, limiteSolicitado) {
     affinity_score: arredondar(score),
     shared_interests: comuns,
     // Interesses parecidos, mas não iguais (ex.: Django e Python), com a similaridade. Vazio com o score semântico desligado.
-    related_interests: relacionados.map((r) => ({ mine: r.minha, theirs: r.dela, similarity: arredondar(r.similaridade) })),
+    related_interests: relacionados.map(relacionado),
   }));
 
   return recommendations.length

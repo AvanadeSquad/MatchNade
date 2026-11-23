@@ -17,9 +17,11 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useAviso } from '../context/Avisos.jsx';
 import { useCarregar } from '../hooks/useCarregar.js';
 import { useCelular } from '../hooks/useCelular.js';
+import { usePreferencias } from '../hooks/usePreferencias.js';
 import { API } from '../services/api.js';
 import { lerCafes } from '../utils/cafe.js';
 import { listaEmTexto, porcentagem, unidadeECidade } from '../utils/formatar.js';
+import { sinergiaDaConexao } from '../utils/sinergia.js';
 
 const FILTROS = [
   { id: 'TODOS', rotulo: 'Todos' },
@@ -99,6 +101,7 @@ function DestaqueMatch({ eu, euAvatar, conexao, aoDispensar }) {
 
 function LinhaMatch({ conexao, tipo, cafe, aoResponder, ocupado }) {
   const navegar = useNavigate();
+  const [preferencias] = usePreferencias();
   const comuns = conexao.shared_interests.slice(0, 2);
   return (
     <li className="cartao linha-match">
@@ -109,7 +112,7 @@ function LinhaMatch({ conexao, tipo, cafe, aoResponder, ocupado }) {
         <p className="linha-match__nome">
           <strong>{conexao.name}</strong> <Pronomes valor={conexao.pronouns} />
           <span className="pilula pilula--laranja">
-            <IconeRaio /> {porcentagem(conexao.affinity_score)} compatível
+            <IconeRaio /> {porcentagem(sinergiaDaConexao(conexao, preferencias))} compatível
           </span>
           {conexao.new && <span className="pilula pilula--cinza pilula--maiuscula">Match recente</span>}
           {cafe && (
@@ -186,6 +189,7 @@ function LinhaMatch({ conexao, tipo, cafe, aoResponder, ocupado }) {
 
 // Linha compacta da lista no celular.
 function LinhaCelular({ conexao, tipo, cafe, aoResponder, ocupado }) {
+  const [preferencias] = usePreferencias();
   const comuns = conexao.shared_interests;
   const conteudo = (
     <>
@@ -197,7 +201,8 @@ function LinhaCelular({ conexao, tipo, cafe, aoResponder, ocupado }) {
           {cafe && <span className="pequeno destaque-verde">Café agendado</span>}
         </span>
         <span className="pequeno">
-          Unidade: {conexao.department} • <span className="destaque-roxo">{porcentagem(conexao.affinity_score)} compatibilidade</span>
+          Unidade: {conexao.department} •{' '}
+          <span className="destaque-roxo">{porcentagem(sinergiaDaConexao(conexao, preferencias))} compatibilidade</span>
         </span>
         <span className="linha-celular__comum">
           {comuns.length

@@ -70,7 +70,7 @@ Só em desenvolvimento e testes (a API recusa iniciar em produção com estas fl
 | `POST /matches` | Demonstra interesse. Corpo: `{ "receiver_id" }`. Se a outra pessoa já tinha demonstrado, a conexão vira match. | `201 { status, match_id }`; match mútuo: `status: "ACCEPTED"` e `new: true` | `400 RECEIVER_INVALIDO`, `403 BLOQUEADO`, `403 COTA_ESGOTADA`, `409 JA_EXISTE`, `409 PERFIL_INCOMPLETO` |
 | `PATCH /matches/:id` | Aceita ou recusa uma solicitação recebida. Corpo: `{ "action": "accept" \| "decline" }`. | `200 { match_id, status }` | `403 NAO_E_DESTINATARIO`, `403 BLOQUEADO`, `404`, `409 JA_RESPONDIDA` |
 | `GET /matches?peek=true` | Conexões em três grupos: `recebidas`, `aguardando` e `confirmadas`. O cargo (`position`) só vem nas confirmadas. Cada consulta marca as confirmadas como vistas (some o selo `new`), exceto com `peek=true`. | `200` | |
-| `GET /employees/:id` | Perfil de outra pessoa, com afinidade por eixo, `avatar_id` e `pronouns`. `position` e `bio` só depois do match. Quem restringiu a visibilidade à própria unidade responde `404` para outra unidade, salvo se já houver conexão. | `200` | `404`, `409 PERFIL_INCOMPLETO` |
+| `GET /employees/:id` | Perfil de outra pessoa, com afinidade por eixo, `related_interests` (interesses parecidos, vazio com o score semântico desligado), `avatar_id` e `pronouns`. `position` e `bio` só depois do match. Quem restringiu a visibilidade à própria unidade responde `404` para outra unidade, salvo se já houver conexão. | `200` | `404`, `409 PERFIL_INCOMPLETO` |
 
 Estados de uma conexão:
 

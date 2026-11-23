@@ -3,7 +3,7 @@ import { arredondar } from './afinidade.js';
 import { expirarPendentes } from './expiracao.js';
 import { bloqueadoEntre } from './bloqueios.js';
 import { exigirPerfilCompleto, mesmaUnidade, usoDaCota } from './perfil.js';
-import { afinidadeEntre, carregarBase } from './recomendacoes.js';
+import { afinidadeEntre, carregarBase, relacionado } from './recomendacoes.js';
 
 export async function buscarConexaoDoParticipante(consulta, conexaoId, meuId) {
   const [conexao] = await consulta(
@@ -141,7 +141,10 @@ export async function listarConexoes({ banco, config }, meuId, { marcarVisto = t
       avatar_id: base.perfis.get(linha.outro_id).avatar,
       pronouns: base.perfis.get(linha.outro_id).pronomes,
       affinity_score: arredondar(afinidade.score),
+      affinity_technical: arredondar(afinidade.tecnico),
+      affinity_personal: arredondar(afinidade.pessoal),
       shared_interests: afinidade.comuns,
+      related_interests: afinidade.relacionados.map(relacionado),
     };
   };
 

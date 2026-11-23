@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima, sinergiaExibida } from './sinergia.js';
+import { SINERGIA_MINIMA_OPCOES, filtrarPorSinergiaMinima, sinergiaDaConexao, sinergiaExibida } from './sinergia.js';
 
 const lista = [
   { nome: 'A', sinergia: 0.95 },
@@ -64,5 +64,22 @@ describe('sinergiaExibida', () => {
   it('não dá bônus a quem tem sinergia zero nem passa de 100%', () => {
     expect(sinergiaExibida({ tecnica: 0, pessoal: 0, cidade: 'Recife', scoreDaApi: 0 }, { ...padrao, polos: [recife] })).toBe(0);
     expect(sinergiaExibida({ tecnica: 1, pessoal: 1, cidade: 'Recife', scoreDaApi: 1 }, { ...padrao, polos: [recife] })).toBe(1);
+  });
+});
+
+describe('sinergiaDaConexao', () => {
+  const padrao = { pesoProfissional: 70, polos: [] };
+
+  it('usa os eixos da conexão e a mesma conta da Descoberta', () => {
+    const conexao = { affinity_technical: 0.5, affinity_personal: 0.3, affinity_score: 0.4, city: 'Recife' };
+    expect(sinergiaDaConexao(conexao, padrao)).toBeCloseTo(
+      sinergiaExibida({ tecnica: 0.5, pessoal: 0.3, scoreDaApi: 0.4, cidade: 'Recife' }, padrao),
+      10,
+    );
+    expect(sinergiaDaConexao(conexao, padrao)).toBeCloseTo(0.44, 5);
+  });
+
+  it('sem os eixos (API antiga) usa o score da API', () => {
+    expect(sinergiaDaConexao({ affinity_score: 0.37 }, padrao)).toBe(0.37);
   });
 });
