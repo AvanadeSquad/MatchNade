@@ -19,7 +19,7 @@ Tudo roda em planos gratuitos. Não usa Docker.
 | Tema | Decisão | Motivo |
 |---|---|---|
 | Banco | PostgreSQL. Em desenvolvimento e testes, PGlite (PostgreSQL em processo, em memória ou em disco). | O mesmo SQL roda nos dois. Quem clona o projeto roda a API sem instalar banco nem criar conta. |
-| Acesso a dados | SQL parametrizado direto com `pg`, sem ORM. | O modelo tem 8 tabelas e poucas consultas; menos camadas para manter. |
+| Acesso a dados | SQL parametrizado direto com `pg`, sem ORM. | O modelo tem 10 tabelas e poucas consultas; menos camadas para manter. |
 | Login | E-mail e senha, ou ID token da Microsoft validado no servidor, depois JWT de 8 h. | O front não guarda segredo e a API decide quem entra pela lista de e-mails liberados. |
 | Chat | Polling a cada 5 s, só com a aba visível. | Funciona na hospedagem gratuita; WebSocket exigiria outro tipo de serviço. |
 | Afinidade | Jaccard ponderado pela raridade da tag (IDF, peso `ln(1 + N/df)`, nunca zero), por eixo (profissional e pessoal), mais 0,05 para unidade diferente quando já há afinidade. | Matemática simples e explicável, sem IA. Evita recomendar a todos quem só tem tags populares. |
@@ -63,7 +63,7 @@ O plano gratuito do Gemini pode usar o conteúdo enviado para melhorar produtos 
 
 ## Dados
 
-Oito tabelas: `employee`, `interest_tag`, `employee_interest`, `connection_match`, `chat_message`, `employee_block`, `employee_report` e `ai_interaction_log`. A fonte do esquema são as migrações em `backend/src/db/migracoes` (`001_esquema_inicial.sql` e `002_ai_log_exclusao_em_cascata.sql`). Na inicialização, `backend/src/db/migrar.js` aplica em ordem as que ainda não constam na tabela `schema_migrations`, cada uma na própria transação. Há um índice único parcial que impede duas conexões ativas para o mesmo par de pessoas, em qualquer direção.
+Dez tabelas: `employee`, `interest_tag`, `employee_interest`, `connection_match`, `chat_message`, `employee_block`, `employee_report`, `ai_interaction_log`, `moderation_report_archive` (denúncias recebidas por contas excluídas, sem identificação) e `tag_similarity` (pares de tags parecidas do score semântico). A fonte do esquema são as 8 migrações em `backend/src/db/migracoes` (`001_esquema_inicial.sql` a `008_similaridade_entre_tags.sql`). Na inicialização, `backend/src/db/migrar.js` aplica em ordem as que ainda não constam na tabela `schema_migrations`, cada uma na própria transação. Há um índice único parcial que impede duas conexões ativas para o mesmo par de pessoas, em qualquer direção.
 
 O `ai_interaction_log` registra tipo, versão do prompt, modelo, status e tempo; não guarda a bio.
 

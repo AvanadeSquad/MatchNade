@@ -22,7 +22,7 @@ Esse comando sobe um banco próprio e termina; a demonstração ao vivo continua
 | Min | Etapa | O que fazer | O que dizer |
 |---|---|---|---|
 | 0:00 | 1. Login | Entrar como Ana | Conta com e-mail e senha criada no app; o login Microsoft depende do registro do aplicativo no Entra ID. |
-| 1:00 | 2. Descoberta | Abrir `Descobrir`, mostrar as afinidades e o filtro de sinergia mínima (`40%+`, `60%+`) | O backend calcula a afinidade; o filtro atua nas 20 sugestões devolvidas. O percentual da Descoberta repondera pela preferência da pessoa, por isso difere do perfil. |
+| 1:00 | 2. Descoberta | Abrir `Descobrir`, mostrar as afinidades e o filtro de sinergia mínima (`40%+`, `60%+`) | O backend calcula a afinidade; o filtro atua nas 20 sugestões devolvidas. O percentual repondera os eixos pela preferência da pessoa (70% profissional e 30% pessoal por padrão) e é o mesmo na Descoberta e no perfil. |
 | 2:00 | 3. Privacidade | Abrir o perfil de outra pessoa antes do match | Sem cargo antes do match; mensagens só depois do interesse mútuo. |
 | 3:00 | 4. Conexão | Conectar com alguém, aceitar a Camila, abrir o chat com a Marina | Cota semanal de 1 a 5 solicitações; o par ativo é único por índice no banco, mesmo com cliques simultâneos. |
 | 4:30 | 5. API | Na aba Network, clicar em "Conectar" e abrir `POST /matches` | Mesma regra de negócio vista pela API; `docs/api.md` e `openapi.json` descrevem o contrato. |
@@ -38,5 +38,5 @@ Esse comando sobe um banco próprio e termina; a demonstração ao vivo continua
 
 ## Perguntas que costumam vir
 
-- **Por que o percentual muda entre a Descoberta e o perfil?** Pesos diferentes (a Descoberta usa 70% técnico e 30% pessoal). Está registrado como decisão de produto aberta.
+- **O percentual é o mesmo em todas as telas?** Na Descoberta e no perfil sim: os dois usam a mesma função (`sinergiaExibida`), com os eixos reponderados pela preferência da pessoa (70% profissional e 30% pessoal por padrão). A tela de Matches e o chat ainda mostram o score guardado, que pode diferir.
 - **O que não foi feito?** Login Microsoft ativo (depende do tenant), deploy hospedado, teste com cota real de IA. Diga antes de perguntarem.
