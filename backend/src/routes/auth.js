@@ -138,7 +138,7 @@ export function rotasAuth(ctx) {
   router.post('/auth/microsoft', async (req, res) => {
     const { credential } = corpoMicrosoft.parse(req.body);
     const identidade = await ctx.autenticacao.identificarPorMicrosoft(credential);
-    const { id, novo } = await obterOuCriarPorProvedor(ctx.banco, identidade);
+    const { id, novo } = await obterOuCriarPorProvedor(ctx.banco, identidade, { vincularPorEmail: !identidade.contaPessoal });
     await ctx.banco.query('UPDATE employee SET last_seen_at = COALESCE(last_seen_at, NOW()) WHERE id = $1', [id]);
     ctx.limpeza.executar();
     res.json({ token: await emitirToken(ctx, id), employee: await montarPerfil(ctx, id), is_new: novo });

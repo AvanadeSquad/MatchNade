@@ -210,11 +210,14 @@ export async function listarTags(banco, categoria) {
 }
 
 // Acha a pessoa pelo identificador do provedor de login ou pelo e-mail, ou cria a conta no primeiro acesso.
-export async function obterOuCriarPorProvedor(banco, { sub, email, nome }) {
+// Com `vincularPorEmail: false` (conta pessoal da Microsoft) só vale o identificador: se o e-mail já pertence a
+// outra conta, recusa com 409 em vez de assumi-la.
+export async function obterOuCriarPorProvedor(banco, { sub, email, nome }, { vincularPorEmail = true } = {}) {
   const [existente] = await banco.query(
-    'SELECT id, is_active, deletion_requested_at FROM employee WHERE auth_provider_id = $1 OR email = $2',
-    [sub, email],
+    'SELECT id, is_active, deletion_requested_at FROM employee WHERE auth_provider_id = $1 OR ($3::boolean AND email = $2)',
+    [sub, email, vincularPorEmail],
   );
+  if (!existente && !vincularPorEmail) await recusarEmailJaCadastrado(banco, email);
   if (existente) {
     // Conta marcada para exclusão entra, para poder cancelar. Inativa por outro motivo continua recusada.
     if (!existente.is_active && !existente.deletion_requested_at) throw conflito('CONTA_INATIVA', 'Esta conta está inativa.');
@@ -229,6 +232,18 @@ export async function obterOuCriarPorProvedor(banco, { sub, email, nome }) {
   );
   if (criado) return { id: criado.id, novo: true };
   // Outro acesso simultâneo criou a pessoa primeiro.
-  const [existe] = await banco.query('SELECT id FROM employee WHERE auth_provider_id = $1 OR LOWER(email) = LOWER($2)', [sub, email]);
+  const [existe] = await banco.query('SELECT id FROM employee WHERE auth_provider_id = $1 OR ($3::boolean AND LOWER(email) = LOWER($2))', [
+    sub,
+    email,
+    vincularPorEmail,
+  ]);
+  if (!existe) throw conflito('EMAIL_JA_CADASTRADO', EMAIL_JA_CADASTRADO);
   return { id: existe.id, novo: false };
+}
+
+const EMAIL_JA_CADASTRADO = 'Já existe uma conta com este e-mail. Entre com o e-mail e a senha dela.';
+
+async function recusarEmailJaCadastrado(banco, email) {
+  const [dona] = await banco.query('SELECT id FROM employee WHERE LOWER(email) = LOWER($1)', [email]);
+  if (dona) throw conflito('EMAIL_JA_CADASTRADO', EMAIL_JA_CADASTRADO);
 }
