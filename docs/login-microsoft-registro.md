@@ -33,7 +33,7 @@ Não é preciso criar segredo do cliente, nem conceder consentimento de administ
 | `backend/.env` | `MICROSOFT_ALLOWED_TENANTS` | ID do tenant de cada organização aceita, separados por vírgula (opcional se só aceitar contas pessoais) |
 | `frontend/.env` | `VITE_MICROSOFT_CLIENT_ID` | o mesmo ID do aplicativo |
 
-Sem `MICROSOFT_CLIENT_ID`, ou sem nenhum locatário aceito, o botão não funciona e a API responde 503 `MICROSOFT_NAO_CONFIGURADA`. O front pede a autoridade `common` (organizações e contas pessoais); quem decide o que entra é a API e o tipo de conta do registro.
+Sem `VITE_MICROSOFT_CLIENT_ID` no frontend, a tela de login **não mostra** o botão nem o divisor de SSO (só o login com e-mail e senha). Sem `MICROSOFT_CLIENT_ID` ou sem nenhum locatário aceito na API, a rota responde 503 `MICROSOFT_NAO_CONFIGURADA`. O front pede a autoridade `common` (organizações e contas pessoais); quem decide o que entra é a API e o tipo de conta do registro.
 
 ## 4. Testar
 
