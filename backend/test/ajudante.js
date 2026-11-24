@@ -35,10 +35,10 @@ async function criarBancoDeTeste() {
 }
 
 // Cria um ambiente isolado: banco de teste, app Express e atalhos de teste.
-export async function criarAmbiente({ ambiente = {}, ia, verificadorMicrosoft } = {}) {
+export async function criarAmbiente({ ambiente = {}, ia, verificadorMicrosoft, vetorizador } = {}) {
   const config = configDeTeste(ambiente);
   const { banco, descartar } = await criarBancoDeTeste();
-  const app = criarApp({ banco, config, ia, verificadorMicrosoft, limitarRequisicoes: false, registrarErro: () => {} });
+  const app = criarApp({ banco, config, ia, verificadorMicrosoft, vetorizador, limitarRequisicoes: false, registrarErro: () => {} });
   const http = request(app);
   const tokens = new Map();
 
