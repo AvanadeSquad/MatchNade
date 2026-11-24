@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+reports/
+.stryker-tmp/
+# Markdown fica fora: o Prettier só realinharia as tabelas.
+*.md
+# Gerado por npm run openapi.
+openapi.json

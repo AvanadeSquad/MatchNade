@@ -1,0 +1,135 @@
+# API
+
+Prefixo `/api/v1`. Todas as rotas, exceto `/health`, `/health/ready`, as rotas de autenticação (`/auth/...`) e as rotas de desenvolvimento e teste, exigem `Authorization: Bearer <jwt>`. Erros seguem o formato:
+
+```json
+{ "code": "TEXTO_CURTO", "message": "explicação para a pessoa" }
+```
+
+Dados inválidos devolvem `400 DADOS_INVALIDOS` com `details` (campo e problema). Sessão inválida ou expirada devolve `401 NAO_AUTENTICADO`. JSON malformado devolve `400 CORPO_INVALIDO`, rota inexistente `404 NAO_ENCONTRADO` e erro inesperado `500 ERRO_INTERNO`.
+
+Limites de requisição: 600 por 15 minutos por IP em toda a API (exceto `/health/ready`) e 30 por 15 minutos nas rotas de autenticação (`/auth/...`). Acima do limite a resposta é `429`.
+
+## Sessão
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /health` | Verifica se o serviço está de pé. | `200 { "status": "ok" }` | |
+| `GET /health/ready` | Verifica se o banco atende. O resultado fica guardado por alguns segundos, e a rota não conta no limite de requisições. | `200 { "status": "ok", "banco": "ok" }` | `503 { "status": "indisponivel", "banco": "erro" }` |
+| `POST /auth/microsoft` | Valida o ID token do Microsoft Entra ID (assinatura, aplicativo, validade, locatário liberado e emissor), cria a pessoa no primeiro acesso e devolve o JWT (8 h). Corpo: `{ "credential" }`. A identidade é o par locatário e `oid`; o e-mail (`email` ou `preferred_username`) só passa pela lista de liberados e localiza a conta existente (exceto em conta pessoal, que não assume conta pelo e-mail). | `200 { token, employee, is_new }` | `401 NAO_AUTENTICADO` token inválido, de outro locatário ou sem e-mail, `403 EMAIL_NAO_LIBERADO`, `409 CONTA_INATIVA` ou `409 EMAIL_JA_CADASTRADO` (conta pessoal com o e-mail de uma conta existente), `503 MICROSOFT_NAO_CONFIGURADA` |
+
+### Autenticação local (e-mail e senha)
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /auth/security-questions` | Lista as perguntas de segurança aceitas no cadastro. | `200 { questions: [{ id, pergunta }] }` | |
+| `POST /auth/register` | Cria a conta com senha e pergunta de segurança e já devolve o JWT. Corpo: `{ name, email, password, security_question_id, security_answer }`. Senha de 10 a 128 caracteres; o e-mail é guardado em minúsculas. Senha e resposta ficam só como hash (scrypt com salt). | `201 { token, employee, is_new: true }` | `400 DADOS_INVALIDOS`, `403 EMAIL_NAO_LIBERADO`, `409 EMAIL_JA_CADASTRADO` |
+| `POST /auth/login` | Entra com e-mail e senha. Corpo: `{ email, password }`. | `200 { token, employee, is_new: false }` | `401 NAO_AUTENTICADO` ("E-mail ou senha incorretos.") |
+| `POST /auth/recovery-question` | Devolve a pergunta de segurança da conta. Corpo: `{ email }`. | `200 { question, available: true }` | `400 DADOS_INVALIDOS` |
+| `POST /auth/reset-password` | Redefine a senha com a resposta de segurança. Corpo: `{ email, security_answer, new_password }`. A resposta é comparada sem acentos, sem diferenciar maiúsculas e sem espaços nas pontas. | `200 { message }` | `400 DADOS_INVALIDOS`, `401 NAO_AUTENTICADO` (mensagem genérica) |
+
+Regras que valem para essas rotas:
+
+- **Conta marcada para exclusão:** entra normalmente (login por senha, Microsoft e recuperação de senha), mas só `GET /profile`, `GET /profile/export`, `POST /profile/deletion/cancel` e `DELETE /profile` respondem; qualquer outra rota devolve `403 CONTA_EM_EXCLUSAO`. `GET /profile` traz `deletion: { requested_at, scheduled_for }`, e `deletion` é `null` nas demais contas. Uma conta inativa por outro motivo continua recusada com a resposta genérica de senha errada.
+- **Login sem revelar cadastro:** senha errada, e-mail inexistente, conta sem senha local (criada pelo login da Microsoft) e conta inativa recebem a mesma resposta `401`. Contas sem senha passam pela mesma verificação de hash, para o tempo de resposta não indicar se o e-mail existe.
+- **Recuperação uniforme:** `POST /auth/recovery-question` sempre devolve uma pergunta e `available: true`. Para e-mail sem cadastro ou conta sem pergunta, a pergunta é fictícia (a mesma a cada consulta do mesmo e-mail), e a redefinição falha com a mesma mensagem genérica de uma resposta errada.
+- **Bloqueio da recuperação por conta:** 5 respostas erradas seguidas bloqueiam a redefinição daquela conta por 15 minutos. Durante o bloqueio nem a resposta certa vale, e a mensagem continua a genérica. Uma redefinição com sucesso zera a contagem. Isso se soma ao limite por IP das rotas de login.
+- **Bloqueio do login por conta:** 5 senhas erradas seguidas bloqueiam o login daquela conta por 15 minutos. Durante o bloqueio nem a senha certa entra, e a resposta é a mesma de senha errada (`401`). Um acerto zera a contagem, e redefinir a senha libera o login. Conta inexistente, sem senha local ou inativa não conta erros.
+- **Sessões antigas invalidadas:** redefinir a senha incrementa a versão de sessão da conta, e todo JWT emitido antes passa a receber `401 NAO_AUTENTICADO`.
+
+Só em desenvolvimento e testes (a API recusa iniciar em produção com estas flags):
+
+| Rota | Flag | Função |
+|---|---|---|
+| `GET /auth/dev-users`, `POST /auth/dev-login` | `AUTH_DEV_LOGIN=true` | Lista pessoas e entra sem senha. Corpo do login: `{ email }`, que precisa estar liberado. |
+| `POST /test/login` | `E2E_TEST_MODE=true` | Entra com qualquer e-mail (cria a pessoa se não existir). Usada pelos testes de ponta a ponta. |
+
+## Perfil
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /profile` | Perfil da pessoa logada, com tags, cota e `profile_complete`. | `200` | |
+| `PUT /profile` | Atualiza `name`, `bio`, `position` (opcional), `department`, `location`, `connection_goals` e `max_weekly_matches` (1 a 5). Personalização: `pronouns` (texto simples até 30 caracteres, vazio limpa), `visibility` (`ALL` ou `UNIT`), `avatar_id` (um dos 12 códigos, `null` volta às iniciais) e `preferred_coffee_slots` (até 5 dos horários do Coffee Chat). | `200` perfil | `400`, `400 PRONOMES_INVALIDOS` |
+| `POST /profile/enrich-bio` | Extrai tags da bio com IA. Corpo: `{ "raw_bio" }` (até 1000 caracteres; acima disso a rota recusa em vez de cortar). Até 15 chamadas por hora por pessoa. | `200 { technical_tags, hobby_tags }`, ou com `fallback: true` e listas vazias se a IA falhar | `400 BIO_VAZIA` ou `400` de validação |
+| `PUT /profile/interests` | Substitui os interesses. Corpo: `{ "interests": [{ name, category, source?, confidence? }] }`. | `200` perfil | `400 MENOS_DE_3_TAGS`, `400 TAG_INVALIDA` |
+| `PATCH /profile/pause` | Pausa ou retoma a exposição. Corpo: `{ "is_paused" }`. | `200 { is_paused }` | |
+| `GET /profile/export` | Baixa um JSON com os dados da própria pessoa: perfil, interesses, conexões (a outra pessoa só pelo nome), mensagens enviadas e recebidas, bloqueios e denúncias feitas. Não inclui senha, resposta de segurança nem dado de terceiros. Até 5 por hora por pessoa. | `200 { exported_at, profile, interests, connections, messages, blocks, reports_made }` (cabeçalho `Content-Disposition: attachment`) | `429 LIMITE_EXCEDIDO` |
+| `POST /profile/deletion` | Marca a conta para exclusão em 30 dias: oculta a pessoa, derruba todas as sessões e exige o e-mail da própria conta. Corpo: `{ "confirm_email" }` (sem diferenciar maiúsculas). | `200 { requested_at, scheduled_for }` | `400 CONFIRMACAO_INVALIDA`, `403 CONTA_EM_EXCLUSAO` se já estiver marcada |
+| `POST /profile/deletion/cancel` | Cancela a exclusão dentro do prazo. As conexões e as mensagens voltam. | `200` perfil | `409 SEM_EXCLUSAO_PENDENTE` |
+| `DELETE /profile` | Exclui o perfil e tudo ligado a ele, **na hora**. As denúncias recebidas vão para um arquivo anônimo (só motivo e data, sem e-mail, telefone ou link no texto). Vale também para conta marcada para exclusão. | `204` | |
+| `GET /tags?category=TECHNICAL\|HOBBY` | Catálogo de tags, da mais usada para a menos usada. | `200 { tags }` | |
+| `POST /tags` | Cria uma tag (ou devolve a existente, sem diferenciar maiúsculas). Cargos e termos genéricos são recusados. | `201` | `400 TAG_INVALIDA` |
+
+`connection_goals` aceita `NETWORKING`, `TROCA_DE_CONHECIMENTO`, `HOBBY`, `MENTORIA` e `CONHECER_GENTE`.
+
+## Descoberta e conexões
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /matches/recommendations?limit=5` | Pessoas por afinidade (máximo 20), com `avatar_id` e `pronouns`. Esconde quem já tem conexão, quem bloqueou, quem foi bloqueado, quem pausou, quem tem menos de 3 interesses e quem restringiu a visibilidade à própria unidade (`visibility = UNIT`) quando você é de outra unidade. | `200 { recommendations }`, cada uma com `shared_interests` (tags iguais) e `related_interests` (pares parecidos, `{ mine, theirs, similarity }`, vazio enquanto o score semântico estiver desligado); com a cota usada ou sem ninguém, lista vazia com `message` | `409 PERFIL_INCOMPLETO` |
+| `POST /matches` | Demonstra interesse. Corpo: `{ "receiver_id" }`. Se a outra pessoa já tinha demonstrado, a conexão vira match. | `201 { status, match_id }`; match mútuo: `status: "ACCEPTED"` e `new: true` | `400 RECEIVER_INVALIDO`, `403 BLOQUEADO`, `403 COTA_ESGOTADA`, `409 JA_EXISTE`, `409 PERFIL_INCOMPLETO` |
+| `PATCH /matches/:id` | Aceita ou recusa uma solicitação recebida. Corpo: `{ "action": "accept" \| "decline" }`. | `200 { match_id, status }` | `403 NAO_E_DESTINATARIO`, `403 BLOQUEADO`, `404`, `409 JA_RESPONDIDA` |
+| `GET /matches?peek=true` | Conexões em três grupos: `recebidas`, `aguardando` e `confirmadas`. O cargo (`position`) só vem nas confirmadas. Cada consulta marca as confirmadas como vistas (some o selo `new`), exceto com `peek=true`. | `200` | |
+| `GET /employees/:id` | Perfil de outra pessoa, com afinidade por eixo, `related_interests` (interesses parecidos, vazio com o score semântico desligado), `avatar_id` e `pronouns`. `position` e `bio` só depois do match. Quem restringiu a visibilidade à própria unidade responde `404` para outra unidade, salvo se já houver conexão. | `200` | `404`, `409 PERFIL_INCOMPLETO` |
+
+Estados de uma conexão:
+
+| Estado | Quando | Próximos |
+|---|---|---|
+| `PENDING` | Uma pessoa demonstrou interesse e a outra ainda não respondeu. | `ACCEPTED`, `DECLINED`, `EXPIRED` |
+| `ACCEPTED` | As duas demonstraram interesse, ou a solicitação foi aceita. O chat abre. | O chat fecha enquanto houver bloqueio e reabre com o desbloqueio. |
+| `DECLINED` | A pessoa recusou. Ninguém vê. | Final. |
+| `EXPIRED` | Pendente há mais de 14 dias. A pessoa que pediu pode refazer o pedido: a mesma conexão volta a `PENDING`. | `PENDING` |
+
+A cota semanal conta as solicitações que a pessoa envia (de segunda a domingo, horário de Brasília). Aceitar uma solicitação recebida e o match mútuo por interesse cruzado não consomem a cota de quem aceita.
+
+## Chat
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `GET /matches/:id/icebreaker` | Sugestão de abertura. Gerada uma vez e guardada. Se a IA falhar, devolve o texto padrão com `fallback: true`, sem guardar. Até 60 chamadas por hora por pessoa. | `200 { match_summary }` | `403 SEM_MATCH`, `404`, `429` |
+| `GET /matches/:id/contact` | Link para abrir a conversa com a outra pessoa no Teams. Só depois do match. | `200 { teams_url }` | `403 SEM_MATCH`, `404` |
+| `GET /matches/:id/invite?start=<ISO 8601 com fuso>&minutes=15` | Convite de Coffee Chat: link do calendário do Outlook e conteúdo do arquivo `.ics`. `minutes` de 15 a 120 (padrão 15). Só depois do match. | `200 { outlook_url, ics, ics_filename }` | `400`, `403 SEM_MATCH`, `404` |
+| `GET /matches/:id/messages?after=<id>&limit=100` | Mensagens com id maior que `after`, em ordem (`limit` de 1 a 200). Usado no polling. | `200 { messages }` | `403 SEM_MATCH`, `403 BLOQUEADO`, `404` |
+| `POST /matches/:id/messages` | Envia mensagem (até 1000 caracteres). Corpo: `{ "body" }`. | `201 { id, sender_id, body, created_at }` | `400 MENSAGEM_VAZIA`, `400 MENSAGEM_LONGA`, `403 SEM_MATCH`, `403 BLOQUEADO`, `404` |
+
+## Segurança entre pessoas
+
+| Método e rota | Função | Resposta | Erros |
+|---|---|---|---|
+| `POST /employees/:id/block` | Bloqueia. Some da descoberta e fecha o chat para as duas pessoas. | `204` | `400 ALVO_INVALIDO`, `404` |
+| `DELETE /employees/:id/block` | Desbloqueia. Uma conexão aceita volta a ter o chat aberto. | `204` | |
+| `GET /blocks` | Pessoas que você bloqueou. | `200 { blocked }` | |
+| `POST /employees/:id/report` | Denuncia. Corpo: `{ "reason" }`. | `201` | `400 MOTIVO_OBRIGATORIO`, `400 ALVO_INVALIDO`, `404` |
+
+## Exemplos
+
+Extração de tags:
+
+```http
+POST /api/v1/profile/enrich-bio
+{ "raw_bio": "Sou dev front há 3 anos, curto React e Node. Fora do trabalho jogo xadrez e corro de manhã." }
+
+200 OK
+{ "technical_tags": ["React", "Node.js"], "hobby_tags": ["Xadrez", "Corrida"] }
+```
+
+Recomendações:
+
+```http
+GET /api/v1/matches/recommendations?limit=2
+
+200 OK
+{ "recommendations": [
+    { "employee_id": 42, "name": "Marina Costa", "department": "Tecnologia e Inovação",
+      "city": "São Paulo", "affinity_score": 0.62, "shared_interests": ["Node.js", "Xadrez"] } ] }
+```
+
+Match mútuo:
+
+```http
+POST /api/v1/matches   { "receiver_id": 42 }
+
+201 Created
+{ "match_id": 287, "status": "ACCEPTED", "new": true }
+```

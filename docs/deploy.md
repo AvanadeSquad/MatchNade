@@ -1,0 +1,79 @@
+# Publicação com custo zero
+
+Três serviços gratuitos: banco (Neon), API (Render) e frontend (Vercel ou Netlify). Confira os limites atuais de cada plano antes de depender deles.
+
+## Roteiro do primeiro deploy (cartão E0-06)
+
+Ordem que evita retrabalho. Cada passo tem a seção correspondente abaixo; marque ao concluir.
+
+1. [ ] Banco: criar o projeto no Neon e guardar `DATABASE_URL` (seção 1).
+2. [ ] Decidir quem entra: `ALLOWED_EMAIL_DOMAINS` ou `ALLOWED_EMAILS` (seção 2).
+3. [ ] Gerar `JWT_SECRET` com 32 ou mais caracteres. No PowerShell: `-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 40 | ForEach-Object {[char]$_})`.
+4. [ ] API: criar o Blueprint no Render e preencher as variáveis (seção 4). Anotar a URL da API.
+5. [ ] Conferir a API sozinha, antes do frontend: `Invoke-RestMethod "<API>/health"` deve devolver `status: ok`. A primeira chamada pode levar cerca de um minuto, porque o plano gratuito hiberna.
+6. [ ] Frontend: Vercel ou Netlify, com `VITE_API_URL` apontando para `<API>/api/v1` (seção 5). Anotar a URL do frontend.
+7. [ ] Voltar ao Render e preencher `FRONTEND_URL` com a URL do frontend; sem isso, o navegador bloqueia as chamadas (CORS).
+8. [ ] Conferência de ponta a ponta (seção "Conferência"): conta liberada entra e conclui o cadastro; conta fora da lista é recusada.
+9. [ ] Só depois: IA (`GEMINI_API_KEY`, seção 3) e login Microsoft (seção "Login com Microsoft").
+
+O banco do Neon começa vazio e a API cria as tabelas sozinha. O seed de pessoas fictícias só roda com banco vazio e `SEED_ON_START=true`; **não ligue em produção real**.
+
+## 1. Banco (Neon)
+
+1. Crie um projeto no Neon e copie a string de conexão (já inclui `sslmode=require`).
+2. Guarde como `DATABASE_URL`. As tabelas são criadas na primeira inicialização da API.
+
+## 2. Quem pode entrar
+
+Defina `ALLOWED_EMAIL_DOMAINS` (por exemplo `suaempresa.com`) e/ou `ALLOWED_EMAILS`. Em produção a API não inicia sem uma das duas. O login com a Microsoft (Entra ID) é opcional e fica descrito mais abaixo; sem ele, entra-se com e-mail e senha.
+
+## 3. IA (opcional)
+
+- `GEMINI_API_KEY` (Google AI Studio) e, como reserva, `GROQ_API_KEY`. Sem as chaves o cadastro usa o caminho manual e o chat usa o texto padrão.
+- O modelo padrão é `gemini-flash-lite-latest`. Troque com `GEMINI_MODEL` se o nome mudar.
+
+## 4. API (Render)
+
+O arquivo `render.yaml` na raiz descreve o serviço. No Render, crie um "Blueprint" apontando para o repositório e preencha as variáveis marcadas como secretas:
+
+### Login com Microsoft (opcional)
+
+1. No Microsoft Entra ID, registre um aplicativo do tipo "Aplicativo de página única (SPA)" com o endereço do frontend como URI de redirecionamento (e `http://localhost:5173` para testar). Tipo de conta aceito: "Contas em qualquer diretório organizacional" (só organizações) ou "Contas em qualquer diretório organizacional e contas pessoais da Microsoft" (organizações e Outlook, Hotmail, Live). O passo a passo do registro está em [`login-microsoft-registro.md`](login-microsoft-registro.md).
+2. Guarde o ID do aplicativo como `MICROSOFT_CLIENT_ID` na API e `VITE_MICROSOFT_CLIENT_ID` no frontend.
+3. Liste em `MICROSOFT_ALLOWED_TENANTS` o ID do locatário (tenant) de cada organização aceita, separados por vírgula. É obrigatório: o e-mail de um token de aplicativo multitenant não prova a posse da caixa, então a API só aceita tokens dos locatários listados. Sem a lista (e sem a opção abaixo), a rota responde 503. Para aceitar também contas pessoais, defina `MICROSOFT_ALLOW_PERSONAL=true`: a API passa a aceitar o locatário fixo das contas pessoais (`9188040d-6c67-4c5c-b112-36a304b66dad`), sem abrir nenhum outro locatário.
+4. `ALLOWED_EMAIL_DOMAINS` e `ALLOWED_EMAILS` valem também para este login. Quem já tem conta com o mesmo e-mail entra nela, exceto no login com conta pessoal (Outlook, Hotmail, Live), que recusa com 409 em vez de assumir a conta.
+
+| Variável | Valor |
+|---|---|
+| `DATABASE_URL` | string do Neon |
+| `JWT_SECRET` | texto aleatório com 32 ou mais caracteres |
+| `ALLOWED_EMAIL_DOMAINS` | domínio da empresa |
+| `FRONTEND_URL` | URL do frontend (aceita várias separadas por vírgula) |
+| `GEMINI_API_KEY`, `GROQ_API_KEY` | opcionais |
+| `ALLOWED_EMAILS`, `JWT_EXPIRES_IN`, `TRUST_PROXY` | opcionais: e-mails liberados fora do domínio, validade do JWT (padrão 8h) e número de proxies confiáveis (padrão 1 em produção) |
+
+`NODE_ENV=production` já vem no `render.yaml`. Em produção a API recusa iniciar com `AUTH_DEV_LOGIN`, `E2E_TEST_MODE` ou `RATE_LIMIT_DISABLED` ativos, sem segredo forte ou sem banco. O serviço gratuito do Render hiberna sem uso, então o primeiro acesso depois de um tempo parado demora.
+
+## 5. Frontend (Vercel ou Netlify)
+
+- Diretório raiz: `frontend`. Comando de build: `npm run build`. Saída: `dist`.
+- Variáveis: `VITE_API_URL` (URL da API com `/api/v1`) e, para o login com a Microsoft, `VITE_MICROSOFT_CLIENT_ID`.
+- As rotas do app são do navegador; `frontend/vercel.json` e `frontend/public/_redirects` já redirecionam qualquer caminho para o `index.html`.
+- Os cabeçalhos de segurança, com a política de conteúdo (CSP), ficam em `frontend/vercel.json` (Vercel) e `frontend/public/_headers` (Netlify), com a mesma política nos dois. A CSP só deixa o app chamar o próprio site, o login da Microsoft (`https://login.microsoftonline.com`) e `https://*.onrender.com`. Se a API for publicada em outro domínio, acrescente-o a `connect-src` **nos dois arquivos**; sem isso, o navegador bloqueia as chamadas à API. `npm run test:cabecalhos` confere que os dois continuam iguais.
+
+## Conferência
+
+1. `GET <API>/health` responde `{"status":"ok"}`.
+2. Abra o frontend, entre com uma conta liberada e conclua o cadastro.
+3. Entre com uma conta fora da lista e confira a mensagem "Seu e-mail ainda não está liberado".
+
+## Depois de mesclar
+
+Estado do repositório e o que conferir nas configurações, que não são feitas por código:
+
+1. **Canal de vulnerabilidades:** o repositório é público. O canal é o reporte privado do GitHub (aba **Security**, **Report a vulnerability**), como diz o `SECURITY.md`; confira em Settings, Code security, se "Private vulnerability reporting" está ativo.
+2. **Dependabot:** os alertas estão ativos e o `.github/dependabot.yml` propõe atualizações semanais para backend, frontend, testes de ponta a ponta e GitHub Actions.
+3. **CodeQL:** `.github/workflows/codeql.yml` roda em todo pull request, em todo push em `main` e `develop` e toda semana, com o job "Análise do JavaScript". O job só roda com a variável de repositório `CODEQL_ATIVO` igual a `true`; se ela for removida, o job fica pulado.
+4. **Proteção das branches:** `main` e `develop` só recebem mudanças por pull request, com 1 aprovação e conversas resolvidas. Na `develop`, os checks do CI precisam passar, inclusive "Análise do JavaScript". A lista dos checks está no `CONTRIBUTING.md`.
+5. **Variáveis dos serviços:** confirme no Render as variáveis da seção 4 e no Vercel ou Netlify as da seção 5.
+6. **Referências visuais:** as imagens de `e2e/tests/visual.spec.js-snapshots/` foram geradas no ambiente do CI e correspondem ao Chromium que ele instala; em outra máquina, os testes visuais podem falhar sem mudança visual. Quando uma tela muda de propósito, gere as referências novas no CI pelo passo a passo do `e2e/README.md`.

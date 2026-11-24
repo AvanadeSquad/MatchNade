@@ -1,0 +1,7 @@
+node_modules/
+dist/
+package-lock.json
+# Os estilos usam regras compactas, uma por linha; o Prettier as expandiria.
+src/styles/
+# Markdown fica fora: o Prettier só realinharia as tabelas.
+*.md
