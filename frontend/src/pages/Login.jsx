@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { IconeCheckCirculo, IconeMicrosoft, IconeSeta } from '../components/Icones.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useAviso } from '../context/Avisos.jsx';
 import { useCelular } from '../hooks/useCelular.js';
 import { API } from '../services/api.js';
 import { MICROSOFT_CLIENT_ID, obterIdTokenMicrosoft } from '../services/microsoft.js';
@@ -13,7 +12,6 @@ const mensagemDeErro = (erro) =>
 
 export default function Login() {
   const { token, perfil, entrar } = useAuth();
-  const avisar = useAviso();
   const navegar = useNavigate();
   const [modo, setModo] = useState('login'); // login | cadastro | recuperar | redefinir
   const [email, setEmail] = useState('');
@@ -109,7 +107,6 @@ export default function Login() {
     }
   }
 
-  const ssoIndisponivel = (provedor) => () => avisar(`O SSO ${provedor} ainda precisa ser configurado na API e no ambiente.`, 'info');
   if (token && perfil) return <Navigate to={destinoDepoisDoLogin(perfil)} replace />;
 
   const titulo =
@@ -149,7 +146,7 @@ export default function Login() {
               ? 'Crie suas credenciais e configure a recuperação de senha.'
               : modo.startsWith('recuper') || modo === 'redefinir'
                 ? 'Recupere o acesso usando sua pergunta de segurança.'
-                : 'Entre com seu e-mail corporativo e senha ou use o SSO corporativo.'}
+                : `Entre com seu e-mail corporativo e senha${MICROSOFT_CLIENT_ID ? ' ou use o SSO corporativo' : ''}.`}
           </p>
           <form onSubmit={enviar}>
             {modo === 'cadastro' && (
@@ -301,19 +298,19 @@ export default function Login() {
           </div>
           {modo === 'login' && (
             <>
-              <p className="divisor">
-                <span>ou autenticar com SSO corporativo</span>
-              </p>
-              <div className="login__sso">
-                <button
-                  type="button"
-                  className="botao botao--contorno"
-                  disabled={microsoftOcupado}
-                  onClick={MICROSOFT_CLIENT_ID ? entrarComMicrosoft : ssoIndisponivel('Microsoft Entra ID')}
-                >
-                  <IconeMicrosoft /> Entrar com Microsoft corporativo
-                </button>
-              </div>
+              {/* O botão só existe com o aplicativo registrado no Entra ID (VITE_MICROSOFT_CLIENT_ID). */}
+              {MICROSOFT_CLIENT_ID && (
+                <>
+                  <p className="divisor">
+                    <span>ou autenticar com SSO corporativo</span>
+                  </p>
+                  <div className="login__sso">
+                    <button type="button" className="botao botao--contorno" disabled={microsoftOcupado} onClick={entrarComMicrosoft}>
+                      <IconeMicrosoft /> Entrar com Microsoft corporativo
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </section>
