@@ -38,5 +38,5 @@ Esse comando sobe um banco próprio e termina; a demonstração ao vivo continua
 
 ## Perguntas que costumam vir
 
-- **O percentual é o mesmo em todas as telas?** Na Descoberta e no perfil sim: os dois usam a mesma função (`sinergiaExibida`), com os eixos reponderados pela preferência da pessoa (70% profissional e 30% pessoal por padrão). A tela de Matches e o chat ainda mostram o score guardado, que pode diferir.
+- **O percentual é o mesmo em todas as telas?** Sim: Descoberta, perfil, Matches e chat usam a mesma conta (`sinergiaExibida` e `sinergiaDaConexao`), com os eixos reponderados pela preferência da pessoa (70% profissional e 30% pessoal por padrão).
 - **O que não foi feito?** Login Microsoft ativo (depende do tenant), deploy hospedado, teste com cota real de IA. Diga antes de perguntarem.
