@@ -28,7 +28,7 @@ Esse comando sobe um banco próprio e termina; a demonstração ao vivo continua
 | 4:30 | 5. API | Na aba Network, clicar em "Conectar" e abrir `POST /matches` | Mesma regra de negócio vista pela API; `docs/api.md` e `openapi.json` descrevem o contrato. |
 | 5:30 | 6. Volume | Mostrar o relatório gerado por `npm run metricas` (ver `docs/populacao-e-indicadores.md`) | Indicadores de 5.000 pessoas: pares sem interesse em comum, afinidade das sugestões, tempo das recomendações. |
 | 6:30 | 7. IA | Cadastro com bio: revisão de tags e frase de abertura | A IA só sugere; a pessoa confirma. Cota esgotada cai na reserva e depois no caminho manual (`docs/ia-cota-e-reserva.md`). |
-| 7:30 | 8. Qualidade | Aba Actions do GitHub | 9 verificações e CodeQL a cada PR. |
+| 7:30 | 8. Qualidade | Aba Actions do GitHub | 8 verificações do CI e 2 do CodeQL a cada PR (10 checks no total). |
 
 ## Plano B
 
@@ -38,5 +38,5 @@ Esse comando sobe um banco próprio e termina; a demonstração ao vivo continua
 
 ## Perguntas que costumam vir
 
-- **O percentual é o mesmo em todas as telas?** Na Descoberta e no perfil sim: os dois usam a mesma função (`sinergiaExibida`), com os eixos reponderados pela preferência da pessoa (70% profissional e 30% pessoal por padrão). A tela de Matches e o chat ainda mostram o score guardado, que pode diferir.
+- **O percentual é o mesmo em todas as telas?** Sim: Descoberta, perfil, Matches e chat usam a mesma conta (`sinergiaExibida` e `sinergiaDaConexao`), com os eixos reponderados pela preferência da pessoa (70% profissional e 30% pessoal por padrão).
 - **O que não foi feito?** Login Microsoft ativo (depende do tenant), deploy hospedado, teste com cota real de IA. Diga antes de perguntarem.

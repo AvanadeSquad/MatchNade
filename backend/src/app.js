@@ -2,7 +2,9 @@ import cors from 'cors';
 import express from 'express';
 import { ipKeyGenerator, rateLimit } from './middlewares/limite.js';
 import helmet from 'helmet';
+import { provedorEmbeddingsGemini } from './ai/provedores.js';
 import { criarServicoIa } from './ai/servico.js';
+import { criarVetorizador } from './services/vetorizador.js';
 import { autenticar } from './middlewares/autenticar.js';
 import { rotaNaoEncontrada, tratarErros } from './middlewares/erros.js';
 import { identificarRequisicao } from './middlewares/requisicao.js';
@@ -16,6 +18,13 @@ import { criarLimpeza } from './services/exclusao.js';
 import { criarProntidao } from './services/prontidao.js';
 import { criarLog, resumirErro } from './utils/log.js';
 
+// Com o score semântico ligado e a chave do Gemini, tags novas ganham vetor em segundo plano. Sem os dois, não há vetorizador.
+function vetorizadorPadrao(config, banco) {
+  if (!config.semantica.ativa || !config.ia.geminiKey) return null;
+  const provedor = provedorEmbeddingsGemini({ chave: config.ia.geminiKey, modelo: config.semantica.modelo });
+  return criarVetorizador({ banco, provedor, limiar: config.semantica.limiar });
+}
+
 // Monta a aplicação Express. `banco` e `config` são obrigatórios; `ia`, `verificadorMicrosoft` e `log`
 // podem ser injetados (testes) e `limitarRequisicoes: false` desliga o limite.
 export function criarApp({
@@ -23,12 +32,20 @@ export function criarApp({
   config,
   ia,
   verificadorMicrosoft,
+  vetorizador,
   limitarRequisicoes = true,
   registrarErro,
   log = criarLog({ nivel: config.logLevel }),
 }) {
   const autenticacao = criarAutenticacao(config, verificadorMicrosoft);
-  const ctx = { banco, config, autenticacao, ia: ia ?? criarServicoIa({ config, banco }), limpeza: criarLimpeza({ banco, log }) };
+  const ctx = {
+    banco,
+    config,
+    autenticacao,
+    ia: ia ?? criarServicoIa({ config, banco }),
+    vetorizador: vetorizador === undefined ? vetorizadorPadrao(config, banco) : vetorizador,
+    limpeza: criarLimpeza({ banco, log }),
+  };
   // Limites por pessoa nas rotas que gastam a cota gratuita de IA.
   ctx.limitarPorPessoa = (max, janelaMs) =>
     limitarRequisicoes

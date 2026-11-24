@@ -35,6 +35,15 @@ export const corpoPerfil = z.object({
   preferred_coffee_slots: z.array(z.enum(HORARIOS_CAFE)).max(MAX_HORARIOS_PREFERIDOS).optional(),
 });
 
+// Tag nova pode ter sido criada: pede o vetor dela em segundo plano. Falha aqui nunca afeta a resposta.
+function acionarVetorizador(ctx) {
+  try {
+    ctx.vetorizador?.agendar();
+  } catch {
+    // O score semântico é opcional.
+  }
+}
+
 export const corpoBio = z.object({ raw_bio: z.string().max(1000) });
 
 export const corpoInteresses = z.object({
@@ -78,6 +87,7 @@ export function rotasPerfil(ctx, autenticar) {
   router.put('/profile/interests', autenticar, async (req, res) => {
     const { interests } = corpoInteresses.parse(req.body);
     await salvarInteresses(ctx, req.usuario.id, interests);
+    acionarVetorizador(ctx);
     res.json(await montarPerfil(ctx, req.usuario.id));
   });
 
@@ -115,7 +125,9 @@ export function rotasPerfil(ctx, autenticar) {
 
   router.post('/tags', autenticar, async (req, res) => {
     const { name, category } = corpoTag.parse(req.body);
-    res.status(201).json(await garantirTag(banco.query, name, category));
+    const tag = await garantirTag(banco.query, name, category);
+    acionarVetorizador(ctx);
+    res.status(201).json(tag);
   });
 
   return router;
