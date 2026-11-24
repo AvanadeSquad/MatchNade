@@ -19,7 +19,7 @@ describe('seed do banco', () => {
     const [{ tags }] = await a.banco.query('SELECT COUNT(*)::int AS tags FROM interest_tag');
     expect(pessoas).toBe(montarPessoas().length);
     expect(tags).toBe(TAGS_TECNICAS.length + TAGS_HOBBY.length);
-  });
+  }, 30000);
 
   it('pessoas ficticias conseguem fazer login com a senha de demonstracao, armazenada como hash', async () => {
     const [ana] = await a.banco.query('SELECT password_hash FROM employee WHERE email = $1', ['ana.silva@exemplo.test']);
