@@ -74,7 +74,7 @@ export function carregarConfig(origem = process.env) {
     // Score semântico de tags (S4-14): desligado até medir o gabarito de pares com um provedor real.
     semantica: {
       ativa: booleano(origem.SEMANTIC_AFFINITY_ENABLED),
-      limiar: fracao(origem.SEMANTIC_THRESHOLD, 0.75),
+      limiar: fracao(origem.SEMANTIC_THRESHOLD, 0.85),
       peso: fracao(origem.SEMANTIC_WEIGHT, 0.5),
       modelo: origem.GEMINI_EMBED_MODEL || 'gemini-embedding-001',
     },

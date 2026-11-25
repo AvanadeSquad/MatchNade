@@ -8,9 +8,9 @@ const resposta = (corpo, status = 200) => ({ ok: status >= 200 && status < 300, 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('configuração do score semântico', () => {
-  it('vem desligada por padrão, com limiar 0,75 e peso 0,5', () => {
+  it('vem desligada por padrão, com limiar 0,85 e peso 0,5', () => {
     const { semantica } = carregarConfig({ NODE_ENV: 'test' });
-    expect(semantica).toMatchObject({ ativa: false, limiar: 0.75, peso: 0.5 });
+    expect(semantica).toMatchObject({ ativa: false, limiar: 0.85, peso: 0.5 });
     expect(semantica.modelo).toBeTruthy();
   });
 
@@ -23,7 +23,7 @@ describe('configuração do score semântico', () => {
     });
     expect(ligada.semantica).toMatchObject({ ativa: true, limiar: 0.8, peso: 0.3 });
     const ruim = carregarConfig({ NODE_ENV: 'test', SEMANTIC_THRESHOLD: 'abc', SEMANTIC_WEIGHT: '7' });
-    expect(ruim.semantica).toMatchObject({ limiar: 0.75, peso: 0.5 });
+    expect(ruim.semantica).toMatchObject({ limiar: 0.85, peso: 0.5 });
   });
 });
 
