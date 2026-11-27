@@ -28,7 +28,7 @@ A IA nunca derruba a rota: o cadastro e a conexão continuam funcionando sem ela
 
 O cartão E7-06 pedia 3 segundos. Há dois números diferentes e os dois valem:
 
-- **Meta de 3 s para a mediana.** Medida em 20 bios com o Gemini Flash-Lite: mediana de 1,1 s (`npm run avaliar-ia`).
+- **Meta de 3 s para a mediana.** Medida em 20 bios com o Gemini Flash-Lite: mediana de 1,1 s (relatório técnico da equipe de IA, 18/11/2026; o comando `npm run avaliar-ia` não mede tempo).
 - **Teto de 8 s para o pior caso** (`AI_SLA_MS`). É o tempo para o principal falhar (2,5 s, nova tentativa de 0,5 s e outros 2,5 s) e a reserva ainda responder. Com teto de 3 s a reserva quase nunca responderia a tempo e mais bios cairiam no caminho manual.
 
 Decisão de 22/11: manter 8 s de teto. A pessoa nunca fica esperando em silêncio: a tela mostra "Analisando..." e, vencido o prazo, segue para a escolha manual de tags.
@@ -54,6 +54,6 @@ Quando a IA falha, o quebra-gelo mostra o texto padrão com `fallback: true` e n
 
 - O limite de requisições por minuto e por dia do plano gratuito de cada provedor muda com o tempo; confira na página do provedor antes de afirmar um número.
 - A mensagem exata do `429` real e o cabeçalho de espera (`Retry-After`) não foram observados contra o serviço.
-- O tempo da reserva sob carga real. A mediana medida do Gemini Flash-Lite foi 1,1 s em 20 bios (`npm run avaliar-ia`).
+- O tempo da reserva sob carga real. A mediana medida do Gemini Flash-Lite foi 1,1 s em 20 bios (relatório técnico da equipe de IA; o comando `npm run avaliar-ia` não mede tempo).
 
 Para confirmar com a chave real, rode `npm run avaliar-ia` com `GEMINI_API_KEY` e repita em sequência até o provedor responder `429`; o esperado é a reserva assumir e, com os dois esgotados, o status `ERRO` no log e o texto padrão na tela.

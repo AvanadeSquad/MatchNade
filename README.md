@@ -35,6 +35,31 @@ Sem banco nem chaves: a API usa PGlite com 30 pessoas fictícias. Na tela de log
 
 A tela de login aceita conta com e-mail e senha, criada no próprio app, e o login corporativo com a Microsoft (Entra ID, ativo quando o aplicativo é registrado). A conta com senha tem recuperação por pergunta de segurança. As rotas, as respostas e o bloqueio por tentativas estão em [`docs/api.md`](docs/api.md), e há um exemplo de cada requisição em [`docs/exemplos-api.http`](docs/exemplos-api.http).
 
+### Chaves de IA (opcional)
+
+A IA do produto (sugestão de tags a partir de um texto e frase de abertura no chat) só funciona com uma chave de API. **Sem chave o app roda normalmente**: a pessoa escolhe as tags à mão e o chat mostra um texto padrão.
+
+1. **Gemini (principal, gratuita):** gere a chave em <https://aistudio.google.com/apikey> e coloque em `backend/.env`, na linha `GEMINI_API_KEY=`. O modelo padrão é `gemini-flash-lite-latest` (`GEMINI_MODEL`).
+2. **Groq (reserva, opcional):** gere a chave em <https://console.groq.com/keys> e coloque em `GROQ_API_KEY=`. O modelo padrão é `llama-3.1-8b-instant` (`GROQ_MODEL`). Só é chamado quando o Gemini falha.
+3. Reinicie a API (`npm run dev`, dentro de `backend`) para ler o `.env`. Para conferir a extração com as 20 bios de exemplo, também em `backend`: `npm run avaliar-ia` (sem chave, usa um provedor simulado e o relatório mostra isso).
+4. **Score semântico entre tags (opcional, desligado por padrão):** com `GEMINI_API_KEY`, rode `npm run embeddings` em `backend` para gerar os vetores das tags e ligue `SEMANTIC_AFFINITY_ENABLED=true`. Os vetores precisam de um banco persistente (`DATABASE_URL` ou `PGLITE_DATA_DIR`, o mesmo usado pela API); com o PGlite em memória eles se perdem quando o comando termina. Veja [`docs/afinidade-semantica.md`](docs/afinidade-semantica.md).
+
+Variáveis de IA e seus padrões (`backend/.env`, ver `backend/.env.example`):
+
+| Variável | Padrão | Para que serve |
+|---|---|---|
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | vazio / `gemini-flash-lite-latest` | Provedor principal |
+| `GROQ_API_KEY` / `GROQ_MODEL` | vazio / `llama-3.1-8b-instant` | Provedor de reserva |
+| `AI_TIMEOUT_MS` | 2500 | Tempo máximo de cada chamada |
+| `AI_RETRY_DELAY_MS` | 500 | Espera antes da nova tentativa |
+| `AI_SLA_MS` | 8000 | Prazo total antes do caminho manual |
+| `AI_BREAKER_FAILURES` / `AI_BREAKER_WINDOW_MS` | 3 / 60000 | Disjuntor: falhas e janela em ms |
+| `SEMANTIC_AFFINITY_ENABLED` | desligado | Liga o score semântico entre tags |
+| `SEMANTIC_THRESHOLD` / `SEMANTIC_WEIGHT` | 0.85 / 0.5 | Limiar de similaridade e peso na afinidade |
+| `GEMINI_EMBED_MODEL` | `gemini-embedding-001` | Modelo dos vetores das tags |
+
+Regras: o arquivo `.env` está no `.gitignore` e **nunca deve ser commitado**; nenhuma chave vai ao navegador, só a API as usa; o plano gratuito do Gemini pode usar o conteúdo enviado para melhorar os produtos do Google, então use só dados fictícios ou de teste. Prazos, reserva e disjuntor: [`docs/ia-cota-e-reserva.md`](docs/ia-cota-e-reserva.md). Custo: [`docs/ia-custo.md`](docs/ia-custo.md).
+
 ### Contas de demonstração (apenas desenvolvimento local)
 
 Ao iniciar o backend com um banco **vazio**, o seed cria 30 contas fictícias com senha:
@@ -68,6 +93,9 @@ Os testes de ponta a ponta sobem a API e o app sozinhos em portas próprias (310
 - [`docs/teste-de-carga.md`](docs/teste-de-carga.md): carga, concorrência e população realista.
 - [`docs/afinidade-semantica.md`](docs/afinidade-semantica.md): score semântico entre tags (Django e Python), desligado por padrão.
 - [`docs/ia-cota-e-reserva.md`](docs/ia-cota-e-reserva.md): o que a IA faz com cota esgotada.
+- [`docs/ia-prompts.md`](docs/ia-prompts.md): serviços de IA, prompts em uso e histórico de versões.
+- [`docs/ia-prompts-que-falharam.md`](docs/ia-prompts-que-falharam.md): prompts que falharam, ajustes e validação (1 página).
+- [`docs/ia-custo.md`](docs/ia-custo.md): custo por chamada, por pessoa e em escala.
 - [`docs/design/`](docs/design/README.md): telas e tokens de referência.
 - [`docs/desenho-exclusao-e-personalizacao.md`](docs/desenho-exclusao-e-personalizacao.md): desenho da exclusão de conta e da personalização de perfil (implementados).
 - [`docs/evolucao.md`](docs/evolucao.md): o que ainda não foi exercitado e o que pode evoluir.
