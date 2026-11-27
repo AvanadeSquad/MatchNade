@@ -30,7 +30,7 @@ Depois de conferir o resultado, ajuste e ligue no `.env`:
 | Variável | Padrão | O que faz |
 |---|---|---|
 | `SEMANTIC_AFFINITY_ENABLED` | `false` | Liga a correspondência parcial. |
-| `SEMANTIC_THRESHOLD` | `0.75` | Similaridade mínima para o par entrar em `tag_similarity`. Troque o valor e rode `npm run embeddings` de novo para refazer a tabela. |
+| `SEMANTIC_THRESHOLD` | `0.85` | Similaridade mínima para o par entrar em `tag_similarity`. Troque o valor e rode `npm run embeddings` de novo para refazer a tabela. |
 | `SEMANTIC_WEIGHT` | `0.5` | Quanto o score suave pesa contra o exato (0 = só exato, 1 = só suave). |
 | `GEMINI_EMBED_MODEL` | `gemini-embedding-001` | Modelo de vetores. |
 
@@ -42,6 +42,6 @@ Medido em 22/11 com 2.000 pessoas, 168 tags e 1.092 pares (vetores sintéticos, 
 
 ## O que ainda não foi feito
 
-- **Medição com chave real.** Não havia chave do Gemini no ambiente de desenvolvimento. O provedor de embeddings (`batchEmbedContents`) foi escrito pela documentação e testado só com resposta simulada; a primeira execução real de `npm run embeddings` confirma o formato. O limiar de 0,75 é um ponto de partida: a varredura de `npm run avaliar-semantica` dá o número que vale.
+- **Medição com chave real (25/11/2026).** Feita com `gemini-embedding-001` e o gabarito de 40 pares (44 tags). O formato do `batchEmbedContents` foi confirmado. O limiar de 0,75 não serve: o modelo dá cosseno alto entre quase qualquer par, e de 0,50 a 0,80 a precisão fica em 60% (cobertura 100%); com as 60 tags do seed, todos os 1.770 pares passaram. Em **0,85** a precisão é 95% e a cobertura 79%; em 0,90, 89% e 33%. Por isso o padrão passou a 0,85. A opção continua desligada por padrão: a medição valida a precisão dos pares, não a qualidade das sugestões. O plano gratuito limita as requisições por minuto (erro 429); se aparecer, repita após um minuto.
 - **Vetor ao criar a tag.** Resolvido: com `SEMANTIC_AFFINITY_ENABLED=true` e `GEMINI_API_KEY`, tag nova (criada por `PUT /profile/interests` ou `POST /tags`) ganha vetor em segundo plano e a tabela de pares é refeita (`backend/src/services/vetorizador.js`). A rota nunca espera pelo provedor e uma falha deixa a tag valendo só pelo score exato até a próxima rodada ou até `npm run embeddings`. A tabela é refeita por inteiro a cada rodada com vetor novo; com um catálogo de milhares de tags, vale trocar por atualização só dos pares da tag nova.
 - **Texto de por que combinam.** `related_interests` aparece na Descoberta e no perfil como "Interesses parecidos" (some quando vazio). Não há texto gerado por IA para explicar.
